@@ -1,0 +1,235 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --forest:  #0D2B1F;
+    --canopy:  #1A4A32;
+    --leaf:    #2D7A4F;
+    --palm:    #3DAA6A;
+    --harvest: #E8A838;
+    --mist:    #F0F4F1;
+    --fog:     #E2EBE5;
+    --stone:   #6B7C72;
+    --ink:     #0A1A10;
+    --data:    #00C896;
+    --alert:   #DC3C3C;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--mist);
+    color: var(--ink);
+    font-size: 13px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--fog); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--stone); }
+}
+
+@layer components {
+  /* ── TYPOGRAPHY ── */
+  .font-display { font-family: 'Syne', sans-serif; }
+  .font-mono    { font-family: 'JetBrains Mono', monospace; }
+
+  .label-mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--stone);
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    @apply inline-flex items-center gap-1.5 font-semibold rounded-md border-none cursor-pointer transition-all duration-150;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    padding: 7px 14px;
+  }
+
+  .btn-primary  { background: var(--leaf); color: white; }
+  .btn-primary:hover  { background: #266844; }
+  .btn-secondary { background: var(--forest); color: white; }
+  .btn-secondary:hover { background: var(--canopy); }
+  .btn-ghost    { background: transparent; color: var(--forest); border: 1px solid var(--fog); }
+  .btn-ghost:hover    { background: var(--mist); }
+  .btn-harvest  { background: var(--harvest); color: var(--forest); }
+  .btn-sm       { font-size: 11px; padding: 5px 10px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── BADGES ── */
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    display: inline-block;
+  }
+
+  .badge-green   { background: rgba(45,122,79,0.1);   color: var(--leaf); }
+  .badge-harvest { background: rgba(232,168,56,0.12); color: #8A6000; }
+  .badge-red     { background: rgba(220,60,60,0.08);  color: var(--alert); }
+  .badge-stone   { background: var(--fog);             color: var(--stone); }
+  .badge-blue    { background: rgba(59,130,246,0.1);  color: #2563EB; }
+  .badge-data    { background: rgba(0,200,150,0.1);   color: #007A5E; }
+
+  /* ── CARDS ── */
+  .card {
+    background: white;
+    border: 1px solid var(--fog);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--fog);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--forest);
+    letter-spacing: -0.01em;
+  }
+
+  /* ── FORM ELEMENTS ── */
+  .form-input,
+  .form-select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--fog);
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--forest);
+    background: white;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .form-input:focus,
+  .form-select:focus {
+    border-color: var(--leaf);
+    box-shadow: 0 0 0 3px rgba(45,122,79,0.08);
+  }
+
+  .form-label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--stone);
+    margin-bottom: 6px;
+  }
+
+  .form-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--stone);
+    margin-top: 4px;
+  }
+
+  /* ── CHIPS ── */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    background: var(--mist);
+    border: 1px solid var(--fog);
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--forest);
+  }
+
+  .chip-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--stone);
+    font-size: 13px;
+    line-height: 1;
+    padding: 0;
+    margin-left: 2px;
+    transition: color 0.1s;
+  }
+
+  .chip-remove:hover { color: var(--alert); }
+
+  /* ── FILTER PILLS ── */
+  .filter-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--fog);
+    background: transparent;
+    color: var(--stone);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+  }
+
+  .filter-pill.active { background: var(--forest); color: white; border-color: var(--forest); }
+  .filter-pill:hover:not(.active) { background: var(--mist); }
+
+  /* ── SYNC STATUS ── */
+  .sync-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--data);
+    animation: pulse-dot 2s infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ── SECTION BAR ── */
+  .section-bar-wrap {
+    width: 80px;
+    height: 4px;
+    background: var(--fog);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  /* ── CROP CARDS ── */
+  .crop-card-palm  { background: rgba(13,43,31,0.04);  border: 1px solid rgba(45,122,79,0.2); }
+  .crop-card-maize { background: rgba(232,168,56,0.05); border: 1px solid rgba(232,168,56,0.2); }
+
+  /* ── ALERT BANNER ── */
+  .alert-banner {
+    background: rgba(232,168,56,0.08);
+    border: 1px solid rgba(232,168,56,0.25);
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+}

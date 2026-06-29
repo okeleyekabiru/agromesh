@@ -1,0 +1,53 @@
+# .NET
+**/bin/
+**/obj/
+*.user
+*.suo
+.vs/
+*.csproj.user
+TestResults/
+
+# ASP.NET
+appsettings.Development.json
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Node / Web
+node_modules/
+dist/
+.vite/
+*.lock
+!package-lock.json
+!yarn.lock
+web/.env
+web/.env.local
+
+# Flutter / Dart
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/build/
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/app/google-services.json
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/ios/Flutter/.last_build_id
+mobile/**/*.g.dart
+mobile/**/*.freezed.dart
+
+# Logs
+logs/
+*.log
+serilog-*.txt
+
+# Docker
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db

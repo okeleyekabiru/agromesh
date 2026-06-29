@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="AgroMesh.API/AgroMesh.API.csproj" />
+  <Project Path="AgroMesh.Application/AgroMesh.Application.csproj" />
+  <Project Path="AgroMesh.Domain/AgroMesh.Domain.csproj" />
+  <Project Path="AgroMesh.Infrastructure/AgroMesh.Infrastructure.csproj" />
+  <Project Path="AgroMesh.Tests/AgroMesh.Tests.csproj" />
+</Solution>
