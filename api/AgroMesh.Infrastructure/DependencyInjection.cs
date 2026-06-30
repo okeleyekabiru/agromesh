@@ -2,6 +2,7 @@ using AgroMesh.Application.Interfaces;
 using AgroMesh.Infrastructure.Persistence;
 using AgroMesh.Infrastructure.Persistence.Repositories;
 using AgroMesh.Infrastructure.Services;
+using AgroMesh.Infrastructure.Services.Auth;
 using AgroMesh.Infrastructure.Services.Financial;
 using AgroMesh.Infrastructure.Services.Scheduling;
 using AgroMesh.Infrastructure.Services.Weather;
@@ -29,6 +30,10 @@ public static class DependencyInjection
         services.AddHttpClient("weather-client");
         services.AddHttpClient("claude-client");
         services.AddHttpClient("mono-client");
+
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
+        services.AddScoped<IJwtService, JwtService>();
 
         services.AddScoped<IFarmRepository, FarmRepository>();
         services.AddScoped<ISectionRepository, SectionRepository>();

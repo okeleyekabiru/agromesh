@@ -9,11 +9,32 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' }
 })
 
+// Attach JWT on every request
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('agro_token')
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
+
+// On 401: clear session and return to landing
+api.interceptors.response.use(
+  res => res,
+  err => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('agro_token')
+      localStorage.removeItem('agro_user')
+      window.location.href = '/'
+    }
+    return Promise.reject(err)
+  }
+)
+
 // ── Farm ──
 export const farmApi = {
   list: () => api.get('/api/farms'),
   get: () => api.get(`/api/farms/${FARM_ID}`),
   create: (body: unknown) => api.post('/api/farms', body),
+  update: (farmId: string, body: unknown) => api.patch(`/api/farms/${farmId}`, body),
   getOnboardingStatus: () => api.get(`/api/farms/${FARM_ID}/onboarding-status`),
   getWeather: () => api.get(`/api/farms/${FARM_ID}/weather`),
   getDashboard: () => api.get(`/api/farms/${FARM_ID}/dashboard`),
@@ -69,4 +90,18 @@ export const inventoryApi = {
 // ── Chemicals ──
 export const chemicalApi = {
   getAll: () => api.get('/api/chemicals')
+}
+
+// ── Auth ──
+export const authApi = {
+  login:    (body: { email: string; password: string }) =>
+    api.post('/api/auth/login', body),
+  register: (body: { fullName: string; email: string; password: string; farmName: string; location?: string; latitude?: number; longitude?: number }) =>
+    api.post('/api/auth/register', body),
+  me: () => api.get('/api/auth/me'),
+}
+
+// ── Feature Flags ──
+export const featuresApi = {
+  getForFarm: (farmId: string) => api.get(`/api/farms/${farmId}/features`),
 }

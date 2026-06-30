@@ -7,6 +7,7 @@ public class AgroMeshDbContext : DbContext
 {
     public AgroMeshDbContext(DbContextOptions<AgroMeshDbContext> options) : base(options) { }
 
+    public DbSet<User> Users => Set<User>();
     public DbSet<Farm> Farms => Set<Farm>();
     public DbSet<Section> Sections => Set<Section>();
     public DbSet<Block> Blocks => Set<Block>();

@@ -68,7 +68,7 @@
       <div class="card">
         <div class="card-header">
           <div class="card-title">Next Sync</div>
-          <div class="card-label">Mono → Claude → Dashboard</div>
+          <div class="card-label">Mono → AI → Dashboard</div>
         </div>
         <div style="padding:16px;">
           <div style="background:rgba(13,43,31,0.04);border:1px solid rgba(45,122,79,0.15);border-radius:8px;padding:16px;">
@@ -77,7 +77,7 @@
             <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--stone);margin-top:6px;line-height:1.6;">
               Pull Mono transactions<br>
               Run keyword dictionary<br>
-              Claude API for ambiguous<br>
+              AI for ambiguous<br>
               Refresh P&L dashboard
             </div>
           </div>

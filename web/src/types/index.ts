@@ -287,3 +287,34 @@ export interface PagedResult<T> {
   page: number
   pageSize: number
 }
+
+// ── AUTH ──
+
+export interface AuthUser {
+  id: string
+  email: string
+  fullName: string
+  farmId: string | null
+}
+
+export interface AuthResponse {
+  token: string
+  user: AuthUser
+  farmId: string | null
+}
+
+// ── FEATURE FLAGS ──
+
+export type FeatureName =
+  | 'finance'
+  | 'inventory'
+  | 'workers'
+  | 'reports'
+  | 'scheduling'
+  | 'weather'
+  | 'ai_categorization'
+
+export interface FeatureFlag {
+  name: FeatureName
+  enabled: boolean
+}

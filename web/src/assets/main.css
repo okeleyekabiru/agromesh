@@ -4,6 +4,7 @@
 
 @layer base {
   :root {
+    /* ── Brand tokens ── */
     --forest:  #0D2B1F;
     --canopy:  #1A4A32;
     --leaf:    #2D7A4F;
@@ -15,6 +16,23 @@
     --ink:     #0A1A10;
     --data:    #00C896;
     --alert:   #DC3C3C;
+
+    /* ── Elevation scale ── */
+    --shadow-xs: 0 1px 2px rgba(10,26,16,0.06);
+    --shadow-sm: 0 2px 6px rgba(10,26,16,0.08), 0 1px 2px rgba(10,26,16,0.04);
+    --shadow-md: 0 4px 16px rgba(10,26,16,0.10), 0 2px 4px rgba(10,26,16,0.05);
+    --shadow-lg: 0 12px 32px rgba(10,26,16,0.14), 0 4px 8px rgba(10,26,16,0.06);
+    --shadow-xl: 0 24px 64px rgba(10,26,16,0.20), 0 8px 16px rgba(10,26,16,0.08);
+
+    /* ── Animation tokens ── */
+    --dur-fast: 120ms;
+    --dur-base: 200ms;
+    --dur-slow: 300ms;
+    --dur-enter: 280ms;
+    --ease-out:  cubic-bezier(0.16, 1, 0.3, 1);   /* spring-feel enter  */
+    --ease-in:   cubic-bezier(0.4, 0, 1, 1);        /* snappy exit        */
+    --ease-io:   cubic-bezier(0.4, 0, 0.2, 1);      /* material standard  */
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* overshoot spring */
   }
 
   * { box-sizing: border-box; }
@@ -26,12 +44,75 @@
     font-size: 13px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Focus ring — consistent, accessible */
+  :focus-visible {
+    outline: 2px solid var(--leaf);
+    outline-offset: 2px;
+    border-radius: 4px;
   }
 
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--fog); border-radius: 2px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--stone); }
+}
+
+/* ── Global keyframes ─────────────────────────────────────────────────── */
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes bar-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+
+/* Page-level route transition */
+.page-enter-active {
+  animation: fade-up var(--dur-enter) var(--ease-out) both;
+}
+.page-leave-active {
+  animation: fade-in var(--dur-fast) var(--ease-in) reverse both;
+  pointer-events: none;
+}
+
+/* Reduced-motion: collapse all animations */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @layer components {
@@ -49,19 +130,32 @@
 
   /* ── BUTTONS ── */
   .btn {
-    @apply inline-flex items-center gap-1.5 font-semibold rounded-md border-none cursor-pointer transition-all duration-150;
+    @apply inline-flex items-center gap-1.5 font-semibold rounded-md border-none cursor-pointer;
     font-family: 'Inter', sans-serif;
     font-size: 12px;
     padding: 7px 14px;
+    transition:
+      background var(--dur-base) var(--ease-io),
+      box-shadow  var(--dur-base) var(--ease-io),
+      transform   var(--dur-fast) var(--ease-io),
+      opacity     var(--dur-fast);
+    touch-action: manipulation;
+    user-select: none;
   }
 
-  .btn-primary  { background: var(--leaf); color: white; }
-  .btn-primary:hover  { background: #266844; }
-  .btn-secondary { background: var(--forest); color: white; }
-  .btn-secondary:hover { background: var(--canopy); }
+  .btn:active:not(:disabled) { transform: scale(0.97); }
+
+  .btn-primary  { background: var(--leaf); color: white; box-shadow: var(--shadow-xs); }
+  .btn-primary:hover  {
+    background: #266844;
+    box-shadow: 0 4px 14px rgba(45,122,79,0.35);
+  }
+  .btn-secondary { background: var(--forest); color: white; box-shadow: var(--shadow-xs); }
+  .btn-secondary:hover { background: var(--canopy); box-shadow: var(--shadow-sm); }
   .btn-ghost    { background: transparent; color: var(--forest); border: 1px solid var(--fog); }
-  .btn-ghost:hover    { background: var(--mist); }
+  .btn-ghost:hover    { background: var(--mist); border-color: var(--stone); }
   .btn-harvest  { background: var(--harvest); color: var(--forest); }
+  .btn-harvest:hover  { background: #D4932A; }
   .btn-sm       { font-size: 11px; padding: 5px 10px; }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
@@ -90,6 +184,25 @@
     border: 1px solid var(--fog);
     border-radius: 12px;
     overflow: hidden;
+    box-shadow: var(--shadow-xs);
+    transition:
+      box-shadow var(--dur-base) var(--ease-out),
+      transform  var(--dur-base) var(--ease-out),
+      border-color var(--dur-base);
+  }
+
+  /* Interactive cards lift on hover */
+  .card-interactive {
+    cursor: pointer;
+  }
+  .card-interactive:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: rgba(45,122,79,0.2);
+  }
+  .card-interactive:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-xs);
   }
 
   .card-header {
@@ -108,6 +221,19 @@
     letter-spacing: -0.01em;
   }
 
+  /* ── SKELETON LOADER ── */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--fog) 25%,
+      var(--mist) 50%,
+      var(--fog) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 6px;
+  }
+
   /* ── FORM ELEMENTS ── */
   .form-input,
   .form-select {
@@ -120,15 +246,23 @@
     color: var(--forest);
     background: white;
     outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition:
+      border-color var(--dur-fast) var(--ease-io),
+      box-shadow   var(--dur-fast) var(--ease-io);
     appearance: none;
     -webkit-appearance: none;
+    min-height: 40px;
   }
 
   .form-input:focus,
   .form-select:focus {
     border-color: var(--leaf);
-    box-shadow: 0 0 0 3px rgba(45,122,79,0.08);
+    box-shadow: 0 0 0 3px rgba(45,122,79,0.10);
+  }
+
+  .form-input:hover:not(:focus),
+  .form-select:hover:not(:focus) {
+    border-color: var(--stone);
   }
 
   .form-label {
@@ -160,6 +294,7 @@
     font-size: 11px;
     font-weight: 500;
     color: var(--forest);
+    transition: border-color var(--dur-fast);
   }
 
   .chip-remove {
@@ -171,9 +306,8 @@
     line-height: 1;
     padding: 0;
     margin-left: 2px;
-    transition: color 0.1s;
+    transition: color var(--dur-fast);
   }
-
   .chip-remove:hover { color: var(--alert); }
 
   /* ── FILTER PILLS ── */
@@ -186,14 +320,23 @@
     background: transparent;
     color: var(--stone);
     cursor: pointer;
-    transition: all 0.15s;
+    transition:
+      background    var(--dur-fast) var(--ease-io),
+      color         var(--dur-fast),
+      border-color  var(--dur-fast),
+      transform     var(--dur-fast);
     letter-spacing: 0.04em;
   }
 
-  .filter-pill.active { background: var(--forest); color: white; border-color: var(--forest); }
-  .filter-pill:hover:not(.active) { background: var(--mist); }
+  .filter-pill:hover:not(.active) { background: var(--fog); transform: translateY(-1px); }
+  .filter-pill.active {
+    background: var(--forest);
+    color: white;
+    border-color: var(--forest);
+    box-shadow: var(--shadow-xs);
+  }
 
-  /* ── SYNC STATUS ── */
+  /* ── SYNC STATUS DOT ── */
   .sync-dot {
     width: 7px;
     height: 7px;
@@ -201,11 +344,6 @@
     background: var(--data);
     animation: pulse-dot 2s infinite;
     flex-shrink: 0;
-  }
-
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
   }
 
   /* ── SECTION BAR ── */
@@ -223,13 +361,21 @@
 
   /* ── ALERT BANNER ── */
   .alert-banner {
-    background: rgba(232,168,56,0.08);
-    border: 1px solid rgba(232,168,56,0.25);
+    background: rgba(232,168,56,0.07);
+    border: 1px solid rgba(232,168,56,0.22);
     border-radius: 10px;
-    padding: 12px 16px;
+    padding: 11px 14px;
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
+    animation: slide-down var(--dur-base) var(--ease-out) both;
+  }
+
+  /* ── STAGGER UTILITY ── */
+  /* Use inline style="--i:N" on items, then apply animation with delay */
+  .stagger-item {
+    animation: fade-up var(--dur-slow) var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 50ms);
   }
 }

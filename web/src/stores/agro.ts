@@ -2,11 +2,13 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type {
   Farm, Section, Worker, WorkerRole, ActivityLog, Transaction,
-  InventoryItem, ChemicalProduct, UpcomingTask, LowStockAlert, WeatherWidget, DashboardData
+  InventoryItem, ChemicalProduct, UpcomingTask, LowStockAlert, WeatherWidget, DashboardData,
+  AuthUser, AuthResponse, FeatureFlag
 } from '@/types'
 import {
   farmApi, sectionApi, activityApi, transactionApi,
   workerApi, workerRoleApi, inventoryApi, chemicalApi,
+  authApi, featuresApi,
   setFarmId
 } from '@/services/api'
 
@@ -32,7 +34,14 @@ export const useAgroStore = defineStore('agro', () => {
   const error = ref<string | null>(null)
   const needsOnboarding = ref(false)
 
+  // ── AUTH STATE ──
+  const currentUser = ref<AuthUser | null>(null)
+  const token = ref<string | null>(localStorage.getItem('agro_token'))
+  const enabledFeatures = ref<string[]>([])
+
   // ── COMPUTED ──
+  const isAuthenticated = computed(() => !!token.value)
+
   const pendingReviews = computed(() =>
     transactions.value.filter(t => !t.reviewedByUser).length
   )
@@ -174,6 +183,64 @@ export const useAgroStore = defineStore('agro', () => {
     await fetchInventory()
   }
 
+  // ── AUTH ACTIONS ──
+
+  function restoreSession() {
+    const saved = localStorage.getItem('agro_user')
+    if (saved) {
+      try { currentUser.value = JSON.parse(saved) } catch { /* ignore */ }
+    }
+  }
+
+  async function login(email: string, password: string) {
+    const res = await authApi.login({ email, password })
+    const data = res.data as AuthResponse
+    token.value = data.token
+    currentUser.value = data.user
+    localStorage.setItem('agro_token', data.token)
+    localStorage.setItem('agro_user', JSON.stringify(data.user))
+    if (data.farmId) {
+      setFarmId(data.farmId)
+      await fetchFeatures(data.farmId)
+    }
+    return data
+  }
+
+  async function register(body: { fullName: string; email: string; password: string; farmName: string; location?: string; latitude?: number; longitude?: number }) {
+    const res = await authApi.register(body)
+    const data = res.data as AuthResponse
+    token.value = data.token
+    currentUser.value = data.user
+    localStorage.setItem('agro_token', data.token)
+    localStorage.setItem('agro_user', JSON.stringify(data.user))
+    if (data.farmId) {
+      setFarmId(data.farmId)
+      needsOnboarding.value = true
+    }
+    return data
+  }
+
+  function logout() {
+    token.value = null
+    currentUser.value = null
+    enabledFeatures.value = []
+    farm.value = null
+    localStorage.removeItem('agro_token')
+    localStorage.removeItem('agro_user')
+  }
+
+  async function fetchFeatures(farmId: string) {
+    try {
+      const res = await featuresApi.getForFarm(farmId)
+      enabledFeatures.value = (res.data as FeatureFlag[])
+        .filter(f => f.enabled)
+        .map(f => f.name)
+    } catch {
+      // API unavailable or no flags configured → enable everything
+      enabledFeatures.value = ['finance','inventory','workers','reports','scheduling','weather','ai_categorization']
+    }
+  }
+
   async function discoverFarm(): Promise<boolean> {
     try {
       const res = await farmApi.list()
@@ -200,6 +267,27 @@ export const useAgroStore = defineStore('agro', () => {
     return res.data
   }
 
+  async function updateFarmProfile(opts: {
+    farmId: string
+    name?: string
+    areaValue?: number
+    areaUnit?: string
+    lat?: number
+    lng?: number
+  }) {
+    try {
+      await farmApi.update(opts.farmId, {
+        name: opts.name,
+        totalHectares: opts.areaValue,
+        preferredAreaUnit: opts.areaUnit,
+        centroidLat: opts.lat,
+        centroidLng: opts.lng,
+      })
+    } catch {
+      // Non-blocking: onboarding continues even if update fails
+    }
+  }
+
   async function initDashboard() {
     const hasFarm = await discoverFarm()
     if (!hasFarm) return
@@ -212,12 +300,16 @@ export const useAgroStore = defineStore('agro', () => {
     farm, sections, workers, workerRoles, activities, transactions,
     inventoryItems, chemicals, upcomingTasks, lowStockAlerts, weather, dashboard,
     isOnline, lastSynced, loading, error, needsOnboarding,
+    // auth state
+    currentUser, token, enabledFeatures,
     // computed
-    pendingReviews, supervisors, lowStockCount,
+    isAuthenticated, pendingReviews, supervisors, lowStockCount,
     // actions
     fetchFarm, fetchDashboard, fetchWeather, fetchSections, fetchActivities,
     fetchTransactions, fetchWorkers, fetchWorkerRoles, fetchInventory, fetchChemicals,
     logActivity, reviewTransaction, adjustStock, addStockFromReceipt,
-    discoverFarm, createFarm, initDashboard
+    discoverFarm, createFarm, updateFarmProfile, initDashboard,
+    // auth actions
+    login, register, logout, fetchFeatures, restoreSession,
   }
 })

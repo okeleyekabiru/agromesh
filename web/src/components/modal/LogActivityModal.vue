@@ -1,4 +1,5 @@
 <template>
+  <Transition name="modal">
   <div class="modal-overlay" @click.self="$emit('close')">
     <div class="modal">
       <div class="modal-header">
@@ -15,8 +16,9 @@
       </div>
 
       <!-- Low-stock warning banner -->
-      <div v-if="lowStockWarnings.length" class="warning-banner">
-        ⚠ {{ lowStockWarnings.join(' · ') }}
+      <div v-if="lowStockWarnings.length" class="warning-banner" role="alert">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A6000" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        {{ lowStockWarnings.join(' · ') }}
       </div>
 
       <div class="modal-body">
@@ -61,7 +63,11 @@
                 :class="{ selected: form.activityType === a.key }"
                 @click="form.activityType = a.key as any"
               >
-                <div class="activity-btn-icon">{{ a.icon }}</div>
+                <div class="activity-btn-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                       v-html="a.icon" />
+                </div>
                 <span class="activity-btn-name">{{ a.name }}</span>
               </button>
             </div>
@@ -152,6 +158,7 @@
       </div>
     </div>
   </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
@@ -193,14 +200,14 @@ const form = ref({
 })
 
 const activityTypes = [
-  { key: 'Weeding',               name: 'Weeding',               icon: '🌿' },
-  { key: 'Spraying',              name: 'Spraying',              icon: '💧' },
-  { key: 'FertilizerApplication', name: 'Fertilizer',            icon: '🌱' },
-  { key: 'Maintenance',           name: 'Maintenance',           icon: '🔧' },
-  { key: 'Harvesting',            name: 'Harvesting',            icon: '🌾' },
-  { key: 'Clearing',              name: 'Clearing',              icon: '🪚' },
-  { key: 'Pruning',               name: 'Pruning',               icon: '✂️' },
-  { key: 'PestControl',           name: 'Pest Control',          icon: '🛡️' },
+  { key: 'Weeding',               name: 'Weeding',     icon: '<path d="M12 22V12M12 12C12 7 7 4 3 5c2 4 5 7 9 7z"/><path d="M12 12c0-5 5-8 9-7-2 4-5 7-9 7z"/>' },
+  { key: 'Spraying',              name: 'Spraying',    icon: '<path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0L12 2.69z"/>' },
+  { key: 'FertilizerApplication', name: 'Fertilizer',  icon: '<path d="M5 8h14l-1.5 8H6.5L5 8z"/><path d="M8 8V6a4 4 0 018 0v2"/>' },
+  { key: 'Maintenance',           name: 'Maintenance', icon: '<path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>' },
+  { key: 'Harvesting',            name: 'Harvesting',  icon: '<path d="M3 17l4-8 4 4 4-8 4 8M3 21h18M12 3v4"/>' },
+  { key: 'Clearing',              name: 'Clearing',    icon: '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/>' },
+  { key: 'Pruning',               name: 'Pruning',     icon: '<line x1="4" y1="20" x2="20" y2="4"/><path d="M8.5 5.5L3 11l1.5 1.5M15.5 18.5L21 13l-1.5-1.5"/>' },
+  { key: 'PestControl',           name: 'Pest Control',icon: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>' },
 ]
 
 const CHEMICAL_TYPES = new Set(['Spraying', 'PestControl'])
@@ -278,8 +285,14 @@ function addInput() {
 </script>
 
 <style scoped>
-.modal-overlay { position: fixed; inset: 0; background: rgba(10,26,16,0.6); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; }
-.modal { background: white; border-radius: 16px; width: 520px; max-height: 88vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(10,26,16,0.2); }
+/* Modal entrance / exit */
+.modal-enter-active .modal-overlay { animation: fade-in var(--dur-base) var(--ease-out) both; }
+.modal-leave-active .modal-overlay { animation: fade-in var(--dur-fast) var(--ease-in) reverse both; }
+.modal-enter-active .modal  { animation: scale-in var(--dur-enter) var(--ease-out) both; }
+.modal-leave-active .modal  { animation: scale-in var(--dur-fast) var(--ease-in) reverse both; }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(10,26,16,0.55); backdrop-filter: blur(6px); z-index: 100; display: flex; align-items: center; justify-content: center; animation: fade-in var(--dur-base) var(--ease-out) both; }
+.modal { background: white; border-radius: 16px; width: 520px; max-height: 88vh; overflow-y: auto; box-shadow: var(--shadow-xl); animation: scale-in var(--dur-enter) var(--ease-out) both; }
 .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--fog); display: flex; align-items: center; justify-content: space-between; }
 .modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: var(--forest); letter-spacing: -0.01em; }
 .modal-close { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--fog); background: transparent; cursor: pointer; font-size: 18px; color: var(--stone); display: flex; align-items: center; justify-content: center; }
@@ -298,10 +311,42 @@ function addInput() {
 .modal-footer { padding: 16px 24px; border-top: 1px solid var(--fog); display: flex; justify-content: space-between; align-items: center; }
 .form-group { margin-bottom: 16px; }
 .activity-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
-.activity-btn { padding: 10px 12px; border: 1.5px solid var(--fog); border-radius: 8px; background: transparent; cursor: pointer; text-align: left; transition: all 0.15s; }
-.activity-btn:hover { border-color: var(--palm); background: rgba(61,170,106,0.04); }
-.activity-btn.selected { border-color: var(--leaf); background: rgba(45,122,79,0.06); }
-.activity-btn-icon { font-size: 20px; margin-bottom: 4px; line-height: 1; }
+.activity-btn {
+  padding: 10px 12px;
+  border: 1.5px solid var(--fog);
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color var(--dur-fast) var(--ease-io),
+    background   var(--dur-fast) var(--ease-io),
+    transform    var(--dur-fast) var(--ease-spring);
+}
+.activity-btn:hover {
+  border-color: rgba(61,170,106,0.4);
+  background: rgba(61,170,106,0.04);
+  transform: translateY(-1px);
+}
+.activity-btn:active { transform: scale(0.97); }
+.activity-btn.selected {
+  border-color: var(--leaf);
+  background: rgba(45,122,79,0.07);
+  box-shadow: 0 0 0 3px rgba(45,122,79,0.10);
+}
+.activity-btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(45,122,79,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+  color: var(--leaf);
+  transition: background var(--dur-fast);
+}
+.activity-btn.selected .activity-btn-icon { background: rgba(45,122,79,0.15); }
 .activity-btn-name { font-size: 11px; font-weight: 600; color: var(--forest); display: block; }
 .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; min-height: 28px; align-items: center; }
 .add-row { display: flex; gap: 8px; }

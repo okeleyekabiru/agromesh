@@ -3,8 +3,8 @@
     <div class="onboard-card">
       <!-- Header -->
       <div class="onboard-header">
-        <div class="onboard-logo">🌿 AgroMesh</div>
-        <div class="onboard-subtitle">Farm Setup Wizard</div>
+        <div class="onboard-logo">AgroMesh</div>
+        <div class="onboard-subtitle">Farm Setup · Step {{ step + 1 }} of {{ steps.length }}</div>
       </div>
 
       <!-- Step indicator -->
@@ -26,10 +26,6 @@
           <label class="form-label">Farm Name</label>
           <input class="form-input" v-model="farm.name" placeholder="e.g. Adeyemi Oil Palm Plantation" />
         </div>
-        <div class="form-group">
-          <label class="form-label">Location</label>
-          <input class="form-input" v-model="farm.location" placeholder="e.g. Oyo State, Nigeria" />
-        </div>
         <div class="form-row">
           <div class="form-group" style="flex:1">
             <label class="form-label">Total Area</label>
@@ -44,90 +40,39 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Farm Coordinates (optional — used for weather)</label>
-          <div class="form-row">
-            <input class="form-input" v-model.number="farm.lat" type="number" step="0.001" placeholder="Latitude e.g. 7.3775" style="flex:1" />
-            <input class="form-input" v-model.number="farm.lng" type="number" step="0.001" placeholder="Longitude e.g. 3.9470" style="flex:1" />
+          <label class="form-label">
+            GPS Coordinates
+            <span class="label-opt">enables live weather</span>
+          </label>
+          <button type="button" class="gps-btn" @click="detectGps" :disabled="gpsLoading">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+            </svg>
+            <span class="gps-spinner" v-if="gpsLoading" />
+            {{ gpsLoading ? 'Detecting…' : (farm.lat != null ? '✓ Location captured' : 'Detect via GPS') }}
+          </button>
+          <div v-if="farm.lat != null && farm.lng != null" class="gps-result">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0112 2a8 8 0 018 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
+            {{ farm.lat.toFixed(5) }}°, {{ farm.lng.toFixed(5) }}°
+            <button type="button" class="gps-clear" @click="() => { farm.lat = null; farm.lng = null }">×</button>
+          </div>
+          <div v-if="gpsError" class="gps-err-msg">{{ gpsError }}</div>
+          <div class="form-row" style="margin-top:8px">
+            <input class="form-input" v-model.number="farm.lat" type="number" step="0.00001"
+                   placeholder="Latitude e.g. 7.3775" style="flex:1" />
+            <input class="form-input" v-model.number="farm.lng" type="number" step="0.00001"
+                   placeholder="Longitude e.g. 3.9470" style="flex:1" />
           </div>
         </div>
         <div class="hint-box">
-          💡 Coordinates enable live weather forecasts and spray-window predictions powered by Open-Meteo. You can add these later from Farm Settings.
+          Sections and farm boundaries are set up in the next step after this wizard.
         </div>
       </div>
 
-      <!-- ── STEP 1: Sections + Map ── -->
+      <!-- ── STEP 1: Worker Roles ── -->
       <div v-if="step === 1" class="onboard-body">
-        <div class="step-title">Define your farm sections</div>
-        <div class="hint-box" style="margin-bottom:12px;">
-          Click on the map to draw a polygon boundary for each section. Double-click or click the first point to close.
-        </div>
-
-        <!-- Map -->
-        <div id="onboarding-map" class="map-container"></div>
-
-        <!-- Section form -->
-        <div class="section-form">
-          <div class="form-row">
-            <div class="form-group" style="flex:1">
-              <label class="form-label">Section Name</label>
-              <input class="form-input" v-model="curSection.name" placeholder="e.g. Section A" />
-            </div>
-            <div class="form-group" style="width:120px">
-              <label class="form-label">Area</label>
-              <input class="form-input" v-model.number="curSection.areaValue" type="number" min="0.1" step="0.5" />
-            </div>
-            <div class="form-group" style="width:90px">
-              <label class="form-label">Unit</label>
-              <select class="form-select" v-model="curSection.areaUnit">
-                <option value="Hectares">ha</option>
-                <option value="Acres">ac</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Crops -->
-          <div class="form-group">
-            <label class="form-label">Crops (% must total 100)</label>
-            <div v-for="(c, i) in curSection.crops" :key="i" class="crop-row">
-              <select class="form-select" v-model="c.cropType" style="flex:1">
-                <option v-for="ct in cropTypes" :key="ct" :value="ct">{{ ct }}</option>
-              </select>
-              <input class="form-input" v-model.number="c.percentage" type="number" min="1" max="100" style="width:70px" placeholder="%" />
-              <button class="btn btn-ghost btn-sm" @click="curSection.crops.splice(i,1)" :disabled="curSection.crops.length === 1">✕</button>
-            </div>
-            <button class="btn btn-ghost btn-sm" @click="curSection.crops.push({ cropType: 'OilPalm', percentage: 0 })" style="margin-top:6px;">
-              + Add Crop
-            </button>
-          </div>
-
-          <div class="map-coords-hint" v-if="curSection.polygonPoints.length">
-            {{ curSection.polygonPoints.length }} points drawn
-            <button class="btn btn-ghost btn-sm" @click="clearPolygon">Clear</button>
-          </div>
-
-          <button class="btn btn-primary" @click="addSection" :disabled="!canAddSection" style="width:100%;margin-top:8px;">
-            + Add Section
-          </button>
-        </div>
-
-        <!-- Added sections list -->
-        <div v-if="sections.length" class="added-sections">
-          <div class="form-label" style="margin-bottom:8px;">Added sections ({{ sections.length }})</div>
-          <div v-for="(s, i) in sections" :key="i" class="added-section-row">
-            <div class="section-dot" :style="{ background: sectionColor(i) }"></div>
-            <div style="flex:1">
-              <div class="added-section-name">{{ s.name }}</div>
-              <div class="added-section-meta">{{ s.crops.map(c => `${c.cropType} ${c.percentage}%`).join(' · ') }} · {{ s.areaValue }} {{ s.areaUnit === 'Hectares' ? 'ha' : 'ac' }}</div>
-            </div>
-            <button class="btn btn-ghost btn-sm" @click="sections.splice(i,1)">✕</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── STEP 2: Worker Roles ── -->
-      <div v-if="step === 2" class="onboard-body">
         <div class="step-title">Define worker roles &amp; daily rates</div>
-        <div class="hint-box">Rates are set per role. All workers assigned to a role share its rate — change it once to update everyone.</div>
+        <div class="hint-box">Rates are set per role. All workers assigned to a role share its rate.</div>
         <div class="roles-list">
           <div v-for="(r, i) in roles" :key="i" class="role-input-row">
             <input class="form-input" v-model="r.title" placeholder="Role title e.g. Farm Worker" style="flex:2" />
@@ -148,8 +93,8 @@
         </button>
       </div>
 
-      <!-- ── STEP 3: Workers ── -->
-      <div v-if="step === 3" class="onboard-body">
+      <!-- ── STEP 2: Workers ── -->
+      <div v-if="step === 2" class="onboard-body">
         <div class="step-title">Add your workers</div>
         <div class="workers-list">
           <div v-for="(w, i) in workers" :key="i" class="worker-input-row">
@@ -177,7 +122,7 @@
         <div style="display:flex;align-items:center;gap:12px;">
           <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--stone);">Step {{ step + 1 }} of {{ steps.length }}</span>
           <button class="btn btn-primary" @click="next" :disabled="!canProceed || saving">
-            {{ step === steps.length - 1 ? (saving ? 'Setting up…' : '✓ Launch Farm') : 'Continue →' }}
+            {{ step === steps.length - 1 ? (saving ? 'Saving…' : 'Continue to Sections →') : 'Continue →' }}
           </button>
         </div>
       </div>
@@ -186,63 +131,56 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAgroStore } from '@/stores/agro'
-import { workerRoleApi, workerApi, sectionApi } from '@/services/api'
+import { workerRoleApi, workerApi } from '@/services/api'
 
 const router = useRouter()
 const store = useAgroStore()
 
 const step = ref(0)
 const saving = ref(false)
-const steps = ['Farm Profile', 'Sections', 'Worker Roles', 'Workers']
+const steps = ['Farm Profile', 'Worker Roles', 'Workers']
 
 // ── Farm profile ──
 const farm = ref({
-  name: '',
-  location: '',
-  areaValue: 45,
-  areaUnit: 'Acres' as 'Hectares' | 'Acres',
+  name: store.currentUser?.fullName ? '' : '',
+  areaValue: 0,
+  areaUnit: 'Hectares' as 'Hectares' | 'Acres',
   lat: null as number | null,
   lng: null as number | null,
 })
 
-// ── Sections ──
-const SECTION_COLORS = ['#2d7a4f', '#3daa6a', '#8bc34a', '#ffb300', '#e64a19', '#7b1fa2']
-function sectionColor(i: number) { return SECTION_COLORS[i % SECTION_COLORS.length] }
+// ── GPS ──
+const gpsLoading = ref(false)
+const gpsError   = ref('')
 
-const cropTypes = ['OilPalm', 'Maize', 'Cassava', 'Cocoa', 'Soybean', 'Sorghum', 'Rice', 'Groundnut', 'Yam', 'Vegetables']
-
-const curSection = ref({
-  name: '',
-  areaValue: 10,
-  areaUnit: farm.value.areaUnit as 'Hectares' | 'Acres',
-  crops: [{ cropType: 'OilPalm', percentage: 100 }],
-  polygonPoints: [] as [number, number][],
-  boundaryGeoJson: null as string | null,
-})
-
-const sections = ref<{
-  name: string
-  areaValue: number
-  areaUnit: 'Hectares' | 'Acres'
-  crops: { cropType: string; percentage: number }[]
-  polygonPoints: [number, number][]
-  boundaryGeoJson: string | null
-}[]>([])
-
-const canAddSection = computed(() => {
-  const s = curSection.value
-  const cropSum = s.crops.reduce((acc, c) => acc + (c.percentage || 0), 0)
-  return s.name.trim() && s.areaValue > 0 && cropSum === 100
-})
+async function detectGps() {
+  if (!navigator.geolocation) {
+    gpsError.value = 'Geolocation not supported.'
+    return
+  }
+  gpsLoading.value = true
+  gpsError.value = ''
+  try {
+    const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 12000, enableHighAccuracy: true })
+    )
+    farm.value.lat = Math.round(pos.coords.latitude  * 100000) / 100000
+    farm.value.lng = Math.round(pos.coords.longitude * 100000) / 100000
+  } catch {
+    gpsError.value = 'Could not detect location. Enter coordinates manually.'
+  } finally {
+    gpsLoading.value = false
+  }
+}
 
 // ── Worker roles ──
 const roles = ref([
   { title: 'Field Supervisor', workerType: 'Employee' as const, dailyRate: 3500 },
-  { title: 'Farm Worker', workerType: 'Employee' as const, dailyRate: 2200 },
-  { title: 'Contractor', workerType: 'Contractor' as const, dailyRate: 4000 },
+  { title: 'Farm Worker',      workerType: 'Employee' as const, dailyRate: 2200 },
+  { title: 'Contractor',       workerType: 'Contractor' as const, dailyRate: 4000 },
 ])
 
 // ── Workers ──
@@ -250,145 +188,15 @@ const workers = ref<{ name: string; initials: string; roleIndex: number }[]>([])
 
 // ── Validation ──
 const canProceed = computed(() => {
-  if (step.value === 0) return farm.value.name.trim() && farm.value.location.trim() && farm.value.areaValue > 0
-  if (step.value === 1) return sections.value.length > 0
-  if (step.value === 2) return roles.value.every(r => r.title.trim() && r.dailyRate > 0)
-  return true // workers optional
+  if (step.value === 0) return farm.value.name.trim() && farm.value.areaValue > 0
+  if (step.value === 1) return roles.value.every(r => r.title.trim() && r.dailyRate > 0)
+  return true
 })
-
-// ── Leaflet map ──
-let leafletMap: any = null
-let drawingLayer: any = null
-let sectionLayers: any[] = []
-let clickPoints: [number, number][] = []
-let tempMarkers: any[] = []
-let tempPolyline: any = null
-let L: any = null
-
-async function initMap() {
-  await nextTick()
-  const el = document.getElementById('onboarding-map')
-  if (!el || leafletMap) return
-
-  L = (await import('leaflet')).default
-  await import('leaflet/dist/leaflet.css')
-
-  // Fix default marker icons
-  delete (L.Icon.Default.prototype as any)._getIconUrl
-  L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-  })
-
-  // Default center: Oyo State, Nigeria
-  const lat = farm.value.lat ?? 7.3775
-  const lng = farm.value.lng ?? 3.9470
-
-  leafletMap = L.map('onboarding-map').setView([lat, lng], 14)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors',
-    maxZoom: 19
-  }).addTo(leafletMap)
-
-  drawingLayer = L.layerGroup().addTo(leafletMap)
-
-  leafletMap.on('click', (e: any) => {
-    clickPoints.push([e.latlng.lat, e.latlng.lng])
-    curSection.value.polygonPoints = [...clickPoints]
-
-    // Add marker
-    const marker = L.circleMarker([e.latlng.lat, e.latlng.lng], {
-      radius: 5, fillColor: '#2d7a4f', color: '#fff', weight: 2, fillOpacity: 1
-    }).addTo(drawingLayer!)
-    tempMarkers.push(marker)
-
-    // Redraw polyline
-    if (tempPolyline) drawingLayer!.removeLayer(tempPolyline)
-    if (clickPoints.length > 1) {
-      tempPolyline = L.polyline(clickPoints, { color: '#2d7a4f', weight: 2, dashArray: '4,4' }).addTo(drawingLayer!)
-    }
-
-    // Auto-close polygon on 3+ points if last click near first
-    if (clickPoints.length >= 3) {
-      const first = clickPoints[0]
-      const dist = Math.hypot(e.latlng.lat - first[0], e.latlng.lng - first[1])
-      if (dist < 0.0003) closePolygon()
-    }
-  })
-
-  leafletMap.on('dblclick', (e: any) => {
-    e.originalEvent.preventDefault()
-    if (clickPoints.length >= 3) closePolygon()
-  })
-}
-
-function closePolygon() {
-  if (clickPoints.length < 3 || !drawingLayer || !L) return
-
-  // Build GeoJSON from click points (close ring)
-  const ring = [...clickPoints, clickPoints[0]]
-  const geoJson = {
-    type: 'Polygon',
-    coordinates: [ring.map(([lat, lng]) => [lng, lat])]
-  }
-  curSection.value.boundaryGeoJson = JSON.stringify(geoJson)
-}
-
-function clearPolygon() {
-  clickPoints = []
-  curSection.value.polygonPoints = []
-  curSection.value.boundaryGeoJson = null
-  if (drawingLayer) {
-    drawingLayer.clearLayers()
-    tempMarkers = []
-    tempPolyline = null
-  }
-}
-
-function addSection() {
-  if (!canAddSection.value) return
-
-  // If we have click points but haven't closed the polygon, close it now
-  if (clickPoints.length >= 3 && !curSection.value.boundaryGeoJson) {
-    const ring = [...clickPoints, clickPoints[0]]
-    curSection.value.boundaryGeoJson = JSON.stringify({
-      type: 'Polygon',
-      coordinates: [ring.map(([lat, lng]) => [lng, lat])]
-    })
-  }
-
-  sections.value.push({ ...curSection.value, crops: [...curSection.value.crops.map(c => ({ ...c }))] })
-
-  // Draw the closed polygon on the map
-  if (clickPoints.length >= 3 && leafletMap && L) {
-    const color = sectionColor(sections.value.length - 1)
-    const poly = L.polygon([...clickPoints], { color, fillOpacity: 0.15, weight: 2 })
-      .bindTooltip(curSection.value.name, { permanent: true, direction: 'center', className: 'map-section-label' })
-      .addTo(leafletMap)
-    sectionLayers.push(poly)
-  }
-
-  // Reset form
-  clearPolygon()
-  curSection.value = {
-    name: '',
-    areaValue: 10,
-    areaUnit: farm.value.areaUnit,
-    crops: [{ cropType: 'OilPalm', percentage: 100 }],
-    polygonPoints: [],
-    boundaryGeoJson: null,
-  }
-}
 
 // ── Navigation ──
 async function next() {
   if (step.value < steps.length - 1) {
     step.value++
-    if (step.value === 1) {
-      await nextTick()
-      await initMap()
-    }
     return
   }
   await submit()
@@ -402,44 +210,31 @@ function back() {
 async function submit() {
   saving.value = true
   try {
-    // 1. Create farm
-    await store.createFarm({
+    const farmId = store.currentUser?.farmId
+    if (!farmId) throw new Error('No farm associated with this account.')
+
+    // Update farm profile (area, coords)
+    await store.updateFarmProfile({
+      farmId,
       name: farm.value.name,
-      location: farm.value.location,
       areaValue: farm.value.areaValue,
       areaUnit: farm.value.areaUnit,
-      ownerId: 'owner_001',
+      lat: farm.value.lat ?? undefined,
+      lng: farm.value.lng ?? undefined,
     })
 
-    // 2. Set coordinates if provided
-    if (farm.value.lat && farm.value.lng) {
-      // POST to set coordinates (handled by update endpoint or create already stores them)
-      // For MVP, coordinates can be set via a separate PATCH call if available
-    }
-
-    // 3. Create sections
-    for (const s of sections.value) {
-      await sectionApi.create({
-        name: s.name,
-        crops: s.crops.map(c => ({ cropType: c.cropType, hectares: 0, percentage: c.percentage })),
-        areaValue: s.areaValue,
-        areaUnit: s.areaUnit,
-        boundaryGeoJson: s.boundaryGeoJson,
-      })
-    }
-
-    // 4. Create worker roles
-    const createdRoles: { id: string; title: string }[] = []
+    // Create worker roles
+    const createdRoles: { id: string }[] = []
     for (const r of roles.value) {
       const res = await workerRoleApi.create({
         title: r.title,
         workerType: r.workerType,
         dailyRate: r.dailyRate,
       })
-      createdRoles.push({ id: res.data.id, title: r.title })
+      createdRoles.push({ id: res.data.id })
     }
 
-    // 5. Create workers
+    // Create workers
     for (const w of workers.value) {
       const role = createdRoles[w.roleIndex]
       if (!role) continue
@@ -451,8 +246,8 @@ async function submit() {
       })
     }
 
-    // Done — navigate to dashboard
-    router.push('/')
+    // Go to sections setup wizard
+    router.push({ name: 'sections-setup' })
   } catch (e) {
     console.error('Onboarding failed', e)
     saving.value = false
@@ -460,21 +255,10 @@ async function submit() {
 }
 
 onMounted(async () => {
-  // If a farm already exists, go straight to dashboard
-  const hasFarm = await store.discoverFarm()
-  if (hasFarm) router.replace('/')
-})
-
-onUnmounted(() => {
-  if (leafletMap) {
-    leafletMap.remove()
-    leafletMap = null
+  // Pre-fill farm name from user
+  if (store.currentUser) {
+    // Farm name was set at registration; just prepare for profile update
   }
-})
-
-// Sync section unit with farm unit preference
-watch(() => farm.value.areaUnit, (unit) => {
-  curSection.value.areaUnit = unit
 })
 </script>
 
@@ -492,7 +276,7 @@ watch(() => farm.value.areaUnit, (unit) => {
   background: white;
   border-radius: 20px;
   width: 100%;
-  max-width: 680px;
+  max-width: 560px;
   box-shadow: 0 32px 80px rgba(0,0,0,0.4);
   overflow: hidden;
 }
@@ -525,7 +309,6 @@ watch(() => farm.value.areaUnit, (unit) => {
   display: flex;
   padding: 16px 24px;
   border-bottom: 1px solid var(--fog);
-  gap: 0;
 }
 
 .step-item {
@@ -596,6 +379,7 @@ watch(() => farm.value.areaUnit, (unit) => {
 }
 
 .form-row { display: flex; gap: 12px; }
+
 .hint-box {
   background: rgba(45,122,79,0.06);
   border: 1px solid rgba(45,122,79,0.15);
@@ -607,25 +391,68 @@ watch(() => farm.value.areaUnit, (unit) => {
   margin-top: 12px;
 }
 
-/* Map */
-.map-container {
-  height: 280px;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid var(--fog);
-  margin-bottom: 16px;
+/* GPS */
+.label-opt {
+  font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--stone);
+  font-weight: 400;
+  margin-left: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
-
-.section-form { background: rgba(45,122,79,0.03); border: 1px solid var(--fog); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
-.crop-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
-.map-coords-hint { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--stone); display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-
-.added-sections { }
-.added-section-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--fog); }
-.added-section-row:last-child { border-bottom: none; }
-.section-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.added-section-name { font-size: 12px; font-weight: 600; color: var(--forest); }
-.added-section-meta { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--stone); margin-top: 1px; }
+.gps-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 9px 14px;
+  background: rgba(45,122,79,0.06);
+  border: 1px solid rgba(45,122,79,0.2);
+  border-radius: 10px;
+  color: var(--leaf);
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  margin-bottom: 8px;
+}
+.gps-btn:hover:not(:disabled) { background: rgba(45,122,79,0.1); border-color: rgba(45,122,79,0.35); }
+.gps-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.gps-spinner {
+  width: 11px; height: 11px;
+  border: 1.5px solid rgba(45,122,79,0.25);
+  border-top-color: var(--leaf);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.gps-result {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(45,122,79,0.08);
+  border: 1px solid rgba(45,122,79,0.2);
+  border-radius: 8px;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--leaf);
+  margin-bottom: 8px;
+}
+.gps-clear {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--stone);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0 2px;
+}
+.gps-clear:hover { color: var(--forest); }
+.gps-err-msg { font-size: 10px; color: #E64A19; margin-bottom: 6px; padding: 0 2px; }
 
 /* Roles */
 .roles-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }

@@ -1,7 +1,10 @@
+using System.Text;
 using AgroMesh.API.Middleware;
 using AgroMesh.Application;
 using AgroMesh.Infrastructure;
 using AgroMesh.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 
@@ -41,6 +44,20 @@ try
         });
     });
 
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(opts =>
+        {
+            var key = builder.Configuration["Jwt:Key"]!;
+            opts.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey        = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+                ValidateIssuer          = false,
+                ValidateAudience        = false,
+                ClockSkew               = TimeSpan.Zero,
+            };
+        });
+
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -63,6 +80,7 @@ try
     }
 
     app.UseCors("AllowAll");
+    app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
 

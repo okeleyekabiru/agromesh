@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: agromesh
       POSTGRES_PASSWORD: agromesh_dev
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - agromesh_pgdata:/var/lib/postgresql/data
     healthcheck:

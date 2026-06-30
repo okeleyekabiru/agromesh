@@ -1,10 +1,14 @@
 <template>
-  <template v-if="route.name === 'onboarding'">
+  <template v-if="route.meta.public">
     <RouterView />
   </template>
   <template v-else>
     <AppShell>
-      <RouterView />
+      <RouterView v-slot="{ Component, route: r }">
+        <Transition name="page" mode="out-in">
+          <component :is="Component" :key="r.path" />
+        </Transition>
+      </RouterView>
     </AppShell>
     <LogActivityModal v-if="showModal" @close="showModal = false" />
   </template>
