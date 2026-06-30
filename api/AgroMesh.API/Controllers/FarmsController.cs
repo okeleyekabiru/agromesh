@@ -14,6 +14,10 @@ public class FarmsController : ControllerBase
 
     public FarmsController(IMediator mediator) => _mediator = mediator;
 
+    [HttpGet]
+    public async Task<IActionResult> GetAll(CancellationToken ct) =>
+        Ok(await _mediator.Send(new GetFarmsQuery(), ct));
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateFarmRequest request, CancellationToken ct)
     {

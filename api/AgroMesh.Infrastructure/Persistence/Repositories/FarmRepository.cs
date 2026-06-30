@@ -20,6 +20,9 @@ public class FarmRepository : IFarmRepository
             .Include(f => f.Workers).ThenInclude(w => w.Role)
             .FirstOrDefaultAsync(f => f.Id == id, ct);
 
+    public async Task<List<Farm>> GetAllAsync(CancellationToken ct = default) =>
+        await _db.Farms.Include(f => f.Sections).OrderBy(f => f.CreatedAt).ToListAsync(ct);
+
     public async Task<List<Farm>> GetByOwnerIdAsync(string ownerId, CancellationToken ct = default) =>
         await _db.Farms.Where(f => f.OwnerId == ownerId).ToListAsync(ct);
 

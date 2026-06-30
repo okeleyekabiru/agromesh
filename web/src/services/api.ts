@@ -1,7 +1,8 @@
 import axios from 'axios'
 
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000'
-export const FARM_ID = import.meta.env.VITE_FARM_ID || 'farm_001'
+export let FARM_ID = import.meta.env.VITE_FARM_ID || 'farm_001'
+export function setFarmId(id: string) { FARM_ID = id }
 
 export const api = axios.create({
   baseURL: BASE,
@@ -10,7 +11,9 @@ export const api = axios.create({
 
 // ── Farm ──
 export const farmApi = {
+  list: () => api.get('/api/farms'),
   get: () => api.get(`/api/farms/${FARM_ID}`),
+  create: (body: unknown) => api.post('/api/farms', body),
   getOnboardingStatus: () => api.get(`/api/farms/${FARM_ID}/onboarding-status`),
   getWeather: () => api.get(`/api/farms/${FARM_ID}/weather`),
   getDashboard: () => api.get(`/api/farms/${FARM_ID}/dashboard`),

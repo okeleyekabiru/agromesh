@@ -20,10 +20,11 @@ public class Farm : BaseEntity
 
     private Farm() { }
 
-    public static Farm Create(string name, string location, double totalHectares, string ownerId, AreaUnit preferredUnit = AreaUnit.Hectares)
+    public static Farm Create(string name, string location, double totalHectares, string ownerId, AreaUnit preferredUnit = AreaUnit.Hectares, string? id = null)
     {
         return new Farm
         {
+            Id = id ?? Guid.NewGuid().ToString(),
             Name = name,
             Location = location,
             TotalHectares = totalHectares,

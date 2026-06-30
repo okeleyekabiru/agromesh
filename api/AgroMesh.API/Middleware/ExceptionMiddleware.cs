@@ -1,5 +1,6 @@
 using AgroMesh.Domain.Exceptions;
 using System.Text.Json;
+#pragma warning disable CS8604
 
 namespace AgroMesh.API.Middleware;
 
@@ -19,6 +20,22 @@ public class ExceptionMiddleware
         try
         {
             await _next(context);
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Not found: {Message}", ex.Message);
+            context.Response.StatusCode = 404;
+            context.Response.ContentType = "application/problem+json";
+            var notFound = new
+            {
+                type = "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+                title = "Not Found",
+                status = 404,
+                detail = ex.Message,
+                traceId = context.TraceIdentifier
+            };
+            await context.Response.WriteAsync(JsonSerializer.Serialize(notFound));
+            return;
         }
         catch (DomainException ex)
         {

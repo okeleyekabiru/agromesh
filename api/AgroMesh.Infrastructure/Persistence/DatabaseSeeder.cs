@@ -11,7 +11,7 @@ public static class DatabaseSeeder
     {
         if (await db.Farms.AnyAsync()) return; // idempotent
 
-        var farm = Farm.Create("Adeyemi Oil Palm & Maize Plantation", "Oyo State, Nigeria", 45.0, "owner_001", AreaUnit.Hectares);
+        var farm = Farm.Create("Adeyemi Oil Palm & Maize Plantation", "Oyo State, Nigeria", 45.0, "owner_001", AreaUnit.Acres, id: "farm_001");
         farm.SetCoordinates(7.3775, 3.9470); // Oyo State approx
         db.Farms.Add(farm);
         await db.SaveChangesAsync();

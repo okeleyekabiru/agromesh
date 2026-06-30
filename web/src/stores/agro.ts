@@ -6,7 +6,8 @@ import type {
 } from '@/types'
 import {
   farmApi, sectionApi, activityApi, transactionApi,
-  workerApi, workerRoleApi, inventoryApi, chemicalApi
+  workerApi, workerRoleApi, inventoryApi, chemicalApi,
+  setFarmId
 } from '@/services/api'
 
 export const useAgroStore = defineStore('agro', () => {
@@ -29,6 +30,7 @@ export const useAgroStore = defineStore('agro', () => {
   const lastSynced = ref<string | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const needsOnboarding = ref(false)
 
   // ── COMPUTED ──
   const pendingReviews = computed(() =>
@@ -172,8 +174,36 @@ export const useAgroStore = defineStore('agro', () => {
     await fetchInventory()
   }
 
+  async function discoverFarm(): Promise<boolean> {
+    try {
+      const res = await farmApi.list()
+      const farms: typeof res.data = res.data
+      if (!farms || farms.length === 0) {
+        needsOnboarding.value = true
+        return false
+      }
+      setFarmId(farms[0].id)
+      farm.value = farms[0]
+      needsOnboarding.value = false
+      return true
+    } catch {
+      needsOnboarding.value = true
+      return false
+    }
+  }
+
+  async function createFarm(body: unknown) {
+    const res = await farmApi.create(body)
+    setFarmId(res.data.id)
+    farm.value = res.data
+    needsOnboarding.value = false
+    return res.data
+  }
+
   async function initDashboard() {
-    await Promise.all([fetchFarm(), fetchDashboard(), fetchWeather()])
+    const hasFarm = await discoverFarm()
+    if (!hasFarm) return
+    await Promise.all([fetchDashboard(), fetchWeather()])
     lastSynced.value = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
   }
 
@@ -181,12 +211,13 @@ export const useAgroStore = defineStore('agro', () => {
     // state
     farm, sections, workers, workerRoles, activities, transactions,
     inventoryItems, chemicals, upcomingTasks, lowStockAlerts, weather, dashboard,
-    isOnline, lastSynced, loading, error,
+    isOnline, lastSynced, loading, error, needsOnboarding,
     // computed
     pendingReviews, supervisors, lowStockCount,
     // actions
     fetchFarm, fetchDashboard, fetchWeather, fetchSections, fetchActivities,
     fetchTransactions, fetchWorkers, fetchWorkerRoles, fetchInventory, fetchChemicals,
-    logActivity, reviewTransaction, adjustStock, addStockFromReceipt, initDashboard
+    logActivity, reviewTransaction, adjustStock, addStockFromReceipt,
+    discoverFarm, createFarm, initDashboard
   }
 })

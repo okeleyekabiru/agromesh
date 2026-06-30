@@ -2,6 +2,7 @@ using AgroMesh.Application.DTOs;
 using AgroMesh.Application.Interfaces;
 using AgroMesh.Domain.Exceptions;
 using MediatR;
+// NotFoundException gives callers a clean 404
 
 namespace AgroMesh.Application.Queries.Farm;
 
@@ -21,7 +22,7 @@ public class GetFarmQueryHandler : IRequestHandler<GetFarmQuery, FarmDto>
     public async Task<FarmDto> Handle(GetFarmQuery query, CancellationToken ct)
     {
         var farm = await _farmRepo.GetByIdWithSectionsAsync(query.FarmId, ct)
-            ?? throw new DomainException($"Farm '{query.FarmId}' not found.");
+            ?? throw new NotFoundException("Farm", query.FarmId);
 
         var workers = await _workerRepo.GetByFarmIdAsync(farm.Id, activeOnly: true, ct);
 
