@@ -29,5 +29,35 @@ services:
       timeout: 3s
       retries: 5
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agromesh_api
+    ports:
+      - "5000:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=agromesh;Username=agromesh;Password=agromesh_dev"
+      ConnectionStrings__Redis: "redis:6379"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:5000
+        VITE_FARM_ID: farm_001
+    container_name: agromesh_web
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
 volumes:
   agromesh_pgdata:
