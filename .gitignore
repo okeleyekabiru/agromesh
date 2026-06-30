@@ -24,6 +24,14 @@ dist/
 !yarn.lock
 web/.env
 web/.env.local
+web/.env.development
+web/test-results/
+
+# IDE
+.vscode/
+
+# Build output
+build/
 
 # Flutter / Dart
 mobile/.dart_tool/

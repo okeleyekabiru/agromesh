@@ -1,23 +1,38 @@
 <template>
   <div class="section-row" @click="$emit('click')">
-    <div class="s-dot" :style="{ background: section.color }" />
+    <div class="s-dot" :style="{ background: dotColor }" />
     <div class="s-name">{{ section.name }}</div>
-    <div class="s-crop">{{ section.crop }}</div>
+    <div class="s-crop">{{ cropLabel }}</div>
     <div class="s-bar-wrap">
-      <div class="s-bar" :style="{ width: pct + '%', background: section.color }" />
+      <div class="s-bar" :style="{ width: pct + '%', background: dotColor }" />
     </div>
     <div class="s-amount">₦{{ amount }}</div>
-    <StatBadge :variant="section.status === 'Active' ? 'green' : section.status === 'Harvest Soon' ? 'harvest' : 'stone'">
+    <StatBadge v-if="section.status" :variant="section.status === 'Active' ? 'green' : section.status === 'HarvestSoon' ? 'harvest' : 'stone'">
       {{ section.status }}
     </StatBadge>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import StatBadge from './StatBadge.vue'
 import type { Section } from '@/types'
-defineProps<{ section: Section; amount: string; pct: number }>()
+
+const props = defineProps<{ section: Partial<Section> & { id: string; name: string }; amount: string; pct: number }>()
 defineEmits(['click'])
+
+const COLORS = ['#3DAA6A','#E8A838','#2D7A4F','#5B8DB8','#A0783C','#8D6B94']
+
+const dotColor = computed(() => {
+  const id = props.section.id ?? ''
+  const idx = id.charCodeAt(id.length - 1) % COLORS.length
+  return COLORS[idx]
+})
+
+const cropLabel = computed(() => {
+  if (!props.section.crops?.length) return ''
+  return props.section.crops.map(c => c.cropType).join(' / ')
+})
 </script>
 
 <style scoped>
@@ -26,7 +41,7 @@ defineEmits(['click'])
 .section-row:hover { background: var(--mist); }
 .s-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .s-name { font-weight: 600; font-size: 12px; color: var(--forest); flex: 1; }
-.s-crop { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--stone); min-width: 70px; }
+.s-crop { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--stone); min-width: 80px; }
 .s-amount { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; color: var(--forest); min-width: 80px; text-align: right; }
 .s-bar-wrap { width: 80px; height: 4px; background: var(--fog); border-radius: 2px; overflow: hidden; }
 .s-bar { height: 100%; border-radius: 2px; }

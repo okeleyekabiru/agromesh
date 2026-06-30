@@ -1,18 +1,18 @@
 // ── CORE DOMAIN TYPES ──
 
-export type CropType = 'Oil Palm' | 'Maize' | 'Mixed'
+export type CropType = 'OilPalm' | 'Maize' | 'Mixed' | 'Cocoa' | 'Cassava'
 
-export type SectionStatus = 'Active' | 'Idle' | 'Harvest Soon'
+export type SectionStatus = 'Active' | 'Idle' | 'HarvestSoon'
 
 export type ActivityType =
   | 'Weeding'
   | 'Spraying'
-  | 'Fertilizer Application'
+  | 'FertilizerApplication'
   | 'Maintenance'
   | 'Harvesting'
   | 'Clearing'
   | 'Pruning'
-  | 'Pest Control'
+  | 'PestControl'
 
 export type WorkerType = 'Employee' | 'Contractor'
 
@@ -28,9 +28,30 @@ export type TransactionCategory =
   | 'Sales'
   | 'Other'
 
-export type CategorizationSource = 'dictionary' | 'pattern' | 'llm' | 'manual'
+export type CategorizationSource = 'Dictionary' | 'Pattern' | 'Llm' | 'Manual'
 
-export type ConfidenceLevel = 'high' | 'medium' | 'low'
+export type ConfidenceLevel = 'High' | 'Medium' | 'Low'
+
+export type AreaUnit = 'Hectares' | 'Acres'
+
+export type InventoryCategory = 'Chemical' | 'Fertilizer' | 'Seed' | 'Fuel' | 'Equipment' | 'SpareParts' | 'Other'
+
+export type ChemicalCategory = 'Herbicide' | 'Insecticide' | 'Fungicide' | 'Acaricide' | 'Nematicide'
+
+// ── VALUE OBJECTS ──
+
+export interface AreaDto {
+  hectares: number
+  acres: number
+  displayValue: string
+  displayUnit: string
+}
+
+export interface SectionCrop {
+  cropType: CropType
+  area: AreaDto
+  percentage: number
+}
 
 // ── ENTITIES ──
 
@@ -38,29 +59,46 @@ export interface Farm {
   id: string
   name: string
   location: string
-  totalHectares: number
-  crops: CropType[]
-  createdAt: string
+  area: AreaDto
+  ownerId: string
+  preferredAreaUnit: AreaUnit
+  centroidLat: number | null
+  centroidLng: number | null
+  sectionCount: number
+  workerCount: number
 }
 
 export interface Section {
   id: string
   farmId: string
   name: string
-  crop: CropType
-  hectares: number
-  color: string
+  crops: SectionCrop[]
+  area: AreaDto
   status: SectionStatus
   lastActivityDate: string | null
-  blockCount: number
+  boundaryGeoJson: string | null
+  centroidLat: number | null
+  centroidLng: number | null
+  blocks: Block[]
+  nextWeedingPrediction: UpcomingTask | null
+  nextSprayingPrediction: UpcomingTask | null
 }
 
 export interface Block {
   id: string
   sectionId: string
   name: string
-  hectares: number
-  treeCount?: number
+  area: AreaDto
+  treeCount: number | null
+}
+
+export interface WorkerRole {
+  id: string
+  farmId: string
+  title: string
+  defaultType: WorkerType
+  dailyRate: number
+  workerCount: number
 }
 
 export interface Worker {
@@ -68,20 +106,23 @@ export interface Worker {
   farmId: string
   name: string
   initials: string
-  role: string
+  workerRoleId: string
+  roleTitle: string
+  dailyRate: number
   type: WorkerType
   active: boolean
+  daysLoggedThisMonth: number
+}
+
+export interface WorkerLogDto {
+  workerId: string
+  workerName: string
+  workerType: WorkerType
+  hoursWorked: number
   dailyRate: number
 }
 
-export interface WorkerLog {
-  workerId: string
-  name: string
-  type: WorkerType
-  hoursWorked: number
-}
-
-export interface InputUsed {
+export interface InputUsedDto {
   item: string
   quantity: number
   unit: string
@@ -92,25 +133,24 @@ export interface ActivityLog {
   farmId: string
   sectionId: string
   blockId: string
-  sectionName: string
-  blockName: string
   activityType: ActivityType
   date: string
-  workers: WorkerLog[]
-  inputs: InputUsed[]
-  notes: string
+  notes: string | null
   supervisorId: string
-  supervisorName: string
   labourCost: number
   inputCost: number
-  totalCost: number
   createdOffline: boolean
   syncedAt: string | null
-  icon: string
+  workedAreaGeoJson: string | null
+  workedArea: AreaDto | null
+  chemicalProductId: string | null
+  chemicalProductName: string | null
+  workers: WorkerLogDto[]
+  inputs: InputUsedDto[]
 }
 
 export interface CropAllocation {
-  [crop: string]: number // percentage 0-100
+  [crop: string]: number
 }
 
 export interface Transaction {
@@ -118,25 +158,114 @@ export interface Transaction {
   farmId: string
   monoId: string
   narration: string
-  displayName: string
   amount: number
   date: string
   category: TransactionCategory
   cropAllocation: CropAllocation
   confidence: ConfidenceLevel
-  categorizationSource: CategorizationSource
+  source: CategorizationSource
   reviewedByUser: boolean
-  icon: string
-  iconBg: string
+  reviewNotes: string | null
 }
 
-export interface CropPnL {
-  crop: CropType
-  totalCost: number
-  percentage: number
+export interface ChemicalProduct {
+  id: string
+  name: string
+  manufacturer: string | null
+  chemType: ChemicalCategory
+  typicalIntervalDays: number
+  active: boolean
 }
 
-// ── UI / FORM TYPES ──
+export interface InventoryItem {
+  id: string
+  farmId: string
+  name: string
+  unit: string
+  category: InventoryCategory
+  currentStock: number
+  reorderThreshold: number
+  isLowStock: boolean
+  chemicalProductId: string | null
+  chemicalProductName: string | null
+  lastMovementDate: string | null
+}
+
+export interface StockMovement {
+  id: string
+  inventoryItemId: string
+  type: 'In' | 'Out' | 'Adjustment'
+  quantity: number
+  activityLogId: string | null
+  transactionId: string | null
+  notes: string | null
+  date: string
+}
+
+export interface UpcomingTask {
+  sectionId: string
+  sectionName: string
+  activityType: ActivityType
+  lastDone: string | null
+  predictedNextDue: string
+  daysUntilDue: number
+  reasoning: string
+  recommendedChemical: string | null
+  recommendedSprayDate: string | null
+  confidence: ConfidenceLevel
+  stockAvailable: number | null
+  stockUnit: string | null
+  isStale: boolean
+  weatherDataUsed: boolean
+}
+
+export interface LowStockAlert {
+  inventoryItemId: string
+  inventoryItemName: string
+  currentStock: number
+  unit: string
+  reorderThreshold: number
+}
+
+export interface WeatherWidget {
+  latitude: number
+  longitude: number
+  currentSeason: string
+  todayPrecipitationMm: number
+  todayTempMaxC: number
+  nextDryWindowStart: string | null
+  nextDryWindowEnd: string | null
+  rainfallLast30Days: number
+}
+
+export interface DashboardData {
+  farmId: string
+  totalSpendMtd: number
+  labourCostMtd: number
+  activitiesThisMonth: number
+  pendingReviewCount: number
+  sectionsMtd: SectionMtdDto[]
+  cropPnl: CropPnlDto[]
+  recentActivities: ActivityLog[]
+  upcomingTasks: UpcomingTask[]
+  lowStockAlerts: LowStockAlert[]
+}
+
+export interface SectionMtdDto {
+  sectionId: string
+  sectionName: string
+  cost: number
+  activityCount: number
+}
+
+export interface CropPnlDto {
+  cropType: string
+  revenue: number
+  cost: number
+  netProfit: number
+}
+
+// ── UI TYPES ──
 
 export interface NavItem {
   id: string
@@ -152,35 +281,9 @@ export interface KpiCard {
   dark?: boolean
 }
 
-export interface BarChartData {
-  label: string
-  value: number
-  height: number
-  dim?: boolean
-  current?: boolean
-  displayValue?: string
-}
-
-export interface ActivityFormData {
-  date: string
-  sectionId: string
-  blockId: string
-  activityType: ActivityType | ''
-  activityNote: string
-  workers: string[]
-  inputs: string[]
-  supervisorId: string
-}
-
-export interface SectionMTDSummary {
-  sectionId: string
-  sectionName: string
-  crop: CropType
-  color: string
-  mtdSpend: number
-  percentage: number
-  status: SectionStatus
-  hectares: number
-  costPerHectare: number
-  lastActivity: string
+export interface PagedResult<T> {
+  items: T[]
+  total: number
+  page: number
+  pageSize: number
 }

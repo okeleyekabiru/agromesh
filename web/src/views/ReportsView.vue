@@ -19,8 +19,8 @@
         </div>
         <div v-for="(s, i) in store.sections" :key="s.id" class="report-stat">
           <div>
-            <div class="report-label">{{ s.name }} — {{ s.crop }}</div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--stone);">{{ s.hectares }} hectares</div>
+            <div class="report-label">{{ s.name }} — {{ s.crops?.[0]?.cropType ?? '' }}</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--stone);">{{ s.area?.displayValue }} {{ s.area?.displayUnit }}</div>
           </div>
           <div>
             <span class="report-value">₦{{ cph[i] }}</span>
@@ -88,10 +88,15 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useAgroStore } from '@/stores/agro'
 import StatBadge from '@/components/ui/StatBadge.vue'
 
 const store = useAgroStore()
+
+onMounted(() => {
+  if (!store.sections.length) store.fetchSections()
+})
 
 const cph = ['34,022', '17,781', '24,286', '4,910', '10,500', '3,900']
 

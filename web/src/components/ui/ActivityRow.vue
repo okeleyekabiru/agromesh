@@ -1,26 +1,47 @@
 <template>
   <div class="activity-row">
-    <div class="act-icon">{{ activity.icon }}</div>
+    <div class="act-icon">{{ typeIcon }}</div>
     <div class="act-body">
       <div class="act-title">{{ activity.activityType }}</div>
       <div class="act-detail">
-        {{ activity.sectionName }} · {{ activity.blockName }} ·
-        {{ activity.workers.length }} workers
+        {{ sectionLabel }} · {{ activity.workers.length }} worker{{ activity.workers.length !== 1 ? 's' : '' }}
         <span v-if="activity.inputs.length"> · {{ activity.inputs[0].quantity }}{{ activity.inputs[0].unit }} {{ activity.inputs[0].item }}</span>
+        <span v-if="activity.chemicalProductName"> · {{ activity.chemicalProductName }}</span>
       </div>
     </div>
     <div class="act-right">
-      <div class="act-cost">₦{{ activity.totalCost.toLocaleString() }}</div>
-      <div class="act-time">{{ activity.date }}</div>
-      <StatBadge variant="green" style="margin-top:3px;display:inline-block;">{{ activity.supervisorName }}</StatBadge>
+      <div class="act-cost">₦{{ totalCost.toLocaleString() }}</div>
+      <div class="act-time">{{ formatDate(activity.date) }}</div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import StatBadge from './StatBadge.vue'
+import { computed } from 'vue'
+import { useAgroStore } from '@/stores/agro'
 import type { ActivityLog } from '@/types'
-defineProps<{ activity: ActivityLog }>()
+
+const props = defineProps<{ activity: ActivityLog }>()
+const store = useAgroStore()
+
+const ICONS: Record<string, string> = {
+  Weeding: '🌿', Spraying: '💧', FertilizerApplication: '🌱',
+  Maintenance: '🔧', Harvesting: '🌾', Clearing: '🪚',
+  Pruning: '✂️', PestControl: '🛡️'
+}
+
+const typeIcon = computed(() => ICONS[props.activity.activityType] ?? '📋')
+
+const totalCost = computed(() => (props.activity.labourCost ?? 0) + (props.activity.inputCost ?? 0))
+
+const sectionLabel = computed(() => {
+  const sec = store.sections.find(s => s.id === props.activity.sectionId)
+  return sec?.name ?? props.activity.sectionId
+})
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })
+}
 </script>
 
 <style scoped>

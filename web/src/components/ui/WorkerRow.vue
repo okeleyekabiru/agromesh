@@ -3,11 +3,11 @@
     <div class="w-avatar">{{ worker.initials }}</div>
     <div class="w-info">
       <div class="w-name">{{ worker.name }}</div>
-      <div class="w-role">{{ worker.role }}</div>
+      <div class="w-role">{{ worker.roleTitle }}</div>
     </div>
     <StatBadge :variant="worker.type === 'Employee' ? 'green' : 'blue'">{{ worker.type }}</StatBadge>
     <div class="w-stats">
-      <div class="w-days">{{ daysLogged }} days</div>
+      <div class="w-days">{{ worker.daysLoggedThisMonth }} days</div>
       <div class="w-pay">₦{{ worker.dailyRate.toLocaleString() }} / day</div>
     </div>
   </div>
@@ -16,7 +16,7 @@
 <script setup lang="ts">
 import StatBadge from './StatBadge.vue'
 import type { Worker } from '@/types'
-defineProps<{ worker: Worker; daysLogged: number }>()
+defineProps<{ worker: Worker }>()
 </script>
 
 <style scoped>

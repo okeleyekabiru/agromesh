@@ -1,10 +1,10 @@
 <template>
   <div>
     <div class="kpi-grid">
-      <KpiCard label="Total · MTD"     value="₦1.54M"  delta="↑ 8% vs May"      deltaType="down" :dark="true" />
-      <KpiCard label="Oil Palm"        value="₦1.12M"  delta="73% of spend"      deltaType="mute" />
-      <KpiCard label="Maize"           value="₦420K"   delta="27% of spend"      deltaType="mute" />
-      <KpiCard label="Pending Review"  :value="`${store.pendingReviews}`" delta="Need categorization" deltaType="warn" />
+      <KpiCard label="Total · MTD"     :value="store.dashboard ? `₦${(store.dashboard.totalSpendMtd/1000).toFixed(0)}K` : '—'"  delta="auto-categorized" deltaType="down" :dark="true" />
+      <KpiCard label="Transactions"    :value="`${store.transactions.length}`"                                                    delta="synced from Mono" deltaType="mute" />
+      <KpiCard label="Reviewed"        :value="`${store.transactions.filter(t=>t.reviewedByUser).length}`"                        delta="manually confirmed" deltaType="up" />
+      <KpiCard label="Pending Review"  :value="`${store.pendingReviews}`"                                                         delta="Need categorization" :deltaType="store.pendingReviews > 0 ? 'warn' : 'mute'" />
     </div>
 
     <div class="card">
@@ -14,25 +14,20 @@
         </FilterPill>
       </div>
 
-      <TransactionRow
-        v-for="t in filtered"
-        :key="t.id"
-        :txn="t"
-        :showAlloc="true"
-      />
-
+      <div v-if="store.loading" style="padding:24px;text-align:center;color:var(--stone);font-size:12px;">Loading transactions…</div>
+      <TransactionRow v-for="t in filtered" :key="t.id" :txn="t" :showAlloc="true" />
       <EmptyState
-        v-if="filtered.length === 0"
+        v-if="!store.loading && filtered.length === 0"
         icon="🔍"
         title="No transactions found"
-        subtitle="Try a different filter or check back after the next sync at 2am."
+        subtitle="Try a different filter or check back after the next sync."
       />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAgroStore } from '@/stores/agro'
 import KpiCard from '@/components/ui/KpiCard.vue'
 import FilterPill from '@/components/ui/FilterPill.vue'
@@ -45,9 +40,11 @@ const filters = ['All', 'Fertilizer', 'Labour', 'Fuel', 'Equipment', 'Pending Re
 
 const filtered = computed(() => {
   if (activeFilter.value === 'All') return store.transactions
-  if (activeFilter.value === 'Pending Review') return store.transactions.filter(t => t.confidence !== 'high')
+  if (activeFilter.value === 'Pending Review') return store.transactions.filter(t => !t.reviewedByUser)
   return store.transactions.filter(t => t.category === activeFilter.value)
 })
+
+onMounted(() => store.fetchTransactions())
 </script>
 
 <style scoped>

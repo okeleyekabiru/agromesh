@@ -14,6 +14,11 @@
         </div>
       </div>
 
+      <!-- Low-stock warning banner -->
+      <div v-if="lowStockWarnings.length" class="warning-banner">
+        ⚠ {{ lowStockWarnings.join(' · ') }}
+      </div>
+
       <div class="modal-body">
         <!-- STEP 1: Location -->
         <template v-if="step === 1">
@@ -23,24 +28,24 @@
           </div>
           <div class="form-group">
             <label class="form-label">Section</label>
-            <select class="form-select" v-model="form.sectionId">
+            <select class="form-select" v-model="form.sectionId" @change="form.blockId = ''">
               <option value="">Choose section...</option>
               <option v-for="s in store.sections" :key="s.id" :value="s.id">
-                {{ s.name }} — {{ s.crop }}
+                {{ s.name }} — {{ s.crops.map(c => c.cropType).join(' / ') }}
               </option>
             </select>
             <div v-if="selectedSection" class="form-hint">
-              {{ selectedSection.hectares }} ha · Last activity: {{ selectedSection.lastActivityDate }}
+              {{ selectedSection.area.displayValue }} {{ selectedSection.area.displayUnit }} ·
+              Last activity: {{ selectedSection.lastActivityDate ?? 'never' }}
             </div>
           </div>
           <div class="form-group">
             <label class="form-label">Block</label>
             <select class="form-select" v-model="form.blockId" :disabled="!form.sectionId">
               <option value="">Choose block...</option>
-              <option value="Block A">Block A</option>
-              <option value="Block B">Block B</option>
-              <option value="Block C">Block C</option>
-              <option value="Block D">Block D</option>
+              <option v-for="b in selectedSection?.blocks ?? []" :key="b.id" :value="b.id">
+                {{ b.name }} ({{ b.area.displayValue }} {{ b.area.displayUnit }})
+              </option>
             </select>
           </div>
         </template>
@@ -53,8 +58,8 @@
               <button
                 v-for="a in activityTypes" :key="a.name"
                 class="activity-btn"
-                :class="{ selected: form.activityType === a.name }"
-                @click="form.activityType = a.name as any"
+                :class="{ selected: form.activityType === a.key }"
+                @click="form.activityType = a.key as any"
               >
                 <div class="activity-btn-icon">{{ a.icon }}</div>
                 <span class="activity-btn-name">{{ a.name }}</span>
@@ -63,27 +68,49 @@
           </div>
           <div v-if="form.activityType" class="form-group">
             <label class="form-label">Notes (optional)</label>
-            <input class="form-input" placeholder="Any details about this activity..." v-model="form.activityNote">
+            <input class="form-input" placeholder="Any details about this activity..." v-model="form.notes">
+          </div>
+          <!-- Chemical selection for Spraying / PestControl -->
+          <div v-if="isChemicalActivity" class="form-group">
+            <label class="form-label">Chemical Product</label>
+            <select class="form-select" v-model="form.chemicalProductId">
+              <option value="">None / not tracked</option>
+              <option v-for="c in store.chemicals" :key="c.id" :value="c.id">
+                {{ c.name }}
+              </option>
+            </select>
           </div>
         </template>
 
         <!-- STEP 3: Workers & Inputs -->
         <template v-if="step === 3">
           <div class="form-group">
-            <label class="form-label">Workers ({{ form.workers.length }} added)</label>
+            <label class="form-label">Supervisor</label>
+            <select class="form-select" v-model="form.supervisorId">
+              <option value="">Select supervisor...</option>
+              <option v-for="w in store.supervisors" :key="w.id" :value="w.id">
+                {{ w.name }} — {{ w.roleTitle }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Workers ({{ workerEntries.length }} added)</label>
             <div class="chip-row">
-              <span v-for="w in form.workers" :key="w" class="chip">
-                👤 {{ w }}
-                <button class="chip-remove" @click="removeWorker(w)">×</button>
+              <span v-for="(we, i) in workerEntries" :key="i" class="chip">
+                👤 {{ we.label }}
+                <button class="chip-remove" @click="workerEntries.splice(i,1)">×</button>
               </span>
-              <span v-if="!form.workers.length" class="empty-chips">No workers added yet</span>
+              <span v-if="!workerEntries.length" class="empty-chips">No workers added yet</span>
             </div>
             <div class="add-row">
-              <input class="form-input" placeholder="Worker name..." v-model="workerInput" @keydown.enter="addWorker" style="flex:1">
-              <select class="form-select" v-model="workerType" style="width:130px">
-                <option>Employee</option>
-                <option>Contractor</option>
+              <select class="form-select" v-model="workerPickId" style="flex:1">
+                <option value="">Pick worker...</option>
+                <option v-for="w in store.workers" :key="w.id" :value="w.id">
+                  {{ w.name }} ({{ w.roleTitle }} · ₦{{ w.dailyRate.toLocaleString() }}/day)
+                </option>
               </select>
+              <input class="form-input" placeholder="Hours" v-model.number="workerHours" type="number" min="1" max="12" style="width:80px">
               <button class="btn btn-primary" @click="addWorker">+ Add</button>
             </div>
           </div>
@@ -91,34 +118,23 @@
           <div class="form-group">
             <label class="form-label">Inputs Used ({{ form.inputs.length }} added)</label>
             <div class="chip-row">
-              <span v-for="inp in form.inputs" :key="inp" class="chip">
-                📦 {{ inp }}
-                <button class="chip-remove" @click="removeInput(inp)">×</button>
+              <span v-for="(inp, i) in form.inputs" :key="i" class="chip">
+                📦 {{ inp.quantity }}{{ inp.unit }} {{ inp.item }}
+                <button class="chip-remove" @click="form.inputs.splice(i,1)">×</button>
               </span>
               <span v-if="!form.inputs.length" class="empty-chips">No inputs added yet</span>
             </div>
             <div class="add-row">
               <input class="form-input" placeholder="e.g. NPK Fertilizer" v-model="inputItem" style="flex:1">
-              <input class="form-input" placeholder="Qty" v-model="inputQty" style="width:64px">
+              <input class="form-input" placeholder="Qty" v-model.number="inputQty" type="number" style="width:64px">
               <select class="form-select" v-model="inputUnit" style="width:72px">
                 <option>kg</option>
                 <option>L</option>
                 <option>bags</option>
                 <option>units</option>
-                <option>ha</option>
               </select>
               <button class="btn btn-primary" @click="addInput">+ Add</button>
             </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Supervisor</label>
-            <select class="form-select" v-model="form.supervisorId">
-              <option value="">Select supervisor...</option>
-              <option v-for="w in store.supervisors" :key="w.id" :value="w.id">
-                {{ w.name }}
-              </option>
-            </select>
           </div>
         </template>
       </div>
@@ -129,8 +145,8 @@
         </button>
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--stone);">{{ step }} / {{ steps.length }}</span>
-          <button class="btn btn-primary" @click="next" :disabled="!canProceed">
-            {{ step === steps.length ? '✓ Submit Activity' : 'Continue →' }}
+          <button class="btn btn-primary" @click="next" :disabled="!canProceed || submitting">
+            {{ step === steps.length ? (submitting ? 'Saving…' : '✓ Submit Activity') : 'Continue →' }}
           </button>
         </div>
       </div>
@@ -139,20 +155,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAgroStore } from '@/stores/agro'
 import type { ActivityType } from '@/types'
 
 const emit = defineEmits(['close'])
 const store = useAgroStore()
 
+onMounted(() => {
+  if (!store.workers.length) store.fetchWorkers()
+  if (!store.chemicals.length) store.fetchChemicals()
+  if (!store.sections.length) store.fetchSections()
+})
+
 const step = ref(1)
 const steps = ['Location', 'Activity', 'Workers & Inputs']
+const submitting = ref(false)
+const lowStockWarnings = ref<string[]>([])
 
-const workerInput = ref('')
-const workerType = ref('Employee')
+const workerPickId = ref('')
+const workerHours = ref<number>(8)
+const workerEntries = ref<{ workerId: string; workerName: string; workerType: string; hoursWorked: number; dailyRate: number; label: string }[]>([])
+
 const inputItem = ref('')
-const inputQty = ref('')
+const inputQty = ref<number | ''>('')
 const inputUnit = ref('kg')
 
 const form = ref({
@@ -160,78 +186,100 @@ const form = ref({
   sectionId: '',
   blockId: '',
   activityType: '' as ActivityType | '',
-  activityNote: '',
-  workers: [] as string[],
-  inputs: [] as string[],
-  supervisorId: ''
+  notes: '',
+  supervisorId: '',
+  chemicalProductId: '',
+  inputs: [] as { item: string; quantity: number; unit: string }[]
 })
 
 const activityTypes = [
-  { name: 'Weeding',               icon: '🌿' },
-  { name: 'Spraying',              icon: '💧' },
-  { name: 'Fertilizer Application',icon: '🌱' },
-  { name: 'Maintenance',           icon: '🔧' },
-  { name: 'Harvesting',            icon: '🌾' },
-  { name: 'Clearing',              icon: '🪚' },
-  { name: 'Pruning',               icon: '✂️' },
-  { name: 'Pest Control',          icon: '🛡️' },
+  { key: 'Weeding',               name: 'Weeding',               icon: '🌿' },
+  { key: 'Spraying',              name: 'Spraying',              icon: '💧' },
+  { key: 'FertilizerApplication', name: 'Fertilizer',            icon: '🌱' },
+  { key: 'Maintenance',           name: 'Maintenance',           icon: '🔧' },
+  { key: 'Harvesting',            name: 'Harvesting',            icon: '🌾' },
+  { key: 'Clearing',              name: 'Clearing',              icon: '🪚' },
+  { key: 'Pruning',               name: 'Pruning',               icon: '✂️' },
+  { key: 'PestControl',           name: 'Pest Control',          icon: '🛡️' },
 ]
 
-const selectedSection = computed(() =>
-  store.sections.find(s => s.id === form.value.sectionId)
-)
+const CHEMICAL_TYPES = new Set(['Spraying', 'PestControl'])
+const isChemicalActivity = computed(() => CHEMICAL_TYPES.has(form.value.activityType as string))
+
+const selectedSection = computed(() => store.sections.find(s => s.id === form.value.sectionId))
 
 const canProceed = computed(() => {
   if (step.value === 1) return !!form.value.sectionId && !!form.value.blockId
   if (step.value === 2) return !!form.value.activityType
-  return true
+  return !!form.value.supervisorId
 })
 
-function next() {
+async function next() {
   if (step.value < steps.length) {
     step.value++
-  } else {
-    store.logActivity({
+    return
+  }
+  submitting.value = true
+  lowStockWarnings.value = []
+  try {
+    const payload = {
       date: form.value.date,
       sectionId: form.value.sectionId,
       blockId: form.value.blockId,
-      activityType: form.value.activityType as ActivityType,
-      activityNote: form.value.activityNote,
-      workers: form.value.workers,
-      inputs: form.value.inputs,
-      supervisorId: form.value.supervisorId
-    })
-    emit('close')
+      activityType: form.value.activityType,
+      notes: form.value.notes || null,
+      supervisorId: form.value.supervisorId,
+      chemicalProductId: form.value.chemicalProductId || null,
+      workers: workerEntries.value.map(we => ({
+        workerId: we.workerId,
+        workerName: we.workerName,
+        workerType: we.workerType,
+        hoursWorked: we.hoursWorked,
+        dailyRate: we.dailyRate
+      })),
+      inputs: form.value.inputs
+    }
+    const result = await store.logActivity(payload)
+    if (result.lowStockWarnings?.length) {
+      lowStockWarnings.value = result.lowStockWarnings
+      setTimeout(() => emit('close'), 3000)
+    } else {
+      emit('close')
+    }
+  } catch (e) {
+    console.error('Failed to log activity', e)
+  } finally {
+    submitting.value = false
   }
 }
 
 function addWorker() {
-  if (workerInput.value.trim()) {
-    form.value.workers.push(`${workerInput.value.trim()} (${workerType.value})`)
-    workerInput.value = ''
-  }
-}
-
-function removeWorker(w: string) {
-  form.value.workers = form.value.workers.filter(x => x !== w)
+  const w = store.workers.find(x => x.id === workerPickId.value)
+  if (!w || !workerHours.value) return
+  workerEntries.value.push({
+    workerId: w.id,
+    workerName: w.name,
+    workerType: w.type,
+    hoursWorked: workerHours.value,
+    dailyRate: w.dailyRate,
+    label: `${w.name} · ${workerHours.value}h`
+  })
+  workerPickId.value = ''
+  workerHours.value = 8
 }
 
 function addInput() {
   if (inputItem.value.trim() && inputQty.value) {
-    form.value.inputs.push(`${inputQty.value}${inputUnit.value} ${inputItem.value.trim()}`)
+    form.value.inputs.push({ item: inputItem.value.trim(), quantity: Number(inputQty.value), unit: inputUnit.value })
     inputItem.value = ''
     inputQty.value = ''
   }
-}
-
-function removeInput(inp: string) {
-  form.value.inputs = form.value.inputs.filter(x => x !== inp)
 }
 </script>
 
 <style scoped>
 .modal-overlay { position: fixed; inset: 0; background: rgba(10,26,16,0.6); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; }
-.modal { background: white; border-radius: 16px; width: 480px; max-height: 85vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(10,26,16,0.2); }
+.modal { background: white; border-radius: 16px; width: 520px; max-height: 88vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(10,26,16,0.2); }
 .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--fog); display: flex; align-items: center; justify-content: space-between; }
 .modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: var(--forest); letter-spacing: -0.01em; }
 .modal-close { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--fog); background: transparent; cursor: pointer; font-size: 18px; color: var(--stone); display: flex; align-items: center; justify-content: center; }
@@ -245,6 +293,7 @@ function removeInput(inp: string) {
 .step.done .step-num { background: var(--palm); border-color: var(--palm); color: white; }
 .step-label { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--stone); margin-top: 4px; text-align: center; }
 .step.active .step-label { color: var(--leaf); }
+.warning-banner { background: #FFF8E7; border-bottom: 1px solid #F5D77B; padding: 10px 24px; font-size: 11px; color: #8A6000; font-weight: 600; }
 .modal-body { padding: 20px 24px; }
 .modal-footer { padding: 16px 24px; border-top: 1px solid var(--fog); display: flex; justify-content: space-between; align-items: center; }
 .form-group { margin-bottom: 16px; }

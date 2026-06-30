@@ -25,8 +25,8 @@
     <!-- Farm Context -->
     <div class="sidebar-farm">
       <div class="label-mono" style="margin-bottom:4px;">Active Farm</div>
-      <div class="farm-name">{{ store.farm.name }}</div>
-      <div class="farm-sub">{{ store.farm.location }} · {{ store.farm.totalHectares }} acres</div>
+      <div class="farm-name">{{ store.farm?.name ?? '...' }}</div>
+      <div class="farm-sub">{{ store.farm?.location }} · {{ store.farm?.area?.displayValue }} {{ store.farm?.area?.displayUnit }}</div>
     </div>
 
     <!-- Nav -->
@@ -67,6 +67,7 @@ const navItems = [
   { id: 'sections',   path: '/sections',   label: 'Sections',   icon: '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>' },
   { id: 'finance',    path: '/finance',    label: 'Finance',    icon: '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>' },
   { id: 'workers',    path: '/workers',    label: 'Workers',    icon: '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>' },
+  { id: 'inventory',  path: '/inventory',  label: 'Inventory',  icon: '<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>' },
   { id: 'reports',    path: '/reports',    label: 'Reports',    icon: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>' },
 ]
 </script>

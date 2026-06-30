@@ -5,6 +5,7 @@ import SectionsView   from '@/views/SectionsView.vue'
 import FinanceView    from '@/views/FinanceView.vue'
 import WorkersView    from '@/views/WorkersView.vue'
 import ReportsView    from '@/views/ReportsView.vue'
+import InventoryView  from '@/views/InventoryView.vue'
 
 const routes = [
   { path: '/',           name: 'dashboard',  component: DashboardView,  meta: { title: 'Farm Overview',        sub: 'KABIRU FARMS LTD · JUNE 2025' } },
@@ -13,6 +14,7 @@ const routes = [
   { path: '/finance',    name: 'finance',    component: FinanceView,    meta: { title: 'Finance',              sub: 'MONO SYNC · LAST UPDATED 02:00 AM' } },
   { path: '/workers',    name: 'workers',    component: WorkersView,    meta: { title: 'Workers',              sub: 'WORKFORCE MANAGEMENT' } },
   { path: '/reports',    name: 'reports',    component: ReportsView,    meta: { title: 'Reports',              sub: 'OPERATIONAL REPORTS' } },
+  { path: '/inventory',  name: 'inventory',  component: InventoryView,  meta: { title: 'Inventory',           sub: 'STOCK & SUPPLIES' } },
 ]
 
 export default createRouter({
