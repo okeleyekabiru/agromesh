@@ -53,8 +53,6 @@ logs/
 *.log
 serilog-*.txt
 
-# Docker
-.dockerignore
 
 # OS
 .DS_Store
