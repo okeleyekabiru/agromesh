@@ -5,7 +5,7 @@ public class User : BaseEntity
     public string FullName { get; private set; } = string.Empty;
     public string Email { get; private set; } = string.Empty;
     public string PasswordHash { get; private set; } = string.Empty;
-    public string? FarmId { get; private set; }
+    public string? CompanyId { get; private set; }
 
     private User() { }
 
@@ -16,9 +16,9 @@ public class User : BaseEntity
         PasswordHash = passwordHash,
     };
 
-    public void AssignFarm(string farmId)
+    public void AssignCompany(string companyId)
     {
-        FarmId = farmId;
+        CompanyId = companyId;
         UpdatedAt = DateTime.UtcNow;
     }
 }

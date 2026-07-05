@@ -13,17 +13,22 @@ public class CreateSectionCommandHandler : IRequestHandler<CreateSectionCommand,
 {
     private readonly ISectionRepository _sectionRepo;
     private readonly IFarmRepository _farmRepo;
+    private readonly ICurrentUserAccessor _currentUser;
 
-    public CreateSectionCommandHandler(ISectionRepository sectionRepo, IFarmRepository farmRepo)
+    public CreateSectionCommandHandler(ISectionRepository sectionRepo, IFarmRepository farmRepo, ICurrentUserAccessor currentUser)
     {
         _sectionRepo = sectionRepo;
         _farmRepo = farmRepo;
+        _currentUser = currentUser;
     }
 
     public async Task<SectionDto> Handle(CreateSectionCommand command, CancellationToken ct)
     {
         var farm = await _farmRepo.GetByIdAsync(command.FarmId, ct)
-            ?? throw new DomainException($"Farm '{command.FarmId}' not found.");
+            ?? throw new NotFoundException("Farm", command.FarmId);
+
+        if (!string.IsNullOrEmpty(_currentUser.CompanyId) && farm.CompanyId != _currentUser.CompanyId)
+            throw new NotFoundException("Farm", command.FarmId);
 
         var req = command.Request;
         var totalHectares = AreaConverter.ToHectares(req.AreaValue, farm.PreferredAreaUnit);
@@ -33,17 +38,11 @@ public class CreateSectionCommandHandler : IRequestHandler<CreateSectionCommand,
             Math.Round(totalHectares * (c.Percentage / 100.0), 4),
             (int)c.Percentage)).ToList();
 
-        var section = Domain.Entities.Section.Create(command.FarmId, req.Name, crops, totalHectares, req.BoundaryGeoJson);
-        if (req.CentroidLat.HasValue && req.CentroidLng.HasValue && req.BoundaryGeoJson != null)
-            section.SetBoundary(req.BoundaryGeoJson, req.CentroidLat, req.CentroidLng);
+        var section = Domain.Entities.Section.Create(command.FarmId, req.Name, crops, totalHectares);
+        if (totalHectares > 0)
+            section.SetManualHectares(totalHectares);
 
         await _sectionRepo.AddAsync(section, ct);
-
-        if (farm.CentroidLat == null && req.CentroidLat.HasValue)
-        {
-            farm.SetCoordinates(req.CentroidLat.Value, req.CentroidLng!.Value);
-            await _farmRepo.UpdateAsync(farm, ct);
-        }
 
         return MapToDto(section, farm.PreferredAreaUnit);
     }

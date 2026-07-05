@@ -26,6 +26,9 @@ public class FarmRepository : IFarmRepository
     public async Task<List<Farm>> GetByOwnerIdAsync(string ownerId, CancellationToken ct = default) =>
         await _db.Farms.Where(f => f.OwnerId == ownerId).ToListAsync(ct);
 
+    public async Task<List<Farm>> GetByCompanyIdAsync(string companyId, CancellationToken ct = default) =>
+        await _db.Farms.Where(f => f.CompanyId == companyId).Include(f => f.Sections).OrderBy(f => f.CreatedAt).ToListAsync(ct);
+
     public async Task<Farm> AddAsync(Farm farm, CancellationToken ct = default)
     {
         _db.Farms.Add(farm);

@@ -13,6 +13,7 @@ public class Section : BaseEntity
     public SectionStatus Status { get; private set; } = SectionStatus.Active;
     public DateTime? LastActivityDate { get; private set; }
     public string? BoundaryGeoJson { get; private set; }
+    public BoundarySource? BoundarySource { get; private set; }
     public double? CentroidLat { get; private set; }
     public double? CentroidLng { get; private set; }
 
@@ -33,11 +34,20 @@ public class Section : BaseEntity
         };
     }
 
-    public void SetBoundary(string geoJson, double? centroidLat = null, double? centroidLng = null)
+    public void ApplyBoundary(string geoJson, double hectares, double? centroidLat, double? centroidLng, BoundarySource source)
     {
         BoundaryGeoJson = geoJson;
+        Hectares = hectares;
         CentroidLat = centroidLat;
         CentroidLng = centroidLng;
+        BoundarySource = source;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetManualHectares(double hectares)
+    {
+        Hectares = hectares;
+        BoundarySource = AgroMesh.Domain.Enums.BoundarySource.ManualEstimate;
         UpdatedAt = DateTime.UtcNow;
     }
 

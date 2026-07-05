@@ -20,6 +20,8 @@ public static class DependencyInjection
         services.AddDbContext<AgroMeshDbContext>(options =>
             options.UseNpgsql(config.GetConnectionString("DefaultConnection")));
 
+        services.AddHttpContextAccessor();
+
         var redisConnection = config.GetConnectionString("Redis");
         if (!string.IsNullOrWhiteSpace(redisConnection))
         {
@@ -34,7 +36,11 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
         services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
 
+        services.AddScoped<ICompanyRepository, CompanyRepository>();
+        services.AddScoped<IStateRepository, StateRepository>();
+        services.AddScoped<IBoundarySubmissionRepository, BoundarySubmissionRepository>();
         services.AddScoped<IFarmRepository, FarmRepository>();
         services.AddScoped<ISectionRepository, SectionRepository>();
         services.AddScoped<IBlockRepository, BlockRepository>();

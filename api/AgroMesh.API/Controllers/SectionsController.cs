@@ -2,11 +2,13 @@ using AgroMesh.Application.Commands.Section;
 using AgroMesh.Application.DTOs;
 using AgroMesh.Application.Queries.Section;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AgroMesh.API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/farms/{farmId}/sections")]
 public class SectionsController : ControllerBase
 {

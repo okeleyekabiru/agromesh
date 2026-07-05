@@ -12,6 +12,11 @@ public class FarmConfiguration : IEntityTypeConfiguration<Farm>
         builder.Property(f => f.Name).IsRequired().HasMaxLength(200);
         builder.Property(f => f.Location).IsRequired().HasMaxLength(300);
         builder.Property(f => f.OwnerId).IsRequired().HasMaxLength(100);
+        builder.Property(f => f.CompanyId).IsRequired().HasMaxLength(50);
+        builder.Property(f => f.CountryCode).IsRequired().HasMaxLength(2);
+        builder.Property(f => f.StateId).HasMaxLength(50);
+        builder.Property(f => f.LgaFreetext).HasMaxLength(200);
+        builder.Property(f => f.SetupStatus).IsRequired();
         builder.Property(f => f.TotalHectares).IsRequired();
         builder.Property(f => f.PreferredAreaUnit).IsRequired();
         builder.Property(f => f.CentroidLat);
@@ -43,5 +48,7 @@ public class FarmConfiguration : IEntityTypeConfiguration<Farm>
                .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(f => f.OwnerId);
+        builder.HasIndex(f => f.CompanyId);
+        builder.HasIndex(f => f.StateId);
     }
 }

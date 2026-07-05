@@ -1,7 +1,6 @@
 using AgroMesh.Application.DTOs;
 using AgroMesh.Application.Interfaces;
 using AgroMesh.Domain.Entities;
-using AgroMesh.Domain.Enums;
 using AgroMesh.Domain.Exceptions;
 using MediatR;
 
@@ -12,17 +11,20 @@ public record RegisterCommand(RegisterRequest Request) : IRequest<AuthResponse>;
 public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthResponse>
 {
     private readonly IUserRepository _userRepo;
+    private readonly ICompanyRepository _companyRepo;
     private readonly IFarmRepository _farmRepo;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtService _jwtService;
 
     public RegisterCommandHandler(
         IUserRepository userRepo,
+        ICompanyRepository companyRepo,
         IFarmRepository farmRepo,
         IPasswordHasher passwordHasher,
         IJwtService jwtService)
     {
         _userRepo = userRepo;
+        _companyRepo = companyRepo;
         _farmRepo = farmRepo;
         _passwordHasher = passwordHasher;
         _jwtService = jwtService;
@@ -41,15 +43,21 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
         await _userRepo.AddAsync(user, ct);
         await _userRepo.SaveAsync(ct);
 
-        var farm = AgroMesh.Domain.Entities.Farm.Create(req.FarmName, req.Location ?? string.Empty, 0, user.Id, AreaUnit.Hectares);
-        if (req.Latitude.HasValue && req.Longitude.HasValue)
-            farm.SetCoordinates(req.Latitude.Value, req.Longitude.Value);
+        var company = Domain.Entities.Company.Create(req.FarmName, user.Id, isDefaultCompany: true);
+        await _companyRepo.AddAsync(company, ct);
+
+        var farm = Domain.Entities.Farm.Create(req.FarmName, company.Id, user.Id);
         await _farmRepo.AddAsync(farm, ct);
 
-        user.AssignFarm(farm.Id);
+        user.AssignCompany(company.Id);
         await _userRepo.SaveAsync(ct);
 
         var token = _jwtService.GenerateToken(user);
-        return new AuthResponse(token, new AuthUserDto(user.Id, user.Email, user.FullName, user.FarmId), user.FarmId);
+        var farmSummary = new FarmSummaryDto(farm.Id, farm.Name, farm.SetupStatus);
+        return new AuthResponse(
+            token,
+            new AuthUserDto(user.Id, user.Email, user.FullName, user.CompanyId),
+            user.CompanyId,
+            [farmSummary]);
     }
 }

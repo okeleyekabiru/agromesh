@@ -1,13 +1,12 @@
+using AgroMesh.Domain.Enums;
+
 namespace AgroMesh.Application.DTOs;
 
 public record RegisterRequest(
     string FullName,
     string Email,
     string Password,
-    string FarmName,
-    string? Location,
-    double? Latitude,
-    double? Longitude);
+    string FarmName);
 
 public record LoginRequest(
     string Email,
@@ -17,9 +16,15 @@ public record AuthUserDto(
     string Id,
     string Email,
     string FullName,
-    string? FarmId);
+    string? CompanyId);
+
+public record FarmSummaryDto(
+    string Id,
+    string Name,
+    FarmSetupStatus SetupStatus);
 
 public record AuthResponse(
     string Token,
     AuthUserDto User,
-    string? FarmId);
+    string? CompanyId,
+    List<FarmSummaryDto> Farms);

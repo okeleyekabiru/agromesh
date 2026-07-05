@@ -1,0 +1,18 @@
+using AgroMesh.Domain.Enums;
+
+namespace AgroMesh.Application.DTOs;
+
+public record GeoPointInput(double Lat, double Lng);
+
+public record SubmitBoundaryPointsRequest(string OperationId, List<GeoPointInput> Points, bool ConfirmImplausibleDistance = false);
+
+public record UploadBoundaryFileRequest(string OperationId, string FileName, string Content);
+
+public record BoundarySubmissionResultDto(
+    string SectionId,
+    string OperationId,
+    BoundarySubmissionType SubmissionType,
+    string ComputedGeoJson,
+    double ComputedHectares,
+    double? ComputedCentroidLat,
+    double? ComputedCentroidLng);

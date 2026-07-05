@@ -8,6 +8,11 @@ public class Farm : BaseEntity
     public string Location { get; private set; } = string.Empty;
     public double TotalHectares { get; private set; }
     public string OwnerId { get; private set; } = string.Empty;
+    public string CompanyId { get; private set; } = string.Empty;
+    public string CountryCode { get; private set; } = "NG";
+    public string? StateId { get; private set; }
+    public string? LgaFreetext { get; private set; }
+    public FarmSetupStatus SetupStatus { get; private set; } = FarmSetupStatus.Draft;
     public AreaUnit PreferredAreaUnit { get; private set; } = AreaUnit.Hectares;
     public double? CentroidLat { get; private set; }
     public double? CentroidLng { get; private set; }
@@ -20,16 +25,17 @@ public class Farm : BaseEntity
 
     private Farm() { }
 
-    public static Farm Create(string name, string location, double totalHectares, string ownerId, AreaUnit preferredUnit = AreaUnit.Hectares, string? id = null)
+    public static Farm Create(string name, string companyId, string ownerId, string? stateId = null, string? lgaFreetext = null, string countryCode = "NG", string? id = null)
     {
         return new Farm
         {
             Id = id ?? Guid.NewGuid().ToString(),
             Name = name,
-            Location = location,
-            TotalHectares = totalHectares,
+            CompanyId = companyId,
             OwnerId = ownerId,
-            PreferredAreaUnit = preferredUnit
+            StateId = stateId,
+            LgaFreetext = lgaFreetext,
+            CountryCode = countryCode,
         };
     }
 
@@ -51,6 +57,19 @@ public class Farm : BaseEntity
         Name = name;
         Location = location;
         TotalHectares = totalHectares;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetLocation(string stateId, string? lgaFreetext)
+    {
+        StateId = stateId;
+        LgaFreetext = lgaFreetext;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void MarkConfigured()
+    {
+        SetupStatus = FarmSetupStatus.Configured;
         UpdatedAt = DateTime.UtcNow;
     }
 }

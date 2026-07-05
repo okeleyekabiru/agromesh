@@ -14,18 +14,27 @@ public class GetSectionsQueryHandler : IRequestHandler<GetSectionsQuery, List<Se
     private readonly ISectionRepository _sectionRepo;
     private readonly IFarmRepository _farmRepo;
     private readonly ISchedulingPredictionRepository _predictionRepo;
+    private readonly ICurrentUserAccessor _currentUser;
 
-    public GetSectionsQueryHandler(ISectionRepository sectionRepo, IFarmRepository farmRepo, ISchedulingPredictionRepository predictionRepo)
+    public GetSectionsQueryHandler(
+        ISectionRepository sectionRepo,
+        IFarmRepository farmRepo,
+        ISchedulingPredictionRepository predictionRepo,
+        ICurrentUserAccessor currentUser)
     {
         _sectionRepo = sectionRepo;
         _farmRepo = farmRepo;
         _predictionRepo = predictionRepo;
+        _currentUser = currentUser;
     }
 
     public async Task<List<SectionDto>> Handle(GetSectionsQuery query, CancellationToken ct)
     {
         var farm = await _farmRepo.GetByIdAsync(query.FarmId, ct)
-            ?? throw new DomainException($"Farm '{query.FarmId}' not found.");
+            ?? throw new NotFoundException("Farm", query.FarmId);
+
+        if (!string.IsNullOrEmpty(_currentUser.CompanyId) && farm.CompanyId != _currentUser.CompanyId)
+            throw new NotFoundException("Farm", query.FarmId);
 
         var sections = await _sectionRepo.GetByFarmIdAsync(query.FarmId, ct);
         var predictions = await _predictionRepo.GetByFarmIdAsync(query.FarmId, ct);

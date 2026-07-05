@@ -4,6 +4,7 @@ using AgroMesh.Application;
 using AgroMesh.Infrastructure;
 using AgroMesh.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -75,7 +76,7 @@ try
 
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AgroMeshDbContext>();
-        await db.Database.EnsureCreatedAsync();
+        await db.Database.MigrateAsync();
         await DatabaseSeeder.SeedAsync(db);
     }
 

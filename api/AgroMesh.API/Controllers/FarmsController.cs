@@ -2,11 +2,13 @@ using AgroMesh.Application.Commands.Farm;
 using AgroMesh.Application.DTOs;
 using AgroMesh.Application.Queries.Farm;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AgroMesh.API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/farms")]
 public class FarmsController : ControllerBase
 {
@@ -28,6 +30,18 @@ public class FarmsController : ControllerBase
     [HttpGet("{farmId}")]
     public async Task<IActionResult> GetById(string farmId, CancellationToken ct) =>
         Ok(await _mediator.Send(new GetFarmQuery(farmId), ct));
+
+    [HttpPatch("{farmId}")]
+    public async Task<IActionResult> UpdateProfile(string farmId, [FromBody] UpdateFarmProfileRequest request, CancellationToken ct) =>
+        Ok(await _mediator.Send(new UpdateFarmProfileCommand(farmId, request), ct));
+
+    [HttpPatch("{farmId}/location")]
+    public async Task<IActionResult> SetLocation(string farmId, [FromBody] SetFarmLocationRequest request, CancellationToken ct) =>
+        Ok(await _mediator.Send(new SetFarmLocationCommand(farmId, request), ct));
+
+    [HttpPatch("{farmId}/setup-status")]
+    public async Task<IActionResult> SetSetupStatus(string farmId, CancellationToken ct) =>
+        Ok(await _mediator.Send(new SetFarmSetupStatusCommand(farmId), ct));
 
     [HttpGet("{farmId}/onboarding-status")]
     public async Task<IActionResult> GetOnboardingStatus(string farmId, CancellationToken ct) =>

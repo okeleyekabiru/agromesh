@@ -15,6 +15,7 @@ public class SectionConfiguration : IEntityTypeConfiguration<Section>
         builder.Property(s => s.Hectares).IsRequired();
         builder.Property(s => s.Status).IsRequired();
         builder.Property(s => s.BoundaryGeoJson).HasColumnType("text");
+        builder.Property(s => s.BoundarySource);
         builder.Property(s => s.CentroidLat);
         builder.Property(s => s.CentroidLng);
 

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"c:\\\\Users\\\\kabio\\\\source\\\\repos\\\\agromesh\" status --porcelain -- mobile)",
+      "Bash(git -C \"c:\\\\Users\\\\kabio\\\\source\\\\repos\\\\agromesh\" log --oneline -- mobile)",
+      "Bash(dotnet tool *)",
+      "Bash(dotnet ef *)"
+    ]
+  }
+}

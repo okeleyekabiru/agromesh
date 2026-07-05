@@ -1,31 +1,34 @@
 using AgroMesh.Application.DTOs;
 using AgroMesh.Application.Interfaces;
-using AgroMesh.Domain.Entities;
-using AgroMesh.Domain.Utilities;
+using AgroMesh.Application.Queries.Farm;
+using AgroMesh.Domain.Exceptions;
 using MediatR;
 
 namespace AgroMesh.Application.Commands.Farm;
 
+/// <summary>Flow A2 "Add New Farm" — for genuinely independent/distant land, not a Section under an existing Farm.</summary>
 public record CreateFarmCommand(CreateFarmRequest Request) : IRequest<FarmDto>;
 
 public class CreateFarmCommandHandler : IRequestHandler<CreateFarmCommand, FarmDto>
 {
     private readonly IFarmRepository _farmRepo;
+    private readonly ICurrentUserAccessor _currentUser;
 
-    public CreateFarmCommandHandler(IFarmRepository farmRepo) => _farmRepo = farmRepo;
+    public CreateFarmCommandHandler(IFarmRepository farmRepo, ICurrentUserAccessor currentUser)
+    {
+        _farmRepo = farmRepo;
+        _currentUser = currentUser;
+    }
 
     public async Task<FarmDto> Handle(CreateFarmCommand command, CancellationToken ct)
     {
         var req = command.Request;
-        var hectares = AreaConverter.ToHectares(req.AreaValue, req.AreaUnit);
+        var companyId = _currentUser.CompanyId
+            ?? throw new DomainException("You must belong to a company to add a farm.");
 
-        var farm = Domain.Entities.Farm.Create(req.Name, req.Location, hectares, req.OwnerId, req.AreaUnit);
+        var farm = Domain.Entities.Farm.Create(req.Name, companyId, _currentUser.UserId ?? string.Empty, req.StateId, req.LgaFreetext);
         await _farmRepo.AddAsync(farm, ct);
 
-        return new FarmDto(
-            farm.Id, farm.Name, farm.Location,
-            AreaDto.From(farm.TotalHectares, farm.PreferredAreaUnit),
-            farm.OwnerId, farm.PreferredAreaUnit,
-            farm.CentroidLat, farm.CentroidLng, 0, 0);
+        return GetFarmsQueryHandler.MapToDto(farm);
     }
 }
