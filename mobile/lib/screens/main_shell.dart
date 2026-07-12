@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../stores/app_store.dart';
+import '../stores/auth_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/widgets.dart';
 import 'dashboard/dashboard_screen.dart';
@@ -43,8 +44,13 @@ class _MainShellState extends State<MainShell> {
               children: [
                 Text(_titles[_currentIndex],
                   style: const TextStyle(color: AgroColors.white, fontSize: 16, fontWeight: FontWeight.w800)),
-                const Text('Kabiru Farms · Oyo State',
-                  style: TextStyle(color: AgroColors.stone, fontSize: 10)),
+                Text(
+                  store.farmName.isEmpty
+                    ? 'AgroMesh'
+                    : (store.farmLocation.isEmpty ? store.farmName : '${store.farmName} · ${store.farmLocation}'),
+                  style: const TextStyle(color: AgroColors.stone, fontSize: 10),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ],
@@ -72,6 +78,7 @@ class _MainShellState extends State<MainShell> {
                 ],
               ),
             ),
+          const _AccountMenu(),
         ],
       ),
       body: Column(
@@ -120,6 +127,41 @@ class _AgroLogo extends StatelessWidget {
       child: const Center(
         child: Text('A', style: TextStyle(color: AgroColors.palm, fontWeight: FontWeight.w800, fontSize: 14)),
       ),
+    );
+  }
+}
+
+/// Account affordance in the AppBar — surfaces the logged-in user, lets them
+/// switch farms (if they have more than one), and log out.
+class _AccountMenu extends StatelessWidget {
+  const _AccountMenu();
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthStore>();
+
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.account_circle_outlined, color: AgroColors.white),
+      onSelected: (value) {
+        final authStore = context.read<AuthStore>();
+        if (value == 'logout') {
+          authStore.logout();
+        } else if (value == 'switch_farm') {
+          authStore.switchFarm();
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem<String>(
+          enabled: false,
+          child: Text(
+            auth.user?.email ?? '',
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AgroColors.stone),
+          ),
+        ),
+        if (auth.farms.length > 1)
+          const PopupMenuItem<String>(value: 'switch_farm', child: Text('Switch farm')),
+        const PopupMenuItem<String>(value: 'logout', child: Text('Log out')),
+      ],
     );
   }
 }

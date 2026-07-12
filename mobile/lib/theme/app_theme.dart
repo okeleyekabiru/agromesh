@@ -37,7 +37,6 @@ class AgroTheme {
       primary:   AgroColors.leaf,
       secondary: AgroColors.palm,
       surface:   AgroColors.white,
-      background: AgroColors.mist,
       error:     AgroColors.alert,
       brightness: Brightness.light,
     ),

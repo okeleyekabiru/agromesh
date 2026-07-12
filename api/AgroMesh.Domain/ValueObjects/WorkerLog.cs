@@ -7,5 +7,6 @@ public record WorkerLog(
     string WorkerName,
     WorkerType WorkerType,
     double HoursWorked,
-    decimal DailyRate
+    decimal PayRate,
+    PayFrequency PayFrequency
 );

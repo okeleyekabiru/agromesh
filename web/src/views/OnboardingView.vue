@@ -39,31 +39,23 @@
             </select>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">
-            GPS Coordinates
-            <span class="label-opt">enables live weather</span>
-          </label>
-          <button type="button" class="gps-btn" @click="detectGps" :disabled="gpsLoading">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
-            </svg>
-            <span class="gps-spinner" v-if="gpsLoading" />
-            {{ gpsLoading ? 'Detecting…' : (farm.lat != null ? '✓ Location captured' : 'Detect via GPS') }}
-          </button>
-          <div v-if="farm.lat != null && farm.lng != null" class="gps-result">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0112 2a8 8 0 018 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
-            {{ farm.lat.toFixed(5) }}°, {{ farm.lng.toFixed(5) }}°
-            <button type="button" class="gps-clear" @click="() => { farm.lat = null; farm.lng = null }">×</button>
+        <div class="form-row">
+          <div class="form-group" style="flex:1">
+            <label class="form-label">State</label>
+            <select class="form-select" v-model="farm.stateId" style="width:100%">
+              <option value="" disabled>— Select state —</option>
+              <option v-for="s in store.states" :key="s.id" :value="s.id">{{ s.name }}</option>
+            </select>
           </div>
-          <div v-if="gpsError" class="gps-err-msg">{{ gpsError }}</div>
-          <div class="form-row" style="margin-top:8px">
-            <input class="form-input" v-model.number="farm.lat" type="number" step="0.00001"
-                   placeholder="Latitude e.g. 7.3775" style="flex:1" />
-            <input class="form-input" v-model.number="farm.lng" type="number" step="0.00001"
-                   placeholder="Longitude e.g. 3.9470" style="flex:1" />
+          <div class="form-group" style="flex:1">
+            <label class="form-label">
+              LGA <span class="label-opt">optional</span>
+            </label>
+            <input class="form-input" v-model="farm.lgaFreetext" placeholder="e.g. Ikeja" />
           </div>
         </div>
+        <div v-if="statesError" class="gps-err-msg">{{ statesError }}</div>
+        <div v-if="submitError" class="gps-err-msg">{{ submitError }}</div>
         <div class="hint-box">
           Sections and farm boundaries are set up in the next step after this wizard.
         </div>
@@ -71,24 +63,39 @@
 
       <!-- ── STEP 1: Worker Roles ── -->
       <div v-if="step === 1" class="onboard-body">
-        <div class="step-title">Define worker roles &amp; daily rates</div>
-        <div class="hint-box">Rates are set per role. All workers assigned to a role share its rate.</div>
+        <div class="step-title">Define worker roles &amp; pay rates</div>
+        <div class="hint-box">
+          Rates are set per role, at whatever frequency that role is actually paid — contractors
+          are usually daily, supervisors are usually salaried monthly. All workers assigned to a
+          role share its rate and frequency.
+        </div>
         <div class="roles-list">
           <div v-for="(r, i) in roles" :key="i" class="role-input-row">
             <input class="form-input" v-model="r.title" placeholder="Role title e.g. Farm Worker" style="flex:2" />
-            <select class="form-select" v-model="r.workerType" style="width:130px">
+            <select
+              class="form-select"
+              v-model="r.workerType"
+              style="width:130px"
+              @change="r.payFrequency = defaultFrequencyFor(r.workerType)"
+            >
               <option value="Employee">Employee</option>
               <option value="Contractor">Contractor</option>
             </select>
             <div class="rate-input-wrap">
               <span class="rate-prefix">₦</span>
-              <input class="form-input rate-input" v-model.number="r.dailyRate" type="number" min="500" step="100" placeholder="2200" />
-              <span class="rate-suffix">/day</span>
+              <input class="form-input rate-input" v-model.number="r.payRate" type="number" min="500" step="100" placeholder="2200" />
             </div>
+            <select class="form-select" v-model="r.payFrequency" style="width:110px">
+              <option v-for="f in PAY_FREQUENCIES" :key="f" :value="f">/ {{ f.toLowerCase() }}</option>
+            </select>
             <button class="btn btn-ghost btn-sm" @click="roles.splice(i,1)" :disabled="roles.length === 1">✕</button>
           </div>
         </div>
-        <button class="btn btn-ghost" @click="roles.push({ title: '', workerType: 'Employee', dailyRate: 2200 })" style="margin-top:8px;">
+        <button
+          class="btn btn-ghost"
+          @click="roles.push({ title: '', workerType: 'Employee', payRate: 2200, payFrequency: defaultFrequencyFor('Employee') })"
+          style="margin-top:8px;"
+        >
           + Add Role
         </button>
       </div>
@@ -101,7 +108,9 @@
             <input class="form-input" v-model="w.name" placeholder="Full name" style="flex:2" />
             <input class="form-input" v-model="w.initials" placeholder="Initials" style="width:72px;text-transform:uppercase" maxlength="3" />
             <select class="form-select" v-model="w.roleIndex" style="flex:2">
-              <option v-for="(r, ri) in roles" :key="ri" :value="ri">{{ r.title }} (₦{{ r.dailyRate.toLocaleString() }}/day)</option>
+              <option v-for="(r, ri) in roles" :key="ri" :value="ri">
+                {{ r.title }} (₦{{ r.payRate.toLocaleString() }} / {{ r.payFrequency.toLowerCase() }})
+              </option>
             </select>
             <button class="btn btn-ghost btn-sm" @click="workers.splice(i,1)">✕</button>
           </div>
@@ -135,6 +144,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAgroStore } from '@/stores/agro'
 import { workerRoleApi, workerApi } from '@/services/api'
+import { extractErrorMessage } from '@/utils/http'
 
 const router = useRouter()
 const store = useAgroStore()
@@ -145,42 +155,47 @@ const steps = ['Farm Profile', 'Worker Roles', 'Workers']
 
 // ── Farm profile ──
 const farm = ref({
-  name: store.currentUser?.fullName ? '' : '',
+  name: store.activeFarmSummary?.name ?? '',
   areaValue: 0,
   areaUnit: 'Hectares' as 'Hectares' | 'Acres',
-  lat: null as number | null,
-  lng: null as number | null,
+  stateId: '',
+  lgaFreetext: '',
 })
 
-// ── GPS ──
-const gpsLoading = ref(false)
-const gpsError   = ref('')
+// ── Reference states ──
+const statesError = ref('')
+const submitError = ref('')
 
-async function detectGps() {
-  if (!navigator.geolocation) {
-    gpsError.value = 'Geolocation not supported.'
-    return
-  }
-  gpsLoading.value = true
-  gpsError.value = ''
+async function loadStates() {
   try {
-    const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 12000, enableHighAccuracy: true })
-    )
-    farm.value.lat = Math.round(pos.coords.latitude  * 100000) / 100000
-    farm.value.lng = Math.round(pos.coords.longitude * 100000) / 100000
+    await store.fetchStates()
+    if (!store.states.length) statesError.value = 'Could not load states — please retry.'
   } catch {
-    gpsError.value = 'Could not detect location. Enter coordinates manually.'
-  } finally {
-    gpsLoading.value = false
+    statesError.value = 'Could not load states — please retry.'
   }
 }
 
 // ── Worker roles ──
+// Backend enums serialize as raw integers (no JsonStringEnumConverter) — these string
+// labels are for the UI only; ordinal maps below convert at the API call boundary,
+// mirroring the CROP_ORDINAL pattern already used in SectionsSetupView.vue.
+type WorkerTypeLabel = 'Employee' | 'Contractor'
+type PayFrequencyLabel = 'Daily' | 'Weekly' | 'Monthly'
+
+const WORKER_TYPE_ORDINAL: Record<WorkerTypeLabel, number> = { Employee: 0, Contractor: 1 }
+const PAY_FREQUENCY_ORDINAL: Record<PayFrequencyLabel, number> = { Daily: 0, Weekly: 1, Monthly: 2 }
+const PAY_FREQUENCIES: PayFrequencyLabel[] = ['Daily', 'Weekly', 'Monthly']
+
+// Only contractors are reliably daily-paid; anyone else (e.g. a salaried supervisor)
+// defaults to monthly. Both stay fully editable — this is just the initial pick.
+function defaultFrequencyFor(type: WorkerTypeLabel): PayFrequencyLabel {
+  return type === 'Contractor' ? 'Daily' : 'Monthly'
+}
+
 const roles = ref([
-  { title: 'Field Supervisor', workerType: 'Employee' as const, dailyRate: 3500 },
-  { title: 'Farm Worker',      workerType: 'Employee' as const, dailyRate: 2200 },
-  { title: 'Contractor',       workerType: 'Contractor' as const, dailyRate: 4000 },
+  { title: 'Field Supervisor', workerType: 'Employee' as WorkerTypeLabel, payRate: 91000, payFrequency: 'Monthly' as PayFrequencyLabel },
+  { title: 'Farm Worker',      workerType: 'Employee' as WorkerTypeLabel, payRate: 2200,  payFrequency: 'Daily' as PayFrequencyLabel },
+  { title: 'Contractor',       workerType: 'Contractor' as WorkerTypeLabel, payRate: 4000, payFrequency: 'Daily' as PayFrequencyLabel },
 ])
 
 // ── Workers ──
@@ -188,8 +203,8 @@ const workers = ref<{ name: string; initials: string; roleIndex: number }[]>([])
 
 // ── Validation ──
 const canProceed = computed(() => {
-  if (step.value === 0) return farm.value.name.trim() && farm.value.areaValue > 0
-  if (step.value === 1) return roles.value.every(r => r.title.trim() && r.dailyRate > 0)
+  if (step.value === 0) return farm.value.name.trim() && farm.value.areaValue > 0 && !!farm.value.stateId
+  if (step.value === 1) return roles.value.every(r => r.title.trim() && r.payRate > 0 && !!r.payFrequency)
   return true
 })
 
@@ -209,18 +224,23 @@ function back() {
 // ── Submit ──
 async function submit() {
   saving.value = true
+  submitError.value = ''
   try {
-    const farmId = store.currentUser?.farmId
+    const farmId = store.activeFarmId
     if (!farmId) throw new Error('No farm associated with this account.')
 
-    // Update farm profile (area, coords)
+    // Update farm profile (name, area)
     await store.updateFarmProfile({
       farmId,
       name: farm.value.name,
       areaValue: farm.value.areaValue,
       areaUnit: farm.value.areaUnit,
-      lat: farm.value.lat ?? undefined,
-      lng: farm.value.lng ?? undefined,
+    })
+
+    // Set farm location (state / LGA)
+    await store.setFarmLocation(farmId, {
+      stateId: farm.value.stateId,
+      lgaFreetext: farm.value.lgaFreetext.trim() || undefined,
     })
 
     // Create worker roles
@@ -228,8 +248,9 @@ async function submit() {
     for (const r of roles.value) {
       const res = await workerRoleApi.create({
         title: r.title,
-        workerType: r.workerType,
-        dailyRate: r.dailyRate,
+        defaultType: WORKER_TYPE_ORDINAL[r.workerType],
+        payRate: r.payRate,
+        payFrequency: PAY_FREQUENCY_ORDINAL[r.payFrequency],
       })
       createdRoles.push({ id: res.data.id })
     }
@@ -242,23 +263,29 @@ async function submit() {
         name: w.name,
         initials: w.initials.toUpperCase(),
         workerRoleId: role.id,
-        workerType: roles.value[w.roleIndex].workerType,
+        type: WORKER_TYPE_ORDINAL[roles.value[w.roleIndex].workerType],
       })
     }
 
     // Go to sections setup wizard
     router.push({ name: 'sections-setup' })
-  } catch (e) {
+  } catch (e: unknown) {
     console.error('Onboarding failed', e)
+    submitError.value = extractErrorMessage(e, 'Could not save your farm setup. Please try again.')
     saving.value = false
   }
 }
 
-onMounted(async () => {
-  // Pre-fill farm name from user
-  if (store.currentUser) {
-    // Farm name was set at registration; just prepare for profile update
+onMounted(() => {
+  // This wizard operates on an already-created farm (from Quick Signup or Add Farm) — if
+  // there's no active farm context (e.g. a stale bookmark hit outside an active session),
+  // fail fast here instead of letting the user fill out the whole form and hit a cryptic
+  // error only at the final submit step.
+  if (!store.activeFarmId) {
+    router.replace({ name: 'landing' })
+    return
   }
+  loadStates()
 })
 </script>
 

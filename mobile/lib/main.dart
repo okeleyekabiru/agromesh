@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
 import 'stores/app_store.dart';
-import 'screens/main_shell.dart';
+import 'stores/auth_store.dart';
+import 'screens/app_gate.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,13 +15,16 @@ class AgroMeshApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AppStore()..init(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthStore()..bootstrap()),
+        ChangeNotifierProvider(create: (_) => AppStore()),
+      ],
       child: MaterialApp(
         title: 'AgroMesh',
         theme: AgroTheme.theme,
         debugShowCheckedModeBanner: false,
-        home: const MainShell(),
+        home: const AppGate(),
       ),
     );
   }

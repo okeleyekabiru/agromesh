@@ -365,6 +365,8 @@ class AgroTextField extends StatelessWidget {
   final TextEditingController? controller;
   final TextInputType? keyboardType;
   final bool readOnly;
+  final bool obscureText;
+  final Widget? suffixIcon;
   final VoidCallback? onTap;
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
@@ -376,6 +378,8 @@ class AgroTextField extends StatelessWidget {
     this.controller,
     this.keyboardType,
     this.readOnly = false,
+    this.obscureText = false,
+    this.suffixIcon,
     this.onTap,
     this.validator,
     this.onChanged,
@@ -392,11 +396,12 @@ class AgroTextField extends StatelessWidget {
           controller: controller,
           keyboardType: keyboardType,
           readOnly: readOnly,
+          obscureText: obscureText,
           onTap: onTap,
           validator: validator,
           onChanged: onChanged,
           style: GoogleFonts.inter(fontSize: 13, color: AgroColors.forest),
-          decoration: InputDecoration(hintText: hint),
+          decoration: InputDecoration(hintText: hint, suffixIcon: suffixIcon),
         ),
       ],
     );

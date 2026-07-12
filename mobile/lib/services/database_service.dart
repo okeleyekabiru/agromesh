@@ -4,7 +4,11 @@ import '../models/models.dart';
 
 class DatabaseService {
   static Database? _db;
-  static const _version = 1;
+
+  // v1 -> v2: added farm/session-aware section columns (crops_json,
+  // boundary_geojson, centroid_lat/lng) and the boundary_submissions outbox
+  // table for offline GPS corner capture.
+  static const _version = 2;
   static const _name = 'agromesh.db';
 
   static Future<Database> get database async {
@@ -35,6 +39,10 @@ class DatabaseService {
         status INTEGER NOT NULL DEFAULT 0,
         last_activity_date TEXT,
         block_count INTEGER NOT NULL DEFAULT 0,
+        crops_json TEXT,
+        boundary_geojson TEXT,
+        centroid_lat REAL,
+        centroid_lng REAL,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     ''');
@@ -107,15 +115,53 @@ class DatabaseService {
       )
     ''');
 
+    // Offline outbox for GPS corner-capture sessions. `id` is the client
+    // operation id (uuid.v4, minted once) — mirrors activity_logs' pattern of
+    // local-write-first + best-effort POST-on-reconnect.
+    await db.execute('''
+      CREATE TABLE boundary_submissions (
+        id TEXT PRIMARY KEY,
+        section_id TEXT NOT NULL,
+        farm_id TEXT NOT NULL,
+        points_json TEXT NOT NULL,
+        sync_status INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL,
+        synced_at TEXT
+      )
+    ''');
+
     // Indexes for common queries
     await db.execute('CREATE INDEX idx_activities_farm ON activity_logs(farm_id)');
     await db.execute('CREATE INDEX idx_activities_section ON activity_logs(section_id)');
     await db.execute('CREATE INDEX idx_activities_sync ON activity_logs(sync_status)');
     await db.execute('CREATE INDEX idx_activities_date ON activity_logs(date)');
+    await db.execute('CREATE INDEX idx_boundary_farm ON boundary_submissions(farm_id)');
+    await db.execute('CREATE INDEX idx_boundary_section ON boundary_submissions(section_id)');
+    await db.execute('CREATE INDEX idx_boundary_sync ON boundary_submissions(sync_status)');
   }
 
   static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Future migrations go here
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE sections ADD COLUMN crops_json TEXT');
+      await db.execute('ALTER TABLE sections ADD COLUMN boundary_geojson TEXT');
+      await db.execute('ALTER TABLE sections ADD COLUMN centroid_lat REAL');
+      await db.execute('ALTER TABLE sections ADD COLUMN centroid_lng REAL');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS boundary_submissions (
+          id TEXT PRIMARY KEY,
+          section_id TEXT NOT NULL,
+          farm_id TEXT NOT NULL,
+          points_json TEXT NOT NULL,
+          sync_status INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL,
+          synced_at TEXT
+        )
+      ''');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_boundary_farm ON boundary_submissions(farm_id)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_boundary_section ON boundary_submissions(section_id)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_boundary_sync ON boundary_submissions(sync_status)');
+    }
   }
 
   // ── SECTIONS ──
@@ -152,6 +198,34 @@ class DatabaseService {
       hectares: (m['hectares'] as num).toDouble(),
       treeCount: m['tree_count'] as int?,
     )).toList();
+  }
+
+  /// Upserts a real block returned by the backend (`BlockDto`).
+  static Future<void> upsertBlockFromApi(Map<String, dynamic> json) async {
+    final db = await database;
+    final block = Block.fromApiJson(json);
+    await db.insert('blocks', {
+      'id': block.id, 'section_id': block.sectionId,
+      'name': block.name, 'hectares': block.hectares,
+      'tree_count': block.treeCount,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  /// The API has no concept of "no blocks yet" beyond an empty list, but the
+  /// existing Log Activity flow requires selecting a block. Since block
+  /// management isn't part of this phase's backend integration, synthesize a
+  /// single whole-section placeholder block so activity logging keeps working
+  /// for sections that don't have real blocks defined yet.
+  static Future<void> ensureDefaultBlock(String sectionId, double hectares) async {
+    final existing = await getBlocks(sectionId);
+    if (existing.isNotEmpty) return;
+    final db = await database;
+    await db.insert('blocks', {
+      'id': '${sectionId}_default',
+      'section_id': sectionId,
+      'name': 'Whole Section',
+      'hectares': hectares,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   // ── WORKERS ──
@@ -241,42 +315,6 @@ class DatabaseService {
     return activities;
   }
 
-  static Future<List<ActivityLog>> getPendingSync(String farmId) async {
-    final db = await database;
-    final rows = await db.query(
-      'activity_logs',
-      where: 'farm_id = ? AND sync_status = ?',
-      whereArgs: [farmId, SyncStatus.pending.index],
-    );
-    // Same hydration as above (simplified — reuse getActivities with filter in prod)
-    return rows.map((row) => ActivityLog(
-      id: row['id'] as String,
-      farmId: row['farm_id'] as String,
-      sectionId: row['section_id'] as String,
-      sectionName: row['section_name'] as String,
-      blockId: row['block_id'] as String,
-      blockName: row['block_name'] as String,
-      activityType: ActivityType.values[row['activity_type'] as int],
-      date: DateTime.parse(row['date'] as String),
-      workers: const [],
-      inputs: const [],
-      notes: row['notes'] as String? ?? '',
-      supervisorId: row['supervisor_id'] as String,
-      supervisorName: row['supervisor_name'] as String,
-      syncStatus: SyncStatus.pending,
-      createdAt: DateTime.parse(row['created_at'] as String),
-    )).toList();
-  }
-
-  static Future<void> markSynced(String activityId) async {
-    final db = await database;
-    await db.update(
-      'activity_logs',
-      {'sync_status': SyncStatus.synced.index, 'synced_at': DateTime.now().toIso8601String()},
-      where: 'id = ?', whereArgs: [activityId],
-    );
-  }
-
   static Future<int> getPendingSyncCount(String farmId) async {
     final db = await database;
     final result = await db.rawQuery(
@@ -284,5 +322,39 @@ class DatabaseService {
       [farmId, SyncStatus.pending.index],
     );
     return result.first['count'] as int;
+  }
+
+  // ── BOUNDARY SUBMISSIONS ──
+
+  static Future<void> insertBoundarySubmission(BoundarySubmission submission) async {
+    final db = await database;
+    await db.insert('boundary_submissions', submission.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  static Future<int> getPendingBoundaryCount(String farmId) async {
+    final db = await database;
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM boundary_submissions WHERE farm_id = ? AND sync_status = ?',
+      [farmId, SyncStatus.pending.index],
+    );
+    return result.first['count'] as int;
+  }
+
+  // ── GENERIC SYNC HELPERS (shared by SyncService for activity_logs & boundary_submissions) ──
+
+  /// Raw rows (not hydrated into models) with `sync_status = pending` for the
+  /// given farm-scoped outbox table. Deliberately generic — see SyncService.
+  static Future<List<Map<String, dynamic>>> getPendingRows(String table, {required String farmId}) async {
+    final db = await database;
+    return db.query(table, where: 'farm_id = ? AND sync_status = ?', whereArgs: [farmId, SyncStatus.pending.index]);
+  }
+
+  static Future<void> markRowSynced(String table, String id) async {
+    final db = await database;
+    await db.update(
+      table,
+      {'sync_status': SyncStatus.synced.index, 'synced_at': DateTime.now().toIso8601String()},
+      where: 'id = ?', whereArgs: [id],
+    );
   }
 }

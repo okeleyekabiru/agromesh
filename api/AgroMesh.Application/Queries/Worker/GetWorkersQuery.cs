@@ -17,6 +17,6 @@ public class GetWorkersQueryHandler : IRequestHandler<GetWorkersQuery, List<Work
         var workers = await _workerRepo.GetByFarmIdAsync(query.FarmId, query.ActiveOnly, ct);
         return workers.Select(w => new WorkerDto(
             w.Id, w.FarmId, w.Name, w.Initials, w.WorkerRoleId,
-            w.Role.Title, w.Role.DailyRate, w.Type, w.Active, 0)).ToList();
+            w.Role.Title, w.Role.PayRate, w.Role.PayFrequency, w.Type, w.Active, 0)).ToList();
     }
 }

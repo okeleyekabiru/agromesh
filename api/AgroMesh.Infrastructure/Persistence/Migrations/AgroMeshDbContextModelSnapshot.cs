@@ -776,9 +776,6 @@ namespace AgroMesh.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal>("DailyRate")
-                        .HasColumnType("decimal(12,2)");
-
                     b.Property<int>("DefaultType")
                         .HasColumnType("integer");
 
@@ -786,6 +783,12 @@ namespace AgroMesh.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<int>("PayFrequency")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("PayRate")
+                        .HasColumnType("decimal(12,2)");
 
                     b.Property<string>("Title")
                         .IsRequired()

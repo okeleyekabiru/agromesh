@@ -51,7 +51,7 @@ public class LogActivityCommandHandler : IRequestHandler<LogActivityCommand, Log
         {
             var worker = await _workerRepo.GetByIdWithRoleAsync(w.WorkerId, ct)
                 ?? throw new DomainException($"Worker '{w.WorkerId}' not found.");
-            workerLogs.Add(new WorkerLog(worker.Id, worker.Name, worker.Type, w.HoursWorked, worker.Role.DailyRate));
+            workerLogs.Add(new WorkerLog(worker.Id, worker.Name, worker.Type, w.HoursWorked, worker.Role.PayRate, worker.Role.PayFrequency));
         }
 
         var inputs = req.Inputs.Select(i => new InputUsed(i.Item, i.Quantity, i.Unit)).ToList();
@@ -86,7 +86,7 @@ public class LogActivityCommandHandler : IRequestHandler<LogActivityCommand, Log
             activity.WorkedAreaGeoJson,
             activity.WorkedHectares.HasValue ? AreaDto.From(activity.WorkedHectares.Value, farm.PreferredAreaUnit) : null,
             activity.ChemicalProductId, activity.ChemicalProductName,
-            activity.Workers.Select(w => new WorkerLogDto(w.WorkerId, w.WorkerName, w.WorkerType, w.HoursWorked, w.DailyRate)).ToList(),
+            activity.Workers.Select(w => new WorkerLogDto(w.WorkerId, w.WorkerName, w.WorkerType, w.HoursWorked, w.PayRate, w.PayFrequency)).ToList(),
             activity.Inputs.Select(i => new InputUsedDto(i.Item, i.Quantity, i.Unit)).ToList());
 
         return new LogActivityResponse(dto, warnings);

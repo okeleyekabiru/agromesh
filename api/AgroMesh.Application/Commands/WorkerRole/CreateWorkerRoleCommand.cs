@@ -15,9 +15,9 @@ public class CreateWorkerRoleCommandHandler : IRequestHandler<CreateWorkerRoleCo
     public async Task<WorkerRoleDto> Handle(CreateWorkerRoleCommand command, CancellationToken ct)
     {
         var req = command.Request;
-        var role = Domain.Entities.WorkerRole.Create(command.FarmId, req.Title, req.DefaultType, req.DailyRate);
+        var role = Domain.Entities.WorkerRole.Create(command.FarmId, req.Title, req.DefaultType, req.PayRate, req.PayFrequency);
         await _roleRepo.AddAsync(role, ct);
 
-        return new WorkerRoleDto(role.Id, role.FarmId, role.Title, role.DefaultType, role.DailyRate, 0);
+        return new WorkerRoleDto(role.Id, role.FarmId, role.Title, role.DefaultType, role.PayRate, role.PayFrequency, 0);
     }
 }

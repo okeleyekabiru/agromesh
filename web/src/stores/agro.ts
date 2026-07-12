@@ -3,14 +3,17 @@ import { ref, computed } from 'vue'
 import type {
   Farm, Section, Worker, WorkerRole, ActivityLog, Transaction,
   InventoryItem, ChemicalProduct, UpcomingTask, LowStockAlert, WeatherWidget, DashboardData,
-  AuthUser, AuthResponse, FeatureFlag
+  AuthUser, AuthResponse, FeatureFlag, FarmSummary, State,
+  BoundarySubmissionResult, WizardSectionSummary
 } from '@/types'
 import {
   farmApi, sectionApi, activityApi, transactionApi,
   workerApi, workerRoleApi, inventoryApi, chemicalApi,
-  authApi, featuresApi,
+  authApi, featuresApi, referenceApi,
   setFarmId
 } from '@/services/api'
+
+const ACTIVE_FARM_KEY = 'agro_active_farm_id'
 
 export const useAgroStore = defineStore('agro', () => {
 
@@ -39,8 +42,27 @@ export const useAgroStore = defineStore('agro', () => {
   const token = ref<string | null>(localStorage.getItem('agro_token'))
   const enabledFeatures = ref<string[]>([])
 
+  // ── MULTI-FARM STATE ──
+  const companyId = ref<string | null>(null)
+  const farms = ref<FarmSummary[]>([])
+  const activeFarmId = ref<string | null>(localStorage.getItem(ACTIVE_FARM_KEY))
+
+  // ── REFERENCE DATA ──
+  const states = ref<State[]>([])
+
+  // ── SETUP WIZARD (Sections Setup → Review & Confirm handoff) ──
+  // SectionDto doesn't expose a boundary-source field, so we track it client-side for the
+  // lifetime of the wizard session just to render it in the Review & Confirm summary.
+  const wizardSections = ref<WizardSectionSummary[]>([])
+
   // ── COMPUTED ──
   const isAuthenticated = computed(() => !!token.value)
+
+  const activeFarmSummary = computed(() =>
+    farms.value.find(f => f.id === activeFarmId.value) ?? null
+  )
+
+  const hasMultipleFarms = computed(() => farms.value.length > 1)
 
   const pendingReviews = computed(() =>
     transactions.value.filter(t => !t.reviewedByUser).length
@@ -56,6 +78,96 @@ export const useAgroStore = defineStore('agro', () => {
       ? inventoryItems.value.filter(i => i.isLowStock).length
       : lowStockAlerts.value.length
   )
+
+  // ── MULTI-FARM ACTIONS ──
+
+  /** Sets the active farm pointer (localStorage + the shared FARM_ID used by farm-scoped API calls). */
+  function setActiveFarm(farmId: string | null) {
+    activeFarmId.value = farmId
+    if (farmId) {
+      localStorage.setItem(ACTIVE_FARM_KEY, farmId)
+      setFarmId(farmId)
+    } else {
+      localStorage.removeItem(ACTIVE_FARM_KEY)
+    }
+  }
+
+  /** Picks the active farm from the last-used id (if still valid) or defaults to the first farm. */
+  function applyActiveFarm() {
+    const saved = localStorage.getItem(ACTIVE_FARM_KEY)
+    const match = saved ? farms.value.find(f => f.id === saved) : null
+    setActiveFarm(match ? match.id : (farms.value[0]?.id ?? null))
+  }
+
+  /** Loads the farms belonging to the current user's company (server-side scoped via JWT). */
+  async function fetchFarms(): Promise<FarmSummary[]> {
+    const res = await farmApi.list()
+    farms.value = res.data ?? []
+    return farms.value
+  }
+
+  /** Switches the active farm and refreshes farm-scoped context (sidebar, dashboard, etc.). */
+  async function switchFarm(farmId: string) {
+    if (farmId === activeFarmId.value) return
+    setActiveFarm(farmId)
+    farm.value = null
+    dashboard.value = null
+    sections.value = []
+    await fetchFarm()
+    await fetchFeatures(farmId)
+  }
+
+  /** Flow A2 — create a new, independent farm under the caller's existing company. */
+  async function addFarm(body: { name: string; stateId: string; lgaFreetext?: string }) {
+    const res = await farmApi.addFarm(body)
+    const summary: FarmSummary = { id: res.data.id, name: res.data.name, setupStatus: res.data.setupStatus }
+    farms.value.push(summary)
+    setActiveFarm(summary.id)
+    farm.value = res.data
+    needsOnboarding.value = false
+    return res.data as Farm
+  }
+
+  async function fetchStates(): Promise<State[]> {
+    if (states.value.length) return states.value
+    try {
+      const res = await referenceApi.getStates()
+      states.value = res.data ?? []
+    } catch {
+      states.value = []
+    }
+    return states.value
+  }
+
+  async function setFarmLocation(farmId: string, body: { stateId: string; lgaFreetext?: string }) {
+    const res = await farmApi.setLocation(farmId, body)
+    farm.value = res.data
+    return res.data as Farm
+  }
+
+  async function completeFarmSetup(farmId: string) {
+    const res = await farmApi.setSetupStatus(farmId)
+    const idx = farms.value.findIndex(f => f.id === farmId)
+    if (idx !== -1) farms.value[idx] = { ...farms.value[idx], setupStatus: res.data.setupStatus }
+    if (farm.value?.id === farmId) farm.value = res.data
+    return res.data as Farm
+  }
+
+  async function submitBoundaryPoints(
+    sectionId: string,
+    body: { operationId: string; points: { lat: number; lng: number }[]; confirmImplausibleDistance?: boolean }
+  ): Promise<BoundarySubmissionResult> {
+    const res = await sectionApi.submitBoundaryPoints(sectionId, body)
+    return res.data
+  }
+
+  async function uploadBoundaryFile(
+    sectionId: string,
+    body: { operationId: string; fileName: string; content: string }
+  ): Promise<BoundarySubmissionResult> {
+    const res = await sectionApi.uploadBoundaryFile(sectionId, body)
+    return res.data
+  }
 
   // ── ACTIONS ──
   async function fetchFarm() {
@@ -197,26 +309,29 @@ export const useAgroStore = defineStore('agro', () => {
     const data = res.data as AuthResponse
     token.value = data.token
     currentUser.value = data.user
+    companyId.value = data.companyId ?? data.user.companyId ?? null
+    farms.value = data.farms ?? []
     localStorage.setItem('agro_token', data.token)
     localStorage.setItem('agro_user', JSON.stringify(data.user))
-    if (data.farmId) {
-      setFarmId(data.farmId)
-      await fetchFeatures(data.farmId)
+    applyActiveFarm()
+    needsOnboarding.value = farms.value.length === 0
+    if (activeFarmId.value) {
+      await fetchFeatures(activeFarmId.value)
     }
     return data
   }
 
-  async function register(body: { fullName: string; email: string; password: string; farmName: string; location?: string; latitude?: number; longitude?: number }) {
+  async function register(body: { fullName: string; email: string; password: string; farmName: string }) {
     const res = await authApi.register(body)
     const data = res.data as AuthResponse
     token.value = data.token
     currentUser.value = data.user
+    companyId.value = data.companyId ?? data.user.companyId ?? null
+    farms.value = data.farms ?? []
     localStorage.setItem('agro_token', data.token)
     localStorage.setItem('agro_user', JSON.stringify(data.user))
-    if (data.farmId) {
-      setFarmId(data.farmId)
-      needsOnboarding.value = true
-    }
+    applyActiveFarm()
+    needsOnboarding.value = true
     return data
   }
 
@@ -225,6 +340,9 @@ export const useAgroStore = defineStore('agro', () => {
     currentUser.value = null
     enabledFeatures.value = []
     farm.value = null
+    companyId.value = null
+    farms.value = []
+    setActiveFarm(null)
     localStorage.removeItem('agro_token')
     localStorage.removeItem('agro_user')
   }
@@ -241,16 +359,27 @@ export const useAgroStore = defineStore('agro', () => {
     }
   }
 
+  /**
+   * Ensures `farms`/`activeFarmId` are populated after a page reload (token restored from
+   * localStorage but the in-memory farms array from login/register is gone). There's no
+   * `/api/auth/me` endpoint, so this simply re-fetches `GET /api/farms` — which the backend now
+   * scopes server-side to the caller's company — and trusts that array directly (no client-side
+   * "which farm is really theirs" heuristic needed anymore).
+   */
   async function discoverFarm(): Promise<boolean> {
     try {
-      const res = await farmApi.list()
-      const farms: typeof res.data = res.data
-      if (!farms || farms.length === 0) {
+      if (farms.value.length === 0) {
+        await fetchFarms()
+      }
+      if (!farms.value.length) {
         needsOnboarding.value = true
         return false
       }
-      setFarmId(farms[0].id)
-      farm.value = farms[0]
+      if (!activeFarmId.value || !farms.value.some(f => f.id === activeFarmId.value)) {
+        applyActiveFarm()
+      } else {
+        setFarmId(activeFarmId.value)
+      }
       needsOnboarding.value = false
       return true
     } catch {
@@ -259,39 +388,25 @@ export const useAgroStore = defineStore('agro', () => {
     }
   }
 
-  async function createFarm(body: unknown) {
-    const res = await farmApi.create(body)
-    setFarmId(res.data.id)
-    farm.value = res.data
-    needsOnboarding.value = false
-    return res.data
-  }
-
   async function updateFarmProfile(opts: {
     farmId: string
-    name?: string
-    areaValue?: number
-    areaUnit?: string
-    lat?: number
-    lng?: number
+    name: string
+    areaValue: number
+    areaUnit: 'Hectares' | 'Acres'
   }) {
-    try {
-      await farmApi.update(opts.farmId, {
-        name: opts.name,
-        totalHectares: opts.areaValue,
-        preferredAreaUnit: opts.areaUnit,
-        centroidLat: opts.lat,
-        centroidLng: opts.lng,
-      })
-    } catch {
-      // Non-blocking: onboarding continues even if update fails
-    }
+    const res = await farmApi.update(opts.farmId, {
+      name: opts.name,
+      areaValue: opts.areaValue,
+      areaUnit: opts.areaUnit === 'Acres' ? 1 : 0,
+    })
+    farm.value = res.data
+    return res.data as Farm
   }
 
   async function initDashboard() {
     const hasFarm = await discoverFarm()
     if (!hasFarm) return
-    await Promise.all([fetchDashboard(), fetchWeather()])
+    await Promise.all([fetchFarm(), fetchDashboard(), fetchWeather()])
     lastSynced.value = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
   }
 
@@ -302,13 +417,19 @@ export const useAgroStore = defineStore('agro', () => {
     isOnline, lastSynced, loading, error, needsOnboarding,
     // auth state
     currentUser, token, enabledFeatures,
+    // multi-farm state
+    companyId, farms, activeFarmId, states, wizardSections,
     // computed
     isAuthenticated, pendingReviews, supervisors, lowStockCount,
+    activeFarmSummary, hasMultipleFarms,
     // actions
     fetchFarm, fetchDashboard, fetchWeather, fetchSections, fetchActivities,
     fetchTransactions, fetchWorkers, fetchWorkerRoles, fetchInventory, fetchChemicals,
     logActivity, reviewTransaction, adjustStock, addStockFromReceipt,
-    discoverFarm, createFarm, updateFarmProfile, initDashboard,
+    discoverFarm, updateFarmProfile, initDashboard,
+    // multi-farm actions
+    fetchFarms, switchFarm, addFarm, setActiveFarm, fetchStates, setFarmLocation,
+    completeFarmSetup, submitBoundaryPoints, uploadBoundaryFile,
     // auth actions
     login, register, logout, fetchFeatures, restoreSession,
   }

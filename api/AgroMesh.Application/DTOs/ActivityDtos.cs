@@ -2,7 +2,7 @@ using AgroMesh.Domain.Enums;
 
 namespace AgroMesh.Application.DTOs;
 
-public record WorkerLogDto(string WorkerId, string WorkerName, WorkerType WorkerType, double HoursWorked, decimal DailyRate);
+public record WorkerLogDto(string WorkerId, string WorkerName, WorkerType WorkerType, double HoursWorked, decimal PayRate, PayFrequency PayFrequency);
 
 public record InputUsedDto(string Item, double Quantity, string Unit);
 

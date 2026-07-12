@@ -113,7 +113,7 @@
               <select class="form-select" v-model="workerPickId" style="flex:1">
                 <option value="">Pick worker...</option>
                 <option v-for="w in store.workers" :key="w.id" :value="w.id">
-                  {{ w.name }} ({{ w.roleTitle }} · ₦{{ w.dailyRate.toLocaleString() }}/day)
+                  {{ w.name }} ({{ w.roleTitle }} · ₦{{ w.payRate.toLocaleString() }}/{{ PAY_FREQUENCY_LABELS[w.payFrequency].toLowerCase() }})
                 </option>
               </select>
               <input class="form-input" placeholder="Hours" v-model.number="workerHours" type="number" min="1" max="12" style="width:80px">
@@ -165,6 +165,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAgroStore } from '@/stores/agro'
 import type { ActivityType } from '@/types'
+import { PAY_FREQUENCY_LABELS } from '@/types'
 
 const emit = defineEmits(['close'])
 const store = useAgroStore()
@@ -182,7 +183,7 @@ const lowStockWarnings = ref<string[]>([])
 
 const workerPickId = ref('')
 const workerHours = ref<number>(8)
-const workerEntries = ref<{ workerId: string; workerName: string; workerType: string; hoursWorked: number; dailyRate: number; label: string }[]>([])
+const workerEntries = ref<{ workerId: string; workerName: string; workerType: string; hoursWorked: number; payRate: number; label: string }[]>([])
 
 const inputItem = ref('')
 const inputQty = ref<number | ''>('')
@@ -242,7 +243,7 @@ async function next() {
         workerName: we.workerName,
         workerType: we.workerType,
         hoursWorked: we.hoursWorked,
-        dailyRate: we.dailyRate
+        payRate: we.payRate
       })),
       inputs: form.value.inputs
     }
@@ -268,7 +269,7 @@ function addWorker() {
     workerName: w.name,
     workerType: w.type,
     hoursWorked: workerHours.value,
-    dailyRate: w.dailyRate,
+    payRate: w.payRate,
     label: `${w.name} · ${workerHours.value}h`
   })
   workerPickId.value = ''

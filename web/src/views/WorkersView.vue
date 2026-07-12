@@ -29,7 +29,7 @@
       <div class="role-row" v-for="role in store.workerRoles" :key="role.id">
         <div class="role-title">{{ role.title }}</div>
         <StatBadge :variant="role.defaultType === 'Employee' ? 'green' : 'blue'">{{ role.defaultType }}</StatBadge>
-        <div class="role-rate">₦{{ role.dailyRate.toLocaleString() }} / day</div>
+        <div class="role-rate">₦{{ role.payRate.toLocaleString() }} / {{ PAY_FREQUENCY_LABELS[role.payFrequency].toLowerCase() }}</div>
         <div class="role-count" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--stone);">{{ role.workerCount }} workers</div>
       </div>
     </div>
@@ -39,6 +39,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useAgroStore } from '@/stores/agro'
+import { PAY_FREQUENCY_LABELS } from '@/types'
 import KpiCard from '@/components/ui/KpiCard.vue'
 import StatBadge from '@/components/ui/StatBadge.vue'
 import WorkerRow from '@/components/ui/WorkerRow.vue'

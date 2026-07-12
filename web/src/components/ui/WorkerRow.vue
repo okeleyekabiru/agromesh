@@ -8,7 +8,7 @@
     <StatBadge :variant="worker.type === 'Employee' ? 'green' : 'blue'">{{ worker.type }}</StatBadge>
     <div class="w-stats">
       <div class="w-days">{{ worker.daysLoggedThisMonth }} days</div>
-      <div class="w-pay">₦{{ worker.dailyRate.toLocaleString() }} / day</div>
+      <div class="w-pay">₦{{ worker.payRate.toLocaleString() }} / {{ PAY_FREQUENCY_LABELS[worker.payFrequency].toLowerCase() }}</div>
     </div>
   </div>
 </template>
@@ -16,6 +16,7 @@
 <script setup lang="ts">
 import StatBadge from './StatBadge.vue'
 import type { Worker } from '@/types'
+import { PAY_FREQUENCY_LABELS } from '@/types'
 defineProps<{ worker: Worker }>()
 </script>
 

@@ -45,5 +45,7 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>AgroMesh uses your location to mark GPS corners when capturing a section's boundary in the field.</string>
 </dict>
 </plist>

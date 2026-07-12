@@ -1,10 +1,11 @@
 using AgroMesh.Application.Interfaces;
+using AgroMesh.Domain.Enums;
 using AgroMesh.Domain.Exceptions;
 using MediatR;
 
 namespace AgroMesh.Application.Commands.WorkerRole;
 
-public record UpdateWorkerRoleRateCommand(string RoleId, decimal NewDailyRate) : IRequest<Unit>;
+public record UpdateWorkerRoleRateCommand(string RoleId, decimal NewPayRate, PayFrequency NewPayFrequency) : IRequest<Unit>;
 
 public class UpdateWorkerRoleRateCommandHandler : IRequestHandler<UpdateWorkerRoleRateCommand, Unit>
 {
@@ -17,7 +18,7 @@ public class UpdateWorkerRoleRateCommandHandler : IRequestHandler<UpdateWorkerRo
         var role = await _roleRepo.GetByIdAsync(command.RoleId, ct)
             ?? throw new DomainException($"Worker role '{command.RoleId}' not found.");
 
-        role.UpdateRate(command.NewDailyRate);
+        role.UpdatePay(command.NewPayRate, command.NewPayFrequency);
         await _roleRepo.UpdateAsync(role, ct);
         return Unit.Value;
     }

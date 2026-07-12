@@ -28,6 +28,6 @@ public class AddWorkerCommandHandler : IRequestHandler<AddWorkerCommand, WorkerD
         await _workerRepo.AddAsync(worker, ct);
 
         return new WorkerDto(worker.Id, worker.FarmId, worker.Name, worker.Initials,
-            worker.WorkerRoleId, role.Title, role.DailyRate, worker.Type, worker.Active, 0);
+            worker.WorkerRoleId, role.Title, role.PayRate, role.PayFrequency, worker.Type, worker.Active, 0);
     }
 }

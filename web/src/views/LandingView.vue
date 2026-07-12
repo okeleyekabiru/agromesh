@@ -176,69 +176,8 @@
                 <input id="reg-email" v-model="regForm.email" type="email" class="field-input"
                        placeholder="you@example.com" autocomplete="email" required />
               </div>
-              <!-- Country -->
-              <div class="field-group">
-                <label class="field-label" for="reg-country">Country</label>
-                <div class="select-wrap">
-                  <select id="reg-country" v-model="regForm.country" class="field-input field-select" @change="onCountryChange">
-                    <option v-for="c in COUNTRIES" :key="c.code" :value="c.code">{{ c.name }}</option>
-                  </select>
-                  <svg class="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-              </div>
-
-              <!-- State -->
-              <div v-if="availableStates.length" class="field-group">
-                <label class="field-label" for="reg-state">State</label>
-                <div class="select-wrap">
-                  <select id="reg-state" v-model="regForm.state" class="field-input field-select" @change="regForm.lga = ''">
-                    <option value="">— Select state —</option>
-                    <option v-for="s in availableStates" :key="s" :value="s">{{ s }}</option>
-                  </select>
-                  <svg class="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-              </div>
-
-              <!-- LGA (Nigeria only) -->
-              <div v-if="regForm.country === 'NG' && availableLgas.length" class="field-group">
-                <label class="field-label" for="reg-lga">Local Government Area</label>
-                <div class="select-wrap">
-                  <select id="reg-lga" v-model="regForm.lga" class="field-input field-select">
-                    <option value="">— Select LGA —</option>
-                    <option v-for="l in availableLgas" :key="l" :value="l">{{ l }}</option>
-                  </select>
-                  <svg class="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-              </div>
-
-              <!-- GPS Coordinates (for weather & map accuracy) -->
-              <div class="field-group">
-                <label class="field-label">
-                  GPS Coordinates
-                  <span class="label-opt">for weather & scheduling</span>
-                </label>
-                <button type="button" class="gps-btn" @click="detectLocation" :disabled="gpsLoading">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3"/>
-                    <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
-                  </svg>
-                  <span class="gps-spinner" v-if="gpsLoading" />
-                  {{ gpsLoading ? 'Detecting…' : (regForm.lat != null ? '✓ GPS location captured' : 'Detect via GPS') }}
-                </button>
-                <Transition name="gps-fade">
-                  <div v-if="regForm.lat != null && regForm.lng != null" class="gps-result">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0112 2a8 8 0 018 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
-                    {{ regForm.lat.toFixed(5) }}°, {{ regForm.lng.toFixed(5) }}°
-                    <button type="button" class="gps-clear" @click="clearGps" aria-label="Clear">×</button>
-                  </div>
-                </Transition>
-                <div v-if="gpsError" class="gps-err-msg">{{ gpsError }}</div>
-                <div class="gps-manual-row">
-                  <input class="field-input" v-model.number="regForm.lat" type="number" step="0.00001"
-                         placeholder="Lat e.g. 7.3775" />
-                  <input class="field-input" v-model.number="regForm.lng" type="number" step="0.00001"
-                         placeholder="Lng e.g. 3.9470" />
-                </div>
+              <div class="hint-box">
+                You'll set your farm's state/LGA and section boundaries in the setup wizard right after this.
               </div>
               <div class="field-group">
                 <label class="field-label" for="reg-password">Password</label>
@@ -357,7 +296,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAgroStore } from '@/stores/agro'
-import { COUNTRIES, NIGERIA_STATES, STATE_MAP } from '@/data/locations'
+import { extractErrorMessage } from '@/utils/http'
 
 const router = useRouter()
 const store  = useAgroStore()
@@ -372,63 +311,7 @@ const authColRef = ref<HTMLElement | null>(null)
 const loginForm = ref({ email: '', password: '' })
 const regForm   = ref({
   fullName: '', email: '', password: '', farmName: '',
-  country: 'NG', state: '', lga: '',
-  lat: null as number | null, lng: null as number | null,
 })
-
-// ── Location cascades ──
-const availableStates = computed<string[]>(() => {
-  if (regForm.value.country === 'NG') return NIGERIA_STATES.map(s => s.name)
-  return STATE_MAP[regForm.value.country] ?? []
-})
-
-const availableLgas = computed<string[]>(() => {
-  if (regForm.value.country !== 'NG' || !regForm.value.state) return []
-  return NIGERIA_STATES.find(s => s.name === regForm.value.state)?.lgas ?? []
-})
-
-function onCountryChange() {
-  regForm.value.state = ''
-  regForm.value.lga = ''
-}
-
-function buildLocation(): string {
-  const { country, state, lga } = regForm.value
-  const countryName = COUNTRIES.find(c => c.code === country)?.name ?? country
-  if (lga && state) return `${lga}, ${state}, ${countryName}`
-  if (state)        return `${state}, ${countryName}`
-  return countryName
-}
-
-// ── GPS coordinates ──
-const gpsLoading = ref(false)
-const gpsError   = ref('')
-
-function clearGps() {
-  regForm.value.lat = null
-  regForm.value.lng = null
-  gpsError.value = ''
-}
-
-async function detectLocation() {
-  if (!navigator.geolocation) {
-    gpsError.value = 'Geolocation not supported by this browser.'
-    return
-  }
-  gpsLoading.value = true
-  gpsError.value = ''
-  try {
-    const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 12000, enableHighAccuracy: true })
-    )
-    regForm.value.lat = Math.round(pos.coords.latitude  * 100000) / 100000
-    regForm.value.lng = Math.round(pos.coords.longitude * 100000) / 100000
-  } catch {
-    gpsError.value = 'Could not detect location. Enter coordinates manually below.'
-  } finally {
-    gpsLoading.value = false
-  }
-}
 
 function scrollToAuth() {
   authColRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -460,8 +343,7 @@ async function handleLogin() {
     await store.initDashboard()
     router.push({ name: 'dashboard' })
   } catch (e: unknown) {
-    const err = e as { response?: { data?: { message?: string } } }
-    authError.value = err?.response?.data?.message ?? 'Invalid email or password.'
+    authError.value = extractErrorMessage(e, 'Invalid email or password.')
   } finally {
     submitting.value = false
   }
@@ -476,18 +358,17 @@ async function handleRegister() {
   submitting.value = true
   try {
     await store.register({
-      fullName:  regForm.value.fullName,
-      email:     regForm.value.email,
-      password:  regForm.value.password,
-      farmName:  regForm.value.farmName,
-      location:  buildLocation(),
-      latitude:  regForm.value.lat  ?? undefined,
-      longitude: regForm.value.lng  ?? undefined,
+      fullName: regForm.value.fullName,
+      email:    regForm.value.email,
+      password: regForm.value.password,
+      farmName: regForm.value.farmName,
     })
-    router.push({ name: 'onboarding' })
+    // Spec: land on the dashboard with a "Complete farm setup" banner/CTA — never block
+    // the dashboard behind setup completion. The farmer can explore immediately.
+    await store.initDashboard()
+    router.push({ name: 'dashboard' })
   } catch (e: unknown) {
-    const err = e as { response?: { data?: { message?: string } } }
-    authError.value = err?.response?.data?.message ?? 'Registration failed. Please try again.'
+    authError.value = extractErrorMessage(e, 'Registration failed. Please try again.')
   } finally {
     submitting.value = false
   }
@@ -934,6 +815,16 @@ onMounted(() => {
 .field-input:focus {
   border-color: rgba(61,170,106,0.5);
   background: rgba(255,255,255,0.08);
+}
+
+.hint-box {
+  background: rgba(61,170,106,0.07);
+  border: 1px solid rgba(61,170,106,0.18);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.5;
 }
 
 /* Select */

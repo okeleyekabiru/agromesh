@@ -1,12 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/models.dart';
+import '../services/api_client.dart';
 import '../services/database_service.dart';
 import '../services/sync_service.dart';
 
 class AppStore extends ChangeNotifier {
-  static const _farmId = 'farm_001';
   static const _uuid = Uuid();
+
+  // ── SESSION-SCOPED STATE (set by AppGate once a farm is chosen) ──
+  String farmId = '';
+  String farmName = '';
+  String farmLocation = '';
+  bool _connectivitySubscribed = false;
 
   // ── STATE ──
   List<Section> sections = [];
@@ -18,6 +24,7 @@ class AppStore extends ChangeNotifier {
   bool isSyncing = false;
   int  pendingSyncCount = 0;
   String lastSynced = '--:-- --';
+  String? sectionsError;
 
   bool isLoading = false;
   String? error;
@@ -26,24 +33,31 @@ class AppStore extends ChangeNotifier {
   Section? selectedSection;
   Block?   selectedBlock;
 
-  // ── INIT ──
-  Future<void> init() async {
+  // ── INIT ── (called once per active-farm selection, from AppGate)
+  Future<void> init(String farmId, {String? farmName, String? farmLocation}) async {
+    this.farmId = farmId;
+    if (farmName != null) this.farmName = farmName;
+    if (farmLocation != null) this.farmLocation = farmLocation;
+
     isLoading = true;
     notifyListeners();
 
     try {
-      await _seedIfEmpty();
-      await _loadAll();
+      await _seedWorkersIfEmpty();
+      await refreshFarmDetails();
+      await refreshSections();
       await _checkSync();
 
-      // Listen for connectivity changes
-      SyncService.connectivityStream.listen((online) async {
-        isOnline = online;
-        notifyListeners();
-        if (online && pendingSyncCount > 0) {
-          await syncNow();
-        }
-      });
+      if (!_connectivitySubscribed) {
+        _connectivitySubscribed = true;
+        SyncService.connectivityStream.listen((online) async {
+          isOnline = online;
+          notifyListeners();
+          if (online && pendingSyncCount > 0) {
+            await syncNow();
+          }
+        });
+      }
     } catch (e) {
       error = e.toString();
     }
@@ -53,10 +67,13 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> _loadAll() async {
-    sections   = await DatabaseService.getSections(_farmId);
-    workers    = await DatabaseService.getWorkers(_farmId);
-    activities = await DatabaseService.getActivities(_farmId);
-    pendingSyncCount = await DatabaseService.getPendingSyncCount(_farmId);
+    sections   = await DatabaseService.getSections(farmId);
+    workers    = await DatabaseService.getWorkers(farmId);
+    activities = await DatabaseService.getActivities(farmId);
+
+    final pendingActivities = await DatabaseService.getPendingSyncCount(farmId);
+    final pendingBoundaries = await DatabaseService.getPendingBoundaryCount(farmId);
+    pendingSyncCount = pendingActivities + pendingBoundaries;
 
     // Load blocks for all sections
     blocks = [];
@@ -68,7 +85,101 @@ class AppStore extends ChangeNotifier {
 
   Future<void> _checkSync() async {
     isOnline = await SyncService.isOnline();
-    pendingSyncCount = await DatabaseService.getPendingSyncCount(_farmId);
+    await _loadAll();
+  }
+
+  // ── FARM DETAILS ──
+  // Login only returns a thin {id, name, setupStatus} farm summary. Backfill
+  // the rest (location, hectares, etc.) from the real farms list when online;
+  // silently keep whatever we already have (from the login summary or a
+  // previous fetch) when offline.
+  Future<void> refreshFarmDetails() async {
+    try {
+      final json = await ApiClient.get('/api/farms');
+      final list = (json as List).cast<Map<String, dynamic>>();
+      final match = list.where((f) => f['id'] == farmId).toList();
+      if (match.isNotEmpty) {
+        final farm = Farm.fromJson(match.first);
+        farmName = farm.name;
+        farmLocation = farm.location;
+      }
+    } catch (_) {
+      // Offline or server error — non-fatal, keep existing farmName/location.
+    }
+  }
+
+  // ── SECTIONS ──
+
+  /// Pulls the farm's sections from the real backend and caches them locally
+  /// so the Sections tab works offline too. On failure, just falls back to
+  /// whatever is already cached (offline-first read).
+  Future<void> refreshSections() async {
+    sectionsError = null;
+    try {
+      final json = await ApiClient.get('/api/farms/$farmId/sections');
+      final list = (json as List).cast<Map<String, dynamic>>();
+
+      for (final j in list) {
+        final section = Section.fromApiJson(j);
+        await DatabaseService.upsertSection(section);
+
+        final blocksJson = (j['blocks'] as List?) ?? const [];
+        if (blocksJson.isNotEmpty) {
+          for (final b in blocksJson) {
+            await DatabaseService.upsertBlockFromApi(b as Map<String, dynamic>);
+          }
+        } else {
+          await DatabaseService.ensureDefaultBlock(section.id, section.hectares);
+        }
+      }
+    } catch (_) {
+      sectionsError = isOnline
+          ? 'Could not refresh sections from the server.'
+          : 'Offline — showing saved sections.';
+    }
+
+    await _loadAll();
+    notifyListeners();
+  }
+
+  /// Adds a section by name only (the lightweight mobile "quick add" flow —
+  /// full farm/company/section setup lives on the web app). Requires
+  /// connectivity: unlike activity logs and boundary points, this is not
+  /// queued for later sync.
+  Future<void> addSection(String name) async {
+    if (!isOnline) {
+      throw Exception('You need an internet connection to add a section.');
+    }
+    await ApiClient.post('/api/farms/$farmId/sections', {
+      'name': name,
+      'crops': [
+        {'cropType': CropType.mixed.index, 'percentage': 100},
+      ],
+      'areaValue': 0,
+    });
+    await refreshSections();
+  }
+
+  // ── BOUNDARY CAPTURE ──
+
+  /// Writes a completed GPS corner-capture session to the local outbox. This
+  /// must succeed fully offline — sync happens best-effort afterwards (or on
+  /// the next reconnect) via [SyncService].
+  Future<void> finishBoundaryCapture(String sectionId, List<GeoPoint> points) async {
+    final submission = BoundarySubmission(
+      id: _uuid.v4(),
+      sectionId: sectionId,
+      farmId: farmId,
+      points: points,
+      createdAt: DateTime.now(),
+    );
+    await DatabaseService.insertBoundarySubmission(submission);
+    await _loadAll();
+    notifyListeners();
+
+    if (isOnline) {
+      await syncNow();
+    }
   }
 
   // ── LOG ACTIVITY ──
@@ -87,7 +198,7 @@ class AppStore extends ChangeNotifier {
   }) async {
     final activity = ActivityLog(
       id: _uuid.v4(),
-      farmId: _farmId,
+      farmId: farmId,
       sectionId: sectionId,
       sectionName: sectionName,
       blockId: blockId,
@@ -122,7 +233,7 @@ class AppStore extends ChangeNotifier {
     isSyncing = true;
     notifyListeners();
 
-    final result = await SyncService.syncPending();
+    final result = await SyncService.syncPending(farmId);
 
     if (result.synced > 0) {
       lastSynced = _formatTime(DateTime.now());
@@ -144,58 +255,23 @@ class AppStore extends ChangeNotifier {
   }
 
   String _formatTime(DateTime dt) {
-    final h = dt.hour.toString().padLeft(2, '0');
     final m = dt.minute.toString().padLeft(2, '0');
     final ampm = dt.hour < 12 ? 'AM' : 'PM';
     final hour = dt.hour > 12 ? dt.hour - 12 : dt.hour;
     return '$hour:$m $ampm';
   }
 
-  // ── SEED DATA (development only) ──
-  Future<void> _seedIfEmpty() async {
-    final existing = await DatabaseService.getSections(_farmId);
+  // ── SEED DATA (development only — workers have no backend integration yet) ──
+  Future<void> _seedWorkersIfEmpty() async {
+    final existing = await DatabaseService.getWorkers(farmId);
     if (existing.isNotEmpty) return;
 
-    // Seed sections
-    final seedSections = [
-      const Section(id:'s1', farmId:_farmId, name:'Section A', crop:CropType.oilPalm, hectares:18, status:SectionStatus.active, lastActivityDate:'Today', blockCount:4),
-      const Section(id:'s2', farmId:_farmId, name:'Section B', crop:CropType.oilPalm, hectares:16, status:SectionStatus.active, lastActivityDate:'Today', blockCount:4),
-      const Section(id:'s3', farmId:_farmId, name:'Section C', crop:CropType.maize,   hectares:14, status:SectionStatus.harvestSoon, lastActivityDate:'Yesterday', blockCount:3),
-      const Section(id:'s4', farmId:_farmId, name:'Section D', crop:CropType.mixed,   hectares:20, status:SectionStatus.idle, lastActivityDate:'3 days ago', blockCount:5),
-      const Section(id:'s5', farmId:_farmId, name:'Section E', crop:CropType.oilPalm, hectares:16, status:SectionStatus.active, lastActivityDate:'Today', blockCount:4),
-      const Section(id:'s6', farmId:_farmId, name:'Section F', crop:CropType.maize,   hectares:16, status:SectionStatus.idle, lastActivityDate:'5 days ago', blockCount:4),
-    ];
-
-    for (final s in seedSections) {
-      await DatabaseService.upsertSection(s);
-    }
-
-    // Seed blocks for each section
-    for (final s in seedSections) {
-      for (int i = 0; i < s.blockCount; i++) {
-        final block = Block(
-          id: '${s.id}_b$i',
-          sectionId: s.id,
-          name: 'Block ${String.fromCharCode(65 + i)}',
-          hectares: (s.hectares / s.blockCount).roundToDouble(),
-        );
-        await DatabaseService.upsertSection(s); // sections already inserted
-        // Insert block directly
-        final db = await DatabaseService.database;
-        await db.insert('blocks', {
-          'id': block.id, 'section_id': block.sectionId,
-          'name': block.name, 'hectares': block.hectares,
-        }, conflictAlgorithm: ConflictAlgorithm.ignore);
-      }
-    }
-
-    // Seed workers
     final seedWorkers = [
-      const Worker(id:'w1', farmId:_farmId, name:'Ibrahim Musa',  initials:'IM', role:'Field Supervisor',     type:WorkerType.employee,   active:true, dailyRate:3500),
-      const Worker(id:'w2', farmId:_farmId, name:'Tunde Adeyemi', initials:'TA', role:'Assistant Supervisor', type:WorkerType.employee,   active:true, dailyRate:2800),
-      const Worker(id:'w3', farmId:_farmId, name:'Emeka Johnson', initials:'EJ', role:'Farm Worker',          type:WorkerType.employee,   active:true, dailyRate:2200),
-      const Worker(id:'w4', farmId:_farmId, name:'Fatima Bello',  initials:'FB', role:'Farm Worker',          type:WorkerType.employee,   active:true, dailyRate:2200),
-      const Worker(id:'w5', farmId:_farmId, name:'Chukwu Obi',    initials:'CO', role:'Contractor',           type:WorkerType.contractor, active:true, dailyRate:4000),
+      Worker(id: 'w1', farmId: farmId, name: 'Ibrahim Musa',  initials: 'IM', role: 'Field Supervisor',     type: WorkerType.employee,   active: true, dailyRate: 3500),
+      Worker(id: 'w2', farmId: farmId, name: 'Tunde Adeyemi', initials: 'TA', role: 'Assistant Supervisor', type: WorkerType.employee,   active: true, dailyRate: 2800),
+      Worker(id: 'w3', farmId: farmId, name: 'Emeka Johnson', initials: 'EJ', role: 'Farm Worker',          type: WorkerType.employee,   active: true, dailyRate: 2200),
+      Worker(id: 'w4', farmId: farmId, name: 'Fatima Bello',  initials: 'FB', role: 'Farm Worker',          type: WorkerType.employee,   active: true, dailyRate: 2200),
+      Worker(id: 'w5', farmId: farmId, name: 'Chukwu Obi',    initials: 'CO', role: 'Contractor',           type: WorkerType.contractor, active: true, dailyRate: 4000),
     ];
 
     for (final w in seedWorkers) {
@@ -203,6 +279,3 @@ class AppStore extends ChangeNotifier {
     }
   }
 }
-
-// Needed for sqflite ConflictAlgorithm in seed
-import 'package:sqflite/sqflite.dart';

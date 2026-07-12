@@ -26,6 +26,7 @@ web/.env
 web/.env.local
 web/.env.development
 web/test-results/
+web/playwright-report/
 
 # IDE
 .vscode/

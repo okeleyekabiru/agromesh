@@ -2,6 +2,13 @@
   <div>
     <!-- Alert banners -->
     <AlertBanner
+      v-if="store.farm?.setupStatus === 0"
+      action="Complete setup"
+      @action="router.push({ name: 'onboarding' })"
+    >
+      <strong>Your farm setup isn't finished.</strong> Add your location, sections and boundaries to unlock scheduling and reporting.
+    </AlertBanner>
+    <AlertBanner
       v-if="store.pendingReviews > 0"
       action="Review now"
       @action="router.push('/finance')"

@@ -16,6 +16,11 @@ export type ActivityType =
 
 export type WorkerType = 'Employee' | 'Contractor'
 
+// Enums serialize as raw integers on the wire (no JsonStringEnumConverter configured
+// backend-side) — 0=Daily, 1=Weekly, 2=Monthly. Convert at the API boundary; don't
+// compare this against string literals.
+export const PAY_FREQUENCY_LABELS = ['Daily', 'Weekly', 'Monthly'] as const
+
 export type TransactionCategory =
   | 'Labour'
   | 'Fertilizer'
@@ -33,6 +38,9 @@ export type CategorizationSource = 'Dictionary' | 'Pattern' | 'Llm' | 'Manual'
 export type ConfidenceLevel = 'High' | 'Medium' | 'Low'
 
 export type AreaUnit = 'Hectares' | 'Acres'
+
+/** FarmSetupStatus enum ordinal as returned by the API: 0 = Draft, 1 = Configured. */
+export type FarmSetupStatus = 0 | 1
 
 export type InventoryCategory = 'Chemical' | 'Fertilizer' | 'Seed' | 'Fuel' | 'Equipment' | 'SpareParts' | 'Other'
 
@@ -61,11 +69,56 @@ export interface Farm {
   location: string
   area: AreaDto
   ownerId: string
+  companyId: string
+  countryCode: string
+  stateId: string | null
+  lgaFreetext: string | null
+  setupStatus: FarmSetupStatus
   preferredAreaUnit: AreaUnit
   centroidLat: number | null
   centroidLng: number | null
   sectionCount: number
   workerCount: number
+}
+
+/** Lightweight farm summary returned inline from login/register (Farms[]) and GET /api/farms. */
+export interface FarmSummary {
+  id: string
+  name: string
+  setupStatus: FarmSetupStatus
+}
+
+/** A Nigerian state (or FCT) from GET /api/reference/states. */
+export interface State {
+  id: string
+  name: string
+  code: string
+}
+
+/** Response shape from POST /api/sections/{id}/boundary/points and /upload. */
+export interface BoundarySubmissionResult {
+  sectionId: string
+  operationId: string
+  submissionType: 0 | 1 // 0 = GpsPoints, 1 = FileUpload
+  computedGeoJson: string
+  computedHectares: number
+  computedCentroidLat: number | null
+  computedCentroidLng: number | null
+}
+
+/**
+ * How a section's boundary was captured during the setup wizard. Tracked client-side only —
+ * SectionDto doesn't surface a boundary source field, so this lives for the lifetime of the
+ * wizard session (see agro store's `wizardSections`) purely to drive the Review & Confirm summary.
+ */
+export type BoundarySource = 'gps' | 'upload' | 'manual'
+
+export interface WizardSectionSummary {
+  id: string
+  name: string
+  areaValue: number
+  boundarySource: BoundarySource
+  boundaryHectares: number | null
 }
 
 export interface Section {
@@ -97,7 +150,8 @@ export interface WorkerRole {
   farmId: string
   title: string
   defaultType: WorkerType
-  dailyRate: number
+  payRate: number
+  payFrequency: number // index into PAY_FREQUENCY_LABELS
   workerCount: number
 }
 
@@ -108,7 +162,8 @@ export interface Worker {
   initials: string
   workerRoleId: string
   roleTitle: string
-  dailyRate: number
+  payRate: number
+  payFrequency: number // index into PAY_FREQUENCY_LABELS
   type: WorkerType
   active: boolean
   daysLoggedThisMonth: number
@@ -119,7 +174,8 @@ export interface WorkerLogDto {
   workerName: string
   workerType: WorkerType
   hoursWorked: number
-  dailyRate: number
+  payRate: number
+  payFrequency: number // index into PAY_FREQUENCY_LABELS
 }
 
 export interface InputUsedDto {
@@ -294,13 +350,14 @@ export interface AuthUser {
   id: string
   email: string
   fullName: string
-  farmId: string | null
+  companyId: string | null
 }
 
 export interface AuthResponse {
   token: string
   user: AuthUser
-  farmId: string | null
+  companyId: string | null
+  farms: FarmSummary[]
 }
 
 // ── FEATURE FLAGS ──

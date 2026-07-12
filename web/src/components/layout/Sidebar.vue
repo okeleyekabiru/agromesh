@@ -24,16 +24,44 @@
       <span class="logo-text">Agro<span class="logo-accent">Mesh</span></span>
     </div>
 
-    <!-- Farm Context -->
+    <!-- Farm Context / Switcher -->
     <div class="sidebar-farm">
-      <div class="farm-label">ACTIVE FARM</div>
-      <div class="farm-name">{{ store.farm?.name ?? '…' }}</div>
-      <div class="farm-meta">
-        <span>{{ store.farm?.location ?? 'Loading…' }}</span>
-        <template v-if="store.farm?.area?.displayValue">
-          <span class="farm-sep">·</span>
-          <span class="farm-area">{{ store.farm.area.displayValue }} {{ store.farm.area.displayUnit }}</span>
-        </template>
+      <button
+        class="farm-switcher-btn"
+        @click="farmMenuOpen = !farmMenuOpen"
+        :aria-expanded="farmMenuOpen"
+        aria-label="Switch farm"
+      >
+        <div class="farm-switcher-text">
+          <div class="farm-label">ACTIVE FARM</div>
+          <div class="farm-name">{{ store.farm?.name ?? store.activeFarmSummary?.name ?? '…' }}</div>
+          <div class="farm-meta">
+            <span>{{ store.farm?.location ?? 'Loading…' }}</span>
+            <template v-if="store.farm?.area?.displayValue">
+              <span class="farm-sep">·</span>
+              <span class="farm-area">{{ store.farm.area.displayValue }} {{ store.farm.area.displayUnit }}</span>
+            </template>
+          </div>
+        </div>
+        <svg class="farm-chevron" :class="{ 'farm-chevron--open': farmMenuOpen }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+
+      <div v-if="farmMenuOpen" class="farm-menu-backdrop" @click="farmMenuOpen = false" />
+      <div v-if="farmMenuOpen" class="farm-menu">
+        <button
+          v-for="f in store.farms" :key="f.id"
+          class="farm-menu-item"
+          :class="{ 'farm-menu-item--active': f.id === store.activeFarmId }"
+          @click="selectFarm(f.id)"
+        >
+          <span class="farm-menu-name">{{ f.name }}</span>
+          <span v-if="f.setupStatus === 0" class="farm-menu-draft">DRAFT</span>
+          <svg v-if="f.id === store.activeFarmId" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+        <button class="farm-menu-add" @click="openAddFarm">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Farm
+        </button>
       </div>
     </div>
 
@@ -91,13 +119,16 @@
       </div>
     </div>
   </aside>
+
+  <AddFarmModal v-if="showAddFarmModal" @close="showAddFarmModal = false" />
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAgroStore } from '@/stores/agro'
 import { useFeatureFlag } from '@/composables/useFeatureFlag'
+import AddFarmModal from '@/components/modal/AddFarmModal.vue'
 
 const store = useAgroStore()
 const router = useRouter()
@@ -107,6 +138,26 @@ function handleLogout() {
   store.logout()
   router.push({ name: 'landing' })
 }
+
+// ── Farm switcher ──
+const farmMenuOpen = ref(false)
+const showAddFarmModal = ref(false)
+
+async function selectFarm(farmId: string) {
+  farmMenuOpen.value = false
+  if (farmId === store.activeFarmId) return
+  await store.switchFarm(farmId)
+  router.push({ name: 'dashboard' })
+}
+
+function openAddFarm() {
+  farmMenuOpen.value = false
+  showAddFarmModal.value = true
+}
+
+onMounted(() => {
+  if (!store.farms.length) store.fetchFarms()
+})
 
 const ALL_NAV = [
   {
@@ -205,12 +256,96 @@ const navItems = computed(() =>
 }
 .logo-accent { color: var(--palm); }
 
-/* ── Farm Context ── */
+/* ── Farm Context / Switcher ── */
 .sidebar-farm {
   padding: 12px 16px;
   border-bottom: 1px solid rgba(255,255,255,0.06);
   flex-shrink: 0;
+  position: relative;
 }
+.farm-switcher-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+.farm-switcher-text { flex: 1; min-width: 0; }
+.farm-chevron {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: rgba(255,255,255,0.35);
+  transition: transform var(--dur-fast);
+}
+.farm-chevron--open { transform: rotate(180deg); }
+
+.farm-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+.farm-menu {
+  position: absolute;
+  top: 100%;
+  left: 12px;
+  right: 12px;
+  z-index: 50;
+  margin-top: 4px;
+  background: var(--canopy);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+  padding: 6px;
+  animation: scale-in 150ms var(--ease-out) both;
+}
+.farm-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255,255,255,0.75);
+  font-size: 11.5px;
+  text-align: left;
+}
+.farm-menu-item:hover { background: rgba(255,255,255,0.06); }
+.farm-menu-item--active { color: #fff; font-weight: 600; }
+.farm-menu-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.farm-menu-draft {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(232,168,56,0.15);
+  color: var(--harvest);
+  flex-shrink: 0;
+}
+.farm-menu-add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 10px;
+  margin-top: 2px;
+  border-radius: 7px;
+  background: none;
+  border: 1px dashed rgba(255,255,255,0.15);
+  cursor: pointer;
+  color: var(--palm);
+  font-size: 11.5px;
+  text-align: left;
+}
+.farm-menu-add:hover { background: rgba(61,170,106,0.1); }
+
 .farm-label {
   font-family: 'JetBrains Mono', monospace;
   font-size: 8px;

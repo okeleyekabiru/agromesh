@@ -25,7 +25,7 @@ public class GetWorkerRolesQueryHandler : IRequestHandler<GetWorkerRolesQuery, L
         foreach (var role in roles)
         {
             var count = await _workerRepo.GetCountByRoleAsync(role.Id, ct);
-            results.Add(new WorkerRoleDto(role.Id, role.FarmId, role.Title, role.DefaultType, role.DailyRate, count));
+            results.Add(new WorkerRoleDto(role.Id, role.FarmId, role.Title, role.DefaultType, role.PayRate, role.PayFrequency, count));
         }
 
         return results;

@@ -12,7 +12,8 @@ public class WorkerRoleConfiguration : IEntityTypeConfiguration<WorkerRole>
         builder.Property(r => r.FarmId).IsRequired().HasMaxLength(50);
         builder.Property(r => r.Title).IsRequired().HasMaxLength(100);
         builder.Property(r => r.DefaultType).IsRequired();
-        builder.Property(r => r.DailyRate).IsRequired().HasColumnType("decimal(12,2)");
+        builder.Property(r => r.PayRate).IsRequired().HasColumnType("decimal(12,2)");
+        builder.Property(r => r.PayFrequency).IsRequired();
 
         builder.HasMany(r => r.Workers)
                .WithOne(w => w.Role)

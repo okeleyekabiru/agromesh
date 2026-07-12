@@ -1,5 +1,6 @@
 using AgroMesh.Domain.Enums;
 using AgroMesh.Domain.Exceptions;
+using AgroMesh.Domain.Utilities;
 using AgroMesh.Domain.ValueObjects;
 
 namespace AgroMesh.Domain.Entities;
@@ -69,7 +70,8 @@ public class ActivityLog : BaseEntity
             ChemicalProductName = chemicalProductName
         };
 
-        log.LabourCost = workers?.Sum(w => w.DailyRate * (decimal)(w.HoursWorked / 8.0)) ?? 0;
+        log.LabourCost = workers?.Sum(w =>
+            PayRateConverter.ToDailyEquivalent(w.PayRate, w.PayFrequency) * (decimal)(w.HoursWorked / 8.0)) ?? 0;
         log.InputCost = 0; // calculated externally once inventory costs are known
 
         return log;

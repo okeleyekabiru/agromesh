@@ -1,30 +1,53 @@
-// This is a basic Flutter widget test.
+// Basic widget tests for the auth/GPS-capture UI added in Phase 4.
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Per the project's testing approach, this GPS/UI/hardware-interaction code
+// is implemented first and covered with lightweight widget tests after — not
+// exhaustive coverage, just enough to catch obvious render/wiring regressions.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
-import 'package:mobile/main.dart';
+import 'package:agromesh_mobile/screens/auth/login_screen.dart';
+import 'package:agromesh_mobile/screens/sections/boundary_capture_screen.dart';
+import 'package:agromesh_mobile/stores/auth_store.dart';
+import 'package:agromesh_mobile/theme/app_theme.dart';
+import 'package:agromesh_mobile/widgets/widgets.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  // Avoid GoogleFonts trying to fetch font files over the network during tests.
+  setUpAll(() {
+    GoogleFonts.config.allowRuntimeFetching = false;
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  testWidgets('LoginScreen renders email/password fields and a Log In button', (tester) async {
+    await tester.pumpWidget(
+      ChangeNotifierProvider<AuthStore>(
+        create: (_) => AuthStore(),
+        child: MaterialApp(theme: AgroTheme.theme, home: const LoginScreen()),
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    expect(find.byType(AgroTextField), findsNWidgets(2));
+    expect(find.widgetWithText(ElevatedButton, 'Log In'), findsOneWidget);
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('BoundaryCaptureScreen starts with zero corners marked and Finish Boundary disabled', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: BoundaryCaptureScreen(sectionId: 'sec_1', sectionName: 'Test Section'),
+      ),
+    );
+
+    expect(find.text('0 corners marked'), findsOneWidget);
+    // `ElevatedButton.icon` builds a private subclass, so match by text alone
+    // rather than `widgetWithText(ElevatedButton, ...)` (exact-type lookup).
+    expect(find.text('Mark Corner Here'), findsOneWidget);
+
+    final finishButton = tester.widget<OutlinedButton>(
+      find.widgetWithText(OutlinedButton, 'Finish Boundary (need 3 more)'),
+    );
+    expect(finishButton.onPressed, isNull);
   });
 }

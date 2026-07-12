@@ -28,7 +28,7 @@ public class WorkerRolesController : ControllerBase
     [HttpPatch("{roleId}/rate")]
     public async Task<IActionResult> UpdateRate(string roleId, [FromBody] UpdateWorkerRoleRateRequest request, CancellationToken ct)
     {
-        await _mediator.Send(new UpdateWorkerRoleRateCommand(roleId, request.DailyRate), ct);
+        await _mediator.Send(new UpdateWorkerRoleRateCommand(roleId, request.PayRate, request.PayFrequency), ct);
         return NoContent();
     }
 }

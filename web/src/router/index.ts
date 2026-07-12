@@ -9,12 +9,14 @@ import ReportsView     from '@/views/ReportsView.vue'
 import InventoryView   from '@/views/InventoryView.vue'
 import OnboardingView    from '@/views/OnboardingView.vue'
 import SectionsSetupView from '@/views/SectionsSetupView.vue'
+import ReviewConfirmView from '@/views/ReviewConfirmView.vue'
 
 const routes = [
   // Public
   { path: '/',              name: 'landing',        component: LandingView,      meta: { public: true } },
   { path: '/onboarding',    name: 'onboarding',     component: OnboardingView,   meta: { public: true } },
   { path: '/sections-setup', name: 'sections-setup', component: SectionsSetupView, meta: { public: true } },
+  { path: '/setup-review',  name: 'setup-review',   component: ReviewConfirmView, meta: { public: true } },
 
   // App (require auth)
   { path: '/dashboard',  name: 'dashboard',  component: DashboardView,  meta: { title: 'Farm Overview',  sub: 'JUNE 2025' } },
@@ -56,9 +58,8 @@ router.beforeEach(async (to) => {
     }
   }
 
-  // Onboarding check: new farms without sections
-  if (!to.meta.public && store.needsOnboarding) return { name: 'onboarding' }
-
+  // Setup completion is surfaced as a dashboard banner/CTA, never a hard redirect —
+  // the farmer must be able to explore the rest of the app immediately after signup.
   return true
 })
 
