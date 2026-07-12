@@ -30,6 +30,7 @@ web/playwright-report/
 
 # IDE
 .vscode/
+.claude/settings.json
 
 # Build output
 build/

@@ -13,6 +13,7 @@ public record SectionDto(
     SectionStatus Status,
     DateTime? LastActivityDate,
     string? BoundaryGeoJson,
+    BoundarySource? BoundarySource,
     double? CentroidLat,
     double? CentroidLng,
     List<BlockDto> Blocks,
@@ -26,5 +27,7 @@ public record SectionCropInput(CropType CropType, double Percentage);
 // Boundary capture (GPS corner capture or GeoJSON/KML upload) happens as a separate step
 // after creation, via the dedicated boundary endpoints — not bundled into section creation.
 public record CreateSectionRequest(string Name, List<SectionCropInput> Crops, double AreaValue);
+
+public record UpdateSectionRequest(string Name, List<SectionCropInput> Crops, double AreaValue);
 
 public record CreateBlockRequest(string Name, double AreaValue, int? TreeCount);

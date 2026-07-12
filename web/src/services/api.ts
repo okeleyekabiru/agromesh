@@ -49,14 +49,15 @@ export const farmApi = {
 export const sectionApi = {
   getAll: () => api.get(`/api/farms/${FARM_ID}/sections`),
   create: (body: unknown) => api.post(`/api/farms/${FARM_ID}/sections`, body),
+  update: (sectionId: string, body: unknown) => api.patch(`/api/farms/${FARM_ID}/sections/${sectionId}`, body),
   createBlock: (sectionId: string, body: unknown) => api.post(`/api/farms/${FARM_ID}/sections/${sectionId}/blocks`, body),
   submitBoundaryPoints: (
     sectionId: string,
-    body: { operationId: string; points: { lat: number; lng: number }[]; confirmImplausibleDistance?: boolean }
+    body: { operationId: string; points: { lat: number; lng: number }[]; confirmImplausibleGeometry?: boolean }
   ) => api.post(`/api/sections/${sectionId}/boundary/points`, body),
   uploadBoundaryFile: (
     sectionId: string,
-    body: { operationId: string; fileName: string; content: string }
+    body: { operationId: string; fileName: string; content: string; confirmImplausibleGeometry?: boolean }
   ) => api.post(`/api/sections/${sectionId}/boundary/upload`, body)
 }
 

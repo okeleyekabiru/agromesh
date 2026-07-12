@@ -106,20 +106,8 @@ export interface BoundarySubmissionResult {
   computedCentroidLng: number | null
 }
 
-/**
- * How a section's boundary was captured during the setup wizard. Tracked client-side only —
- * SectionDto doesn't surface a boundary source field, so this lives for the lifetime of the
- * wizard session (see agro store's `wizardSections`) purely to drive the Review & Confirm summary.
- */
-export type BoundarySource = 'gps' | 'upload' | 'manual'
-
-export interface WizardSectionSummary {
-  id: string
-  name: string
-  areaValue: number
-  boundarySource: BoundarySource
-  boundaryHectares: number | null
-}
+// Backend BoundarySource enum ordinal on Section: 0=GpsCapture, 1=SurveyUpload, 2=ManualEstimate.
+export const SECTION_BOUNDARY_SOURCE_LABELS = ['GPS capture', 'Survey upload', 'Manual estimate'] as const
 
 export interface Section {
   id: string
@@ -130,6 +118,7 @@ export interface Section {
   status: SectionStatus
   lastActivityDate: string | null
   boundaryGeoJson: string | null
+  boundarySource: number | null
   centroidLat: number | null
   centroidLng: number | null
   blocks: Block[]

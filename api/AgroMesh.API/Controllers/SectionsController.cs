@@ -27,6 +27,10 @@ public class SectionsController : ControllerBase
         return Created($"api/farms/{farmId}/sections/{result.Id}", result);
     }
 
+    [HttpPatch("{sectionId}")]
+    public async Task<IActionResult> Update(string sectionId, [FromBody] UpdateSectionRequest request, CancellationToken ct) =>
+        Ok(await _mediator.Send(new UpdateSectionCommand(sectionId, request), ct));
+
     [HttpPost("{sectionId}/blocks")]
     public async Task<IActionResult> CreateBlock(string sectionId, [FromBody] CreateBlockRequest request, CancellationToken ct)
     {

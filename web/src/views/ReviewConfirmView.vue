@@ -37,9 +37,9 @@
           <div v-else class="section-row" v-for="s in store.wizardSections" :key="s.id">
             <div class="section-row-name">{{ s.name }}</div>
             <div class="section-row-meta">
-              <span class="section-row-area">{{ (s.boundaryHectares ?? s.areaValue).toFixed(2) }} ha</span>
-              <span class="boundary-src-badge" :class="`src-${s.boundarySource}`">
-                {{ BOUNDARY_SRC_LABEL[s.boundarySource] }}
+              <span class="section-row-area">{{ s.area.hectares.toFixed(2) }} ha</span>
+              <span class="boundary-src-badge" :class="`src-${boundarySrcClass(s.boundarySource)}`">
+                {{ s.boundarySource != null ? SECTION_BOUNDARY_SOURCE_LABELS[s.boundarySource] : 'Manual estimate' }}
               </span>
             </div>
           </div>
@@ -64,12 +64,15 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAgroStore } from '@/stores/agro'
 import { extractErrorMessage } from '@/utils/http'
-import type { BoundarySource } from '@/types'
+import { SECTION_BOUNDARY_SOURCE_LABELS } from '@/types'
 
 const router = useRouter()
 const store = useAgroStore()
 
-const BOUNDARY_SRC_LABEL: Record<BoundarySource, string> = { gps: 'GPS', upload: 'survey file', manual: 'manual ha' }
+const BOUNDARY_SRC_CLASS = ['gps', 'upload', 'manual']
+function boundarySrcClass(source: number | null) {
+  return BOUNDARY_SRC_CLASS[source ?? 2]
+}
 
 const confirming = ref(false)
 const confirmError = ref('')

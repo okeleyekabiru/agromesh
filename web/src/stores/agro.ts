@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type {
-  Farm, Section, Worker, WorkerRole, ActivityLog, Transaction,
+  Farm, Section, Block, Worker, WorkerRole, ActivityLog, Transaction,
   InventoryItem, ChemicalProduct, UpcomingTask, LowStockAlert, WeatherWidget, DashboardData,
   AuthUser, AuthResponse, FeatureFlag, FarmSummary, State,
-  BoundarySubmissionResult, WizardSectionSummary
+  BoundarySubmissionResult
 } from '@/types'
 import {
   farmApi, sectionApi, activityApi, transactionApi,
@@ -51,9 +51,9 @@ export const useAgroStore = defineStore('agro', () => {
   const states = ref<State[]>([])
 
   // ── SETUP WIZARD (Sections Setup → Review & Confirm handoff) ──
-  // SectionDto doesn't expose a boundary-source field, so we track it client-side for the
-  // lifetime of the wizard session just to render it in the Review & Confirm summary.
-  const wizardSections = ref<WizardSectionSummary[]>([])
+  // Real, server-confirmed sections added during this wizard session — used to drive the
+  // Review & Confirm summary.
+  const wizardSections = ref<Section[]>([])
 
   // ── COMPUTED ──
   const isAuthenticated = computed(() => !!token.value)
@@ -155,7 +155,7 @@ export const useAgroStore = defineStore('agro', () => {
 
   async function submitBoundaryPoints(
     sectionId: string,
-    body: { operationId: string; points: { lat: number; lng: number }[]; confirmImplausibleDistance?: boolean }
+    body: { operationId: string; points: { lat: number; lng: number }[]; confirmImplausibleGeometry?: boolean }
   ): Promise<BoundarySubmissionResult> {
     const res = await sectionApi.submitBoundaryPoints(sectionId, body)
     return res.data
@@ -163,9 +163,29 @@ export const useAgroStore = defineStore('agro', () => {
 
   async function uploadBoundaryFile(
     sectionId: string,
-    body: { operationId: string; fileName: string; content: string }
+    body: { operationId: string; fileName: string; content: string; confirmImplausibleGeometry?: boolean }
   ): Promise<BoundarySubmissionResult> {
     const res = await sectionApi.uploadBoundaryFile(sectionId, body)
+    return res.data
+  }
+
+  async function updateSection(
+    sectionId: string,
+    body: { name: string; crops: { cropType: number; percentage: number }[]; areaValue: number }
+  ): Promise<Section> {
+    const res = await sectionApi.update(sectionId, body)
+    const idx = sections.value.findIndex(s => s.id === sectionId)
+    if (idx !== -1) sections.value[idx] = res.data
+    return res.data
+  }
+
+  async function createBlock(
+    sectionId: string,
+    body: { name: string; areaValue: number; treeCount: number | null }
+  ): Promise<Block> {
+    const res = await sectionApi.createBlock(sectionId, body)
+    const idx = sections.value.findIndex(s => s.id === sectionId)
+    if (idx !== -1) sections.value[idx].blocks.push(res.data)
     return res.data
   }
 
@@ -429,7 +449,7 @@ export const useAgroStore = defineStore('agro', () => {
     discoverFarm, updateFarmProfile, initDashboard,
     // multi-farm actions
     fetchFarms, switchFarm, addFarm, setActiveFarm, fetchStates, setFarmLocation,
-    completeFarmSetup, submitBoundaryPoints, uploadBoundaryFile,
+    completeFarmSetup, submitBoundaryPoints, uploadBoundaryFile, updateSection, createBlock,
     // auth actions
     login, register, logout, fetchFeatures, restoreSession,
   }

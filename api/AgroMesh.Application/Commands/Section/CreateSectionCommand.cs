@@ -51,7 +51,7 @@ public class CreateSectionCommandHandler : IRequestHandler<CreateSectionCommand,
         section.Id, section.FarmId, section.Name,
         section.Crops.Select(c => new SectionCropDto(c.CropType, AreaDto.From(c.Hectares, unit), c.Percentage)).ToList(),
         AreaDto.From(section.Hectares, unit),
-        section.Status, section.LastActivityDate, section.BoundaryGeoJson,
+        section.Status, section.LastActivityDate, section.BoundaryGeoJson, section.BoundarySource,
         section.CentroidLat, section.CentroidLng,
         section.Blocks.Select(b => new BlockDto(b.Id, b.SectionId, b.Name, AreaDto.From(b.Hectares, unit), b.TreeCount)).ToList(),
         null, null);

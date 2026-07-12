@@ -58,6 +58,12 @@ public class Section : BaseEntity
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void Rename(string name)
+    {
+        Name = name;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void MarkActive(DateTime activityDate)
     {
         Status = SectionStatus.Active;

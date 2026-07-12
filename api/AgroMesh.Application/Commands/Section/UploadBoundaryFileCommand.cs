@@ -46,9 +46,11 @@ public class UploadBoundaryFileCommandHandler : IRequestHandler<UploadBoundaryFi
             ? BoundaryFileParser.ParseKml(command.Request.Content)
             : BoundaryFileParser.ParseGeoJson(command.Request.Content);
 
-        PolygonValidator.Validate(points);
+        PolygonValidator.Validate(points, command.Request.ConfirmImplausibleGeometry);
 
         var hectares = GeoPolygonAreaCalculator.CalculateHectares(points);
+        PolygonValidator.ValidateArea(points, hectares, command.Request.ConfirmImplausibleGeometry);
+
         var centroid = GeoPolygonAreaCalculator.CalculateCentroid(points);
         var geoJson = GeoJsonPolygonBuilder.Build(points);
 

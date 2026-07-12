@@ -9,8 +9,14 @@ export function extractErrorMessage(e: unknown, fallback: string): string {
   return err?.response?.data?.detail ?? err?.response?.data?.message ?? err?.response?.data?.title ?? fallback
 }
 
-/** True when the error is a 422 "points N and M are Xkm apart" implausible-distance rejection. */
-export function isImplausibleDistanceError(e: unknown): boolean {
+/**
+ * True when the error is a 422 "this geometry looks wrong" rejection that the backend
+ * would accept on retry with `confirmImplausibleGeometry: true` — covers both the
+ * "points N and M are Xkm apart" and "computed area is far smaller than the spread of
+ * your points suggests" (self-intersecting/misordered boundary) cases, since both
+ * PolygonValidator messages end with the same "Confirm to proceed anyway." phrase.
+ */
+export function isImplausibleGeometryError(e: unknown): boolean {
   const err = e as { response?: { status?: number; data?: { detail?: string } } }
-  return err?.response?.status === 422 && /apart/i.test(err?.response?.data?.detail ?? '')
+  return err?.response?.status === 422 && /confirm to proceed anyway/i.test(err?.response?.data?.detail ?? '')
 }

@@ -47,9 +47,11 @@ public class SubmitBoundaryPointsCommandHandler : IRequestHandler<SubmitBoundary
             return MapToDto(existing);
 
         var points = command.Request.Points.Select(p => new GeoPoint(p.Lat, p.Lng)).ToList();
-        PolygonValidator.Validate(points, command.Request.ConfirmImplausibleDistance);
+        PolygonValidator.Validate(points, command.Request.ConfirmImplausibleGeometry);
 
         var hectares = GeoPolygonAreaCalculator.CalculateHectares(points);
+        PolygonValidator.ValidateArea(points, hectares, command.Request.ConfirmImplausibleGeometry);
+
         var centroid = GeoPolygonAreaCalculator.CalculateCentroid(points);
         var geoJson = GeoJsonPolygonBuilder.Build(points);
 
