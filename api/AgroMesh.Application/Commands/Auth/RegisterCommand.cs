@@ -13,6 +13,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
     private readonly IUserRepository _userRepo;
     private readonly ICompanyRepository _companyRepo;
     private readonly IFarmRepository _farmRepo;
+    private readonly IInventoryCategoryRepository _categoryRepo;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtService _jwtService;
 
@@ -20,12 +21,14 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
         IUserRepository userRepo,
         ICompanyRepository companyRepo,
         IFarmRepository farmRepo,
+        IInventoryCategoryRepository categoryRepo,
         IPasswordHasher passwordHasher,
         IJwtService jwtService)
     {
         _userRepo = userRepo;
         _companyRepo = companyRepo;
         _farmRepo = farmRepo;
+        _categoryRepo = categoryRepo;
         _passwordHasher = passwordHasher;
         _jwtService = jwtService;
     }
@@ -48,6 +51,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
 
         var farm = Domain.Entities.Farm.Create(req.FarmName, company.Id, user.Id);
         await _farmRepo.AddAsync(farm, ct);
+        await _categoryRepo.AddRangeAsync(Domain.Entities.InventoryCategory.CreateDefaults(farm.Id), ct);
 
         user.AssignCompany(company.Id);
         await _userRepo.SaveAsync(ct);
@@ -56,7 +60,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
         var farmSummary = new FarmSummaryDto(farm.Id, farm.Name, farm.SetupStatus);
         return new AuthResponse(
             token,
-            new AuthUserDto(user.Id, user.Email, user.FullName, user.CompanyId),
+            new AuthUserDto(user.Id, user.Email, user.FullName, user.CompanyId, user.Role.ToString()),
             user.CompanyId,
             [farmSummary]);
     }

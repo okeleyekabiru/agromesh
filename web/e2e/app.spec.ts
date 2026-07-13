@@ -1,11 +1,24 @@
 import { test, expect, type Page, type Route } from '@playwright/test'
 import {
   FARM, SECTIONS, WORKERS, WORKER_ROLES,
-  ACTIVITIES, TRANSACTIONS, INVENTORY, CHEMICALS, DASHBOARD, WEATHER
+  ACTIVITIES, TRANSACTIONS, INVENTORY, INVENTORY_CATEGORIES, STOCK_ADJUSTMENTS, CHEMICALS, DASHBOARD, WEATHER
 } from './fixtures'
 
 // ── Mock all API endpoints ────────────────────────────────────────────────────
-async function mockApi(page: Page) {
+async function mockApi(page: Page, overrides?: { inventory?: unknown; stockAdjustments?: unknown; role?: 'Admin' | 'Member' }) {
+  // Seed an authenticated session before any app script runs. The router guard
+  // (router/index.ts) redirects any non-public route to /landing unless store.isAuthenticated
+  // is true, so every test in this file that navigates straight to an app route (dashboard,
+  // sections, inventory, etc. — anything without meta.public) needs a session already in
+  // localStorage. Mirrors the one place this is already done correctly:
+  // gps-boundary.spec.ts's "Edit section" test.
+  const role = overrides?.role ?? 'Admin'
+  await page.addInitScript((r: string) => {
+    localStorage.setItem('agro_token', 'test-token')
+    localStorage.setItem('agro_user', JSON.stringify({ id: 'u1', email: 'test@example.com', fullName: 'Test User', companyId: 'c1', role: r }))
+    localStorage.setItem('agro_active_farm_id', 'farm_001')
+  }, role)
+
   const intercept = (pattern: string | RegExp, body: unknown, status = 200) =>
     page.route(pattern, (route: Route) => route.fulfill({
       status, contentType: 'application/json', body: JSON.stringify(body),
@@ -19,8 +32,12 @@ async function mockApi(page: Page) {
   await intercept('**/api/farms/farm_001/transactions**',         TRANSACTIONS)
   await intercept('**/api/farms/farm_001/workers**',              WORKERS)
   await intercept('**/api/farms/farm_001/worker-roles',           WORKER_ROLES)
-  await intercept('**/api/farms/farm_001/inventory',              INVENTORY)
+  await intercept('**/api/farms/farm_001/inventory-categories',   INVENTORY_CATEGORIES)
+  await intercept('**/api/farms/farm_001/inventory-adjustments**', overrides?.stockAdjustments ?? STOCK_ADJUSTMENTS)
+  await intercept('**/api/farms/farm_001/inventory',              overrides?.inventory ?? INVENTORY)
   await intercept('**/api/chemicals',                             CHEMICALS)
+  // Sidebar fetches the bare farm list on mount for the farm switcher.
+  await intercept('**/api/farms',                                 [{ id: FARM.id, name: FARM.name, setupStatus: 1 }])
   // Catch-all for /api/farms/farm_001 (must be last — most general)
   await intercept('**/api/farms/farm_001',                        FARM)
 }
@@ -446,6 +463,508 @@ test('inventory — adjust modal can be closed', async ({ page }) => {
   await expect(page.locator('.modal')).toBeVisible()
   await page.locator('.modal button', { hasText: 'Cancel' }).click()
   await expect(page.locator('.modal')).not.toBeVisible()
+})
+
+// ── Inventory: dynamic categories + Add Item / Add Stock (Phase 1) ─────────────
+test('inventory — category filter pills are sourced from fetched categories, not hardcoded', async ({ page }) => {
+  await mockApi(page)
+  await page.goto('/inventory')
+  // "Farm Tools" is not in the old hardcoded filter-pill array — its presence proves the pills
+  // now come from the fetched INVENTORY_CATEGORIES fixture instead.
+  await expect(page.locator('.filter-pill', { hasText: 'Farm Tools' })).toBeVisible()
+})
+
+test('inventory — loading state shown while the inventory list is in flight', async ({ page }) => {
+  await mockApi(page)
+  await page.route('**/api/farms/farm_001/inventory', async route => {
+    // Generous delay — the first navigation in a fresh page also pays for router/app bootstrap
+    // (async router guard, Sidebar's farm fetch, etc.), so a short delay leaves too little
+    // margin to reliably observe the loading state before it flips back to loaded.
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(INVENTORY) })
+  })
+
+  await page.goto('/inventory')
+  await expect(page.locator('.loading-state')).toContainText('Loading inventory')
+  await expect(page.locator('.inv-row')).toHaveCount(3)
+})
+
+test('inventory — empty state shown when there are no items', async ({ page }) => {
+  await mockApi(page, { inventory: [] })
+  await page.goto('/inventory')
+  await expect(page.locator('.card', { hasText: 'No inventory items' })).toBeVisible()
+})
+
+test('inventory — Add Item button opens the Add Item modal', async ({ page }) => {
+  await mockApi(page)
+  await page.goto('/inventory')
+  await page.locator('button[aria-label="Add inventory item or stock"]').click()
+  await expect(page.locator('.modal')).toBeVisible()
+  await expect(page.locator('.modal-title')).toContainText('Add Item')
+})
+
+test('inventory — add item modal creates a brand-new item and it appears in the list', async ({ page }) => {
+  await mockApi(page)
+  let items: unknown[] = [...INVENTORY]
+  let capturedBody: Record<string, unknown> | null = null
+
+  await page.route('**/api/farms/farm_001/inventory', async route => {
+    if (route.request().method() === 'POST') {
+      capturedBody = route.request().postDataJSON()
+      const created = {
+        id: 'inv_new', farmId: 'farm_001', name: capturedBody!.name, unit: capturedBody!.unit,
+        categoryId: capturedBody!.categoryId, categoryName: 'Fertilizer', currentStock: capturedBody!.quantity,
+        reorderThreshold: capturedBody!.reorderThreshold, isLowStock: false,
+        chemicalProductId: null, chemicalProductName: null, lastMovementDate: null,
+      }
+      items = [...items, created]
+      await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(created) })
+    } else {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(items) })
+    }
+  })
+
+  await page.goto('/inventory')
+  await page.locator('button[aria-label="Add inventory item or stock"]').click()
+
+  await page.locator('input[placeholder="e.g. Glyphosate 360"]').fill('NPK 20-10-10')
+  await page.locator('select').filter({ hasText: 'Select category' }).selectOption('cat_fertilizer')
+  await page.locator('input[placeholder="e.g. L, kg, bags"]').fill('kg')
+  await page.locator('input[placeholder="e.g. 50"]').fill('200')
+  await page.locator('input[placeholder="e.g. 10"]').fill('50')
+  await page.locator('.modal-footer button', { hasText: 'Add Item' }).click()
+
+  await expect(page.locator('.modal')).not.toBeVisible()
+  await expect(page.locator('.inv-row')).toHaveCount(4)
+  await expect(page.locator('.inv-name', { hasText: 'NPK 20-10-10' })).toBeVisible()
+  expect(capturedBody).not.toBeNull()
+  expect(capturedBody!.name).toBe('NPK 20-10-10')
+  expect(capturedBody!.existingItemId ?? null).toBeNull()
+})
+
+test('inventory — add item modal restocks an existing item via the item picker', async ({ page }) => {
+  await mockApi(page)
+  let stock = 105
+  let capturedBody: Record<string, unknown> | null = null
+
+  await page.route('**/api/farms/farm_001/inventory', async route => {
+    if (route.request().method() === 'POST') {
+      capturedBody = route.request().postDataJSON()
+      stock += Number(capturedBody!.quantity)
+      await route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'inv_1', farmId: 'farm_001', name: 'Glyphosate 360', unit: 'L',
+          categoryId: 'cat_chemical', categoryName: 'Chemical', currentStock: stock,
+          reorderThreshold: 30, isLowStock: false, chemicalProductId: 'chem_1',
+          chemicalProductName: 'Glyphosate 360', lastMovementDate: '2025-06-17T09:00:00Z',
+        }),
+      })
+    } else {
+      const items = INVENTORY.map(i => (i.id === 'inv_1' ? { ...i, currentStock: stock } : i))
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(items) })
+    }
+  })
+
+  await page.goto('/inventory')
+  await page.locator('button[aria-label="Add inventory item or stock"]').click()
+
+  // Explicit item picker — the "by name/category match" path is covered by the next test.
+  await page.locator('select').filter({ hasText: 'Create new item' }).selectOption('inv_1')
+  await page.locator('input[placeholder="e.g. 50"]').fill('25')
+  await page.locator('.modal-footer button', { hasText: 'Add Stock' }).click()
+
+  await expect(page.locator('.modal')).not.toBeVisible()
+  expect(capturedBody).not.toBeNull()
+  expect(capturedBody!.existingItemId).toBe('inv_1')
+  expect(capturedBody!.quantity).toBe(25)
+
+  const row = page.locator('.inv-row').filter({ hasText: 'Glyphosate 360' })
+  await expect(row.locator('.inv-stock-num')).toContainText('130')
+})
+
+test('inventory — add item modal can create a new category inline and auto-selects it', async ({ page }) => {
+  await mockApi(page)
+  await page.route('**/api/farms/farm_001/inventory-categories', async route => {
+    if (route.request().method() === 'POST') {
+      const body = route.request().postDataJSON()
+      await route.fulfill({
+        status: 201, contentType: 'application/json',
+        body: JSON.stringify({ id: 'cat_new', farmId: 'farm_001', name: body.name, isDefault: false }),
+      })
+    } else {
+      await route.fallback()
+    }
+  })
+
+  await page.goto('/inventory')
+  await page.locator('button[aria-label="Add inventory item or stock"]').click()
+
+  const categorySelect = page.locator('select').filter({ hasText: 'Select category' })
+  await categorySelect.selectOption('__new__')
+  await page.locator('input[placeholder="New category name"]').fill('Irrigation')
+  await page.locator('.modal button', { hasText: /^Add$/ }).click()
+
+  // The new category becomes the selected value without the user re-opening the dropdown.
+  await expect(categorySelect).toHaveValue('cat_new')
+})
+
+test('inventory — add item modal shows an inline error on a failed submit and stays open', async ({ page }) => {
+  await mockApi(page)
+  await page.route('**/api/farms/farm_001/inventory', async route => {
+    if (route.request().method() === 'POST') {
+      await route.fulfill({
+        status: 422, contentType: 'application/problem+json',
+        body: JSON.stringify({
+          type: 'https://tools.ietf.org/html/rfc9110#section-15.5.21',
+          title: 'Unprocessable Request', status: 422,
+          detail: "'Glyphosate 360' is tracked in L, not kg. Enter the quantity in L.",
+          traceId: 'test-trace',
+        }),
+      })
+    } else {
+      await route.fallback()
+    }
+  })
+
+  await page.goto('/inventory')
+  await page.locator('button[aria-label="Add inventory item or stock"]').click()
+
+  await page.locator('input[placeholder="e.g. Glyphosate 360"]').fill('Glyphosate 360')
+  await page.locator('select').filter({ hasText: 'Select category' }).selectOption('cat_chemical')
+  await page.locator('input[placeholder="e.g. L, kg, bags"]').fill('kg')
+  await page.locator('input[placeholder="e.g. 50"]').fill('5')
+  await page.locator('input[placeholder="e.g. 10"]').fill('10')
+  await page.locator('.modal-footer button', { hasText: 'Add Item' }).click()
+
+  await expect(page.locator('.error-msg')).toContainText('tracked in L')
+  await expect(page.locator('.modal')).toBeVisible()
+})
+
+// ── Inventory: Pick / Issue Stock (Phase 2) ─────────────────────────────────────
+test('inventory — Pick Stock button opens the pick modal with worker options', async ({ page }) => {
+  await mockApi(page)
+  await page.goto('/inventory')
+  await page.locator('button', { hasText: 'Pick Stock' }).first().click()
+  await expect(page.locator('.modal')).toBeVisible()
+  await expect(page.locator('.modal-title')).toContainText('Pick Stock')
+  await expect(page.locator('.modal-title')).toContainText('Glyphosate 360')
+  // Available stock shown read-only
+  await expect(page.locator('.modal-body')).toContainText('105')
+  // Worker select sourced from store.workers (existing Workers feature), not a new endpoint
+  const workerSelect = page.locator('select').filter({ hasText: 'Select worker' })
+  await expect(workerSelect).toContainText('Ibrahim Musa')
+  await expect(workerSelect).toContainText('Tunde Adeyemi')
+})
+
+test('inventory — Pick Stock submit is disabled until quantity, worker, and purpose are all filled', async ({ page }) => {
+  await mockApi(page)
+  await page.goto('/inventory')
+  await page.locator('button', { hasText: 'Pick Stock' }).first().click()
+
+  const submit = page.locator('.modal-footer button', { hasText: 'Pick Stock' })
+  await expect(submit).toBeDisabled()
+
+  await page.locator('input[placeholder="e.g. Spraying Section A"]').fill('Spraying Section A')
+  await expect(submit).toBeDisabled() // still missing quantity + worker
+
+  await page.locator('.modal input[type="number"]').fill('10')
+  await expect(submit).toBeDisabled() // still missing worker
+
+  await page.locator('select').filter({ hasText: 'Select worker' }).selectOption('w1')
+  await expect(submit).toBeEnabled()
+})
+
+test('inventory — a valid pick reduces stock, records who/quantity/purpose, and closes the modal', async ({ page }) => {
+  await mockApi(page)
+  let stock = 105
+  let capturedBody: Record<string, unknown> | null = null
+
+  await page.route('**/api/farms/farm_001/inventory/inv_1/pick', async route => {
+    capturedBody = route.request().postDataJSON()
+    stock -= Number(capturedBody!.quantity)
+    await route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({
+        item: {
+          id: 'inv_1', farmId: 'farm_001', name: 'Glyphosate 360', unit: 'L',
+          categoryId: 'cat_chemical', categoryName: 'Chemical', currentStock: stock,
+          reorderThreshold: 30, isLowStock: stock <= 30, chemicalProductId: 'chem_1',
+          chemicalProductName: 'Glyphosate 360', lastMovementDate: '2025-06-19T00:00:00Z',
+        },
+        lowStockWarning: null,
+      }),
+    })
+  })
+  await page.route('**/api/farms/farm_001/inventory', async route => {
+    if (route.request().method() === 'GET') {
+      const items = INVENTORY.map(i => (i.id === 'inv_1' ? { ...i, currentStock: stock, isLowStock: stock <= 30 } : i))
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(items) })
+    } else {
+      await route.fallback()
+    }
+  })
+
+  await page.goto('/inventory')
+  await page.locator('button', { hasText: 'Pick Stock' }).first().click()
+  await page.locator('.modal input[type="number"]').fill('20')
+  await page.locator('select').filter({ hasText: 'Select worker' }).selectOption('w1')
+  await page.locator('input[placeholder="e.g. Spraying Section A"]').fill('Spraying Section A')
+  await page.locator('.modal-footer button', { hasText: 'Pick Stock' }).click()
+
+  await expect(page.locator('.modal')).not.toBeVisible()
+  expect(capturedBody).not.toBeNull()
+  expect(capturedBody!.quantity).toBe(20)
+  expect(capturedBody!.workerId).toBe('w1')
+  expect(capturedBody!.purpose).toBe('Spraying Section A')
+
+  const row = page.locator('.inv-row').filter({ hasText: 'Glyphosate 360' })
+  await expect(row.locator('.inv-stock-num')).toContainText('85')
+})
+
+test('inventory — Pick Stock shows an inline error and stays open when quantity exceeds current stock', async ({ page }) => {
+  await mockApi(page)
+  await page.route('**/api/farms/farm_001/inventory/inv_1/pick', async route => {
+    await route.fulfill({
+      status: 422, contentType: 'application/problem+json',
+      body: JSON.stringify({
+        type: 'https://tools.ietf.org/html/rfc9110#section-15.5.21',
+        title: 'Unprocessable Request', status: 422,
+        detail: "Insufficient stock for 'Glyphosate 360'. Available: 105 L, requested: 500 L.",
+        traceId: 'test-trace',
+      }),
+    })
+  })
+
+  await page.goto('/inventory')
+  await page.locator('button', { hasText: 'Pick Stock' }).first().click()
+  await page.locator('.modal input[type="number"]').fill('500')
+  await page.locator('select').filter({ hasText: 'Select worker' }).selectOption('w1')
+  await page.locator('input[placeholder="e.g. Spraying Section A"]').fill('Spraying Section A')
+  await page.locator('.modal-footer button', { hasText: 'Pick Stock' }).click()
+
+  await expect(page.locator('.error-msg')).toContainText('Insufficient stock')
+  await expect(page.locator('.modal')).toBeVisible()
+})
+
+test('inventory — Pick Stock shows a low-stock warning (not a block) when stock crosses the threshold', async ({ page }) => {
+  await mockApi(page)
+  await page.route('**/api/farms/farm_001/inventory/inv_3/pick', async route => {
+    await route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({
+        item: {
+          id: 'inv_3', farmId: 'farm_001', name: 'Diesel', unit: 'L',
+          categoryId: 'cat_fuel', categoryName: 'Fuel', currentStock: 70,
+          reorderThreshold: 100, isLowStock: true, chemicalProductId: null,
+          chemicalProductName: null, lastMovementDate: '2025-06-19T00:00:00Z',
+        },
+        lowStockWarning: 'Diesel is running low (70 L remaining — reorder threshold: 100)',
+      }),
+    })
+  })
+  await page.route('**/api/farms/farm_001/inventory', async route => {
+    if (route.request().method() === 'GET') {
+      const items = INVENTORY.map(i => (i.id === 'inv_3' ? { ...i, currentStock: 70 } : i))
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(items) })
+    } else {
+      await route.fallback()
+    }
+  })
+
+  await page.goto('/inventory')
+  const dieselRow = page.locator('.inv-row').filter({ hasText: 'Diesel' })
+  await dieselRow.locator('button', { hasText: 'Pick Stock' }).click()
+  await page.locator('.modal input[type="number"]').fill('15')
+  await page.locator('select').filter({ hasText: 'Select worker' }).selectOption('w1')
+  await page.locator('input[placeholder="e.g. Spraying Section A"]').fill('Generator top-up')
+  await page.locator('.modal-footer button', { hasText: 'Pick Stock' }).click()
+
+  // Distinct from the error case: a warning, the pick already succeeded, and the modal doesn't
+  // auto-close — the user must explicitly dismiss it via "Done".
+  await expect(page.locator('.warn-msg')).toContainText('running low')
+  await expect(page.locator('.modal')).toBeVisible()
+  await page.locator('.modal-footer button', { hasText: 'Done' }).click()
+  await expect(page.locator('.modal')).not.toBeVisible()
+})
+
+// ── Inventory: Stock Adjustment Approval (Phase 3) ──────────────────────────────
+test('inventory — submitting an adjustment does not change the displayed stock immediately and shows submitted-for-approval messaging', async ({ page }) => {
+  await mockApi(page)
+  let adjustCaptured: Record<string, unknown> | null = null
+  await page.route('**/api/farms/farm_001/inventory/inv_1/adjust', async route => {
+    adjustCaptured = route.request().postDataJSON()
+    await route.fulfill({
+      status: 201, contentType: 'application/json',
+      body: JSON.stringify({
+        id: 'adj_new', farmId: 'farm_001', inventoryItemId: 'inv_1', inventoryItemName: 'Glyphosate 360', unit: 'L',
+        currentStock: 105, requestedQuantity: adjustCaptured!.newQuantity, status: 'Pending', notes: adjustCaptured!.notes,
+        requestedByUserId: 'u1', reviewedByUserId: null, reviewedAt: null, reviewNotes: null,
+        createdAt: '2025-06-20T00:00:00Z',
+      }),
+    })
+  })
+
+  await page.goto('/inventory')
+  await page.locator('button', { hasText: 'Adjust' }).first().click()
+  await page.locator('input[type="number"]').fill('90')
+  await page.locator('input[placeholder*="recount"]').fill('Physical recount')
+  await page.locator('.modal-footer button', { hasText: 'Submit for Approval' }).click()
+
+  await expect(page.locator('.success-msg')).toContainText('submitted for approval')
+  expect(adjustCaptured).not.toBeNull()
+  expect(adjustCaptured!.newQuantity).toBe(90)
+
+  // Modal stays open with the confirmation until dismissed (mirrors the Pick Stock warning UX).
+  await page.locator('.modal-footer button', { hasText: 'Done' }).click()
+  await expect(page.locator('.modal')).not.toBeVisible()
+
+  // No optimistic/refetch-driven stock change — the backend never touched CurrentStock.
+  const row = page.locator('.inv-row').filter({ hasText: 'Glyphosate 360' })
+  await expect(row.locator('.inv-stock-num')).toContainText('105')
+})
+
+test('inventory — adjust modal shows an inline error and stays open on a failed submit', async ({ page }) => {
+  await mockApi(page)
+  await page.route('**/api/farms/farm_001/inventory/inv_1/adjust', async route => {
+    await route.fulfill({
+      status: 422, contentType: 'application/problem+json',
+      body: JSON.stringify({
+        type: 'https://tools.ietf.org/html/rfc9110#section-15.5.21',
+        title: 'Unprocessable Request', status: 422,
+        detail: 'A reason is required for a stock adjustment request.',
+        traceId: 'test-trace',
+      }),
+    })
+  })
+
+  await page.goto('/inventory')
+  await page.locator('button', { hasText: 'Adjust' }).first().click()
+  await page.locator('input[type="number"]').fill('90')
+  await page.locator('input[placeholder*="recount"]').fill('x')
+  await page.locator('.modal-footer button', { hasText: 'Submit for Approval' }).click()
+
+  await expect(page.locator('.error-msg')).toContainText('reason is required')
+  await expect(page.locator('.modal')).toBeVisible()
+})
+
+test('inventory approvals — queue lists pending requests with item name, quantity, and requester notes', async ({ page }) => {
+  await mockApi(page)
+  await page.goto('/inventory-approvals')
+
+  await expect(page.locator('.approval-row')).toHaveCount(1)
+  const row = page.locator('.approval-row').first()
+  await expect(row).toContainText('Glyphosate 360')
+  await expect(row).toContainText('90')
+  await expect(row).toContainText('Physical recount')
+})
+
+test('inventory approvals — empty state shown when there are no pending requests', async ({ page }) => {
+  await mockApi(page, { stockAdjustments: [] })
+  await page.goto('/inventory-approvals')
+  await expect(page.locator('.card', { hasText: /no pending/i })).toBeVisible()
+})
+
+test('inventory approvals — approving updates stock and removes the request from the queue', async ({ page }) => {
+  await mockApi(page)
+  let approveCaptured: Record<string, unknown> | null = null
+  let queue: unknown[] = [...STOCK_ADJUSTMENTS]
+  // Single dispatching handler (mirrors the Pick Stock/Add Item tests' pattern) — a second,
+  // broader route for the same base path would shadow the specific one and also intercept the
+  // initial GET, which is exactly the bug this single-handler shape avoids.
+  await page.route('**/api/farms/farm_001/inventory-adjustments**', async route => {
+    const req = route.request()
+    if (req.method() === 'PATCH' && req.url().includes('/adj_1/approve')) {
+      approveCaptured = req.postDataJSON()
+      queue = []
+      await route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'adj_1', farmId: 'farm_001', inventoryItemId: 'inv_1', inventoryItemName: 'Glyphosate 360', unit: 'L',
+          currentStock: 90, requestedQuantity: 90, status: 'Approved', notes: 'Physical recount — 15L short',
+          requestedByUserId: 'u1', reviewedByUserId: 'u1', reviewedAt: '2025-06-20T00:00:00Z', reviewNotes: null,
+          createdAt: '2025-06-19T00:00:00Z',
+        }),
+      })
+    } else {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(queue) })
+    }
+  })
+  // Inventory re-fetch after approve reflects the new stock.
+  await page.route('**/api/farms/farm_001/inventory', async route => {
+    if (route.request().method() === 'GET') {
+      const items = INVENTORY.map(i => (i.id === 'inv_1' ? { ...i, currentStock: 90 } : i))
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(items) })
+    } else {
+      await route.fallback()
+    }
+  })
+
+  await page.goto('/inventory-approvals')
+  await expect(page.locator('.approval-row')).toHaveCount(1)
+  await page.locator('.approval-row button', { hasText: 'Approve' }).click()
+
+  expect(approveCaptured).not.toBeNull()
+  await expect(page.locator('.approval-row')).toHaveCount(0)
+
+  await page.goto('/inventory')
+  const row = page.locator('.inv-row').filter({ hasText: 'Glyphosate 360' })
+  await expect(row.locator('.inv-stock-num')).toContainText('90')
+})
+
+test('inventory approvals — rejecting removes the request from the queue without changing stock', async ({ page }) => {
+  await mockApi(page)
+  let rejectCaptured: Record<string, unknown> | null = null
+  let queue: unknown[] = [...STOCK_ADJUSTMENTS]
+  await page.route('**/api/farms/farm_001/inventory-adjustments**', async route => {
+    const req = route.request()
+    if (req.method() === 'PATCH' && req.url().includes('/adj_1/reject')) {
+      rejectCaptured = req.postDataJSON()
+      queue = []
+      await route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'adj_1', farmId: 'farm_001', inventoryItemId: 'inv_1', inventoryItemName: 'Glyphosate 360', unit: 'L',
+          currentStock: 105, requestedQuantity: 90, status: 'Rejected', notes: 'Physical recount — 15L short',
+          requestedByUserId: 'u1', reviewedByUserId: 'u1', reviewedAt: '2025-06-20T00:00:00Z', reviewNotes: null,
+          createdAt: '2025-06-19T00:00:00Z',
+        }),
+      })
+    } else {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(queue) })
+    }
+  })
+
+  await page.goto('/inventory-approvals')
+  await page.locator('.approval-row button', { hasText: 'Reject' }).click()
+
+  expect(rejectCaptured).not.toBeNull()
+  await expect(page.locator('.approval-row')).toHaveCount(0)
+
+  // Reject never touches inventory — the row's stock in the main Inventory view is unchanged.
+  await page.goto('/inventory')
+  const row = page.locator('.inv-row').filter({ hasText: 'Glyphosate 360' })
+  await expect(row.locator('.inv-stock-num')).toContainText('105')
+})
+
+test('inventory approvals — non-admin session does not show approve/reject buttons', async ({ page }) => {
+  await mockApi(page, { role: 'Member' })
+  await page.goto('/inventory-approvals')
+  await expect(page.locator('.approval-row')).toHaveCount(1)
+  await expect(page.locator('.approval-row button', { hasText: 'Approve' })).toHaveCount(0)
+  await expect(page.locator('.approval-row button', { hasText: 'Reject' })).toHaveCount(0)
+})
+
+test('sidebar — pending-adjustments badge reflects queue size', async ({ page }) => {
+  await mockApi(page)
+  await page.goto('/')
+  await expect(page.locator('.nav-item', { hasText: 'Approvals' }).locator('.nav-badge')).toHaveText('1')
+})
+
+test('sidebar — pending-adjustments badge hidden when queue is empty', async ({ page }) => {
+  await mockApi(page, { stockAdjustments: [] })
+  await page.goto('/')
+  await expect(page.locator('.nav-item', { hasText: 'Approvals' }).locator('.nav-badge')).toHaveCount(0)
 })
 
 // ── Log Activity Modal ────────────────────────────────────────────────────────

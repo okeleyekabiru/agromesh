@@ -103,7 +103,23 @@ export const inventoryApi = {
   getLowStock: () => api.get(`/api/farms/${FARM_ID}/inventory/low-stock`),
   create: (body: unknown) => api.post(`/api/farms/${FARM_ID}/inventory`, body),
   adjust: (itemId: string, body: unknown) => api.patch(`/api/farms/${FARM_ID}/inventory/${itemId}/adjust`, body),
-  getMovements: (itemId: string) => api.get(`/api/farms/${FARM_ID}/inventory/${itemId}/movements`)
+  getMovements: (itemId: string) => api.get(`/api/farms/${FARM_ID}/inventory/${itemId}/movements`),
+  pick: (itemId: string, body: unknown) => api.post(`/api/farms/${FARM_ID}/inventory/${itemId}/pick`, body)
+}
+
+// ── Inventory Categories ──
+export const inventoryCategoryApi = {
+  getAll: () => api.get(`/api/farms/${FARM_ID}/inventory-categories`),
+  create: (body: { name: string }) => api.post(`/api/farms/${FARM_ID}/inventory-categories`, body)
+}
+
+// ── Inventory Adjustment Approvals (Phase 3) ──
+export const inventoryAdjustmentsApi = {
+  getAll: (status?: string) => api.get(`/api/farms/${FARM_ID}/inventory-adjustments${status ? `?status=${status}` : ''}`),
+  approve: (requestId: string, body?: { reviewNotes?: string | null }) =>
+    api.patch(`/api/farms/${FARM_ID}/inventory-adjustments/${requestId}/approve`, body ?? {}),
+  reject: (requestId: string, body?: { reviewNotes?: string | null }) =>
+    api.patch(`/api/farms/${FARM_ID}/inventory-adjustments/${requestId}/reject`, body ?? {})
 }
 
 // ── Chemicals ──

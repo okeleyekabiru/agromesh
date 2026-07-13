@@ -15,6 +15,7 @@ public class StockMovementConfiguration : IEntityTypeConfiguration<StockMovement
         builder.Property(m => m.Quantity).IsRequired().HasColumnType("decimal(14,3)");
         builder.Property(m => m.ActivityLogId).HasMaxLength(50);
         builder.Property(m => m.TransactionId).HasMaxLength(50);
+        builder.Property(m => m.WorkerId).HasMaxLength(50);
         builder.Property(m => m.Notes).HasMaxLength(500);
         builder.Property(m => m.Date).IsRequired();
 

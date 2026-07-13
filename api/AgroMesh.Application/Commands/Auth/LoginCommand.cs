@@ -39,7 +39,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponse>
         var token = _jwtService.GenerateToken(user);
         return new AuthResponse(
             token,
-            new AuthUserDto(user.Id, user.Email, user.FullName, user.CompanyId),
+            new AuthUserDto(user.Id, user.Email, user.FullName, user.CompanyId, user.Role.ToString()),
             user.CompanyId,
             farms.Select(f => new FarmSummaryDto(f.Id, f.Name, f.SetupStatus)).ToList());
     }

@@ -1,4 +1,3 @@
-using AgroMesh.Domain.Enums;
 using AgroMesh.Domain.Exceptions;
 
 namespace AgroMesh.Domain.Entities;
@@ -8,7 +7,8 @@ public class InventoryItem : BaseEntity
     public string FarmId { get; private set; } = string.Empty;
     public string Name { get; private set; } = string.Empty;
     public string Unit { get; private set; } = string.Empty;
-    public InventoryCategory Category { get; private set; }
+    public string CategoryId { get; private set; } = string.Empty;
+    public InventoryCategory Category { get; private set; } = null!;
     public decimal CurrentStock { get; private set; }
     public decimal ReorderThreshold { get; private set; }
     public string? ChemicalProductId { get; private set; }
@@ -23,7 +23,7 @@ public class InventoryItem : BaseEntity
         string farmId,
         string name,
         string unit,
-        InventoryCategory category,
+        string categoryId,
         decimal currentStock,
         decimal reorderThreshold,
         string? chemicalProductId = null)
@@ -33,7 +33,7 @@ public class InventoryItem : BaseEntity
             FarmId = farmId,
             Name = name,
             Unit = unit,
-            Category = category,
+            CategoryId = categoryId,
             CurrentStock = currentStock,
             ReorderThreshold = reorderThreshold,
             ChemicalProductId = chemicalProductId

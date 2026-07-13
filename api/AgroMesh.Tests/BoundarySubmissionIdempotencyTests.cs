@@ -67,6 +67,7 @@ public class BoundarySubmissionIdempotencyTests
     {
         public string? UserId => "user-1";
         public string? CompanyId => null;
+        public UserRole Role => UserRole.Admin;
     }
 
     private static List<GeoPointInput> SquareCorners() =>

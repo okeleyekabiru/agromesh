@@ -50,6 +50,8 @@ public static class DependencyInjection
         services.AddScoped<IWorkerRoleRepository, WorkerRoleRepository>();
         services.AddScoped<IChemicalProductRepository, ChemicalProductRepository>();
         services.AddScoped<IInventoryRepository, InventoryRepository>();
+        services.AddScoped<IInventoryCategoryRepository, InventoryCategoryRepository>();
+        services.AddScoped<IStockAdjustmentRequestRepository, StockAdjustmentRequestRepository>();
         services.AddScoped<ISchedulingPredictionRepository, SchedulingPredictionRepository>();
         services.AddScoped<ICropAllocationRuleRepository, CropAllocationRuleRepository>();
 

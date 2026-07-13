@@ -12,7 +12,7 @@ public class InventoryItemConfiguration : IEntityTypeConfiguration<InventoryItem
         builder.Property(i => i.FarmId).IsRequired().HasMaxLength(50);
         builder.Property(i => i.Name).IsRequired().HasMaxLength(200);
         builder.Property(i => i.Unit).IsRequired().HasMaxLength(50);
-        builder.Property(i => i.Category).IsRequired();
+        builder.Property(i => i.CategoryId).IsRequired().HasMaxLength(50);
         builder.Property(i => i.CurrentStock).IsRequired().HasColumnType("decimal(14,3)");
         builder.Property(i => i.ReorderThreshold).IsRequired().HasColumnType("decimal(14,3)");
         builder.Property(i => i.ChemicalProductId).HasMaxLength(50);
@@ -24,7 +24,7 @@ public class InventoryItemConfiguration : IEntityTypeConfiguration<InventoryItem
                .HasForeignKey(m => m.InventoryItemId)
                .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasIndex(i => new { i.FarmId, i.Category });
+        builder.HasIndex(i => new { i.FarmId, i.CategoryId });
         builder.HasIndex(i => i.ChemicalProductId);
     }
 }

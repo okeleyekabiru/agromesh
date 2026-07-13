@@ -22,6 +22,7 @@ public class Farm : BaseEntity
     public List<Worker> Workers { get; private set; } = [];
     public List<CropAllocationRule> AllocationRules { get; private set; } = [];
     public List<InventoryItem> InventoryItems { get; private set; } = [];
+    public List<InventoryCategory> InventoryCategories { get; private set; } = [];
 
     private Farm() { }
 

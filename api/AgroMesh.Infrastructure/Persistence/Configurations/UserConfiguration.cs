@@ -14,5 +14,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasIndex(u => u.Email).IsUnique();
         builder.Property(u => u.PasswordHash).IsRequired();
         builder.Property(u => u.CompanyId).HasMaxLength(50);
+
+        // Stored as a string ("Admin"/"Member") rather than an int ordinal so a manual SELECT
+        // against the DB is self-describing and a future added role doesn't silently reorder
+        // meaning behind existing stored data.
+        builder.Property(u => u.Role).IsRequired().HasConversion<string>().HasMaxLength(20);
     }
 }

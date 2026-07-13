@@ -42,7 +42,13 @@ export type AreaUnit = 'Hectares' | 'Acres'
 /** FarmSetupStatus enum ordinal as returned by the API: 0 = Draft, 1 = Configured. */
 export type FarmSetupStatus = 0 | 1
 
-export type InventoryCategory = 'Chemical' | 'Fertilizer' | 'Seed' | 'Fuel' | 'Equipment' | 'SpareParts' | 'Other'
+/** A farm-scoped inventory category (from GET/POST /api/farms/{farmId}/inventory-categories). */
+export interface InventoryCategory {
+  id: string
+  farmId: string
+  name: string
+  isDefault: boolean
+}
 
 export type ChemicalCategory = 'Herbicide' | 'Insecticide' | 'Fungicide' | 'Acaricide' | 'Nematicide'
 
@@ -227,7 +233,8 @@ export interface InventoryItem {
   farmId: string
   name: string
   unit: string
-  category: InventoryCategory
+  categoryId: string
+  categoryName: string
   currentStock: number
   reorderThreshold: number
   isLowStock: boolean
@@ -264,12 +271,43 @@ export interface UpcomingTask {
   weatherDataUsed: boolean
 }
 
+/** Response shape from POST /api/farms/{farmId}/inventory/{itemId}/pick. */
+export interface PickStockResponse {
+  item: InventoryItem
+  lowStockWarning: string | null
+}
+
 export interface LowStockAlert {
   inventoryItemId: string
   inventoryItemName: string
   currentStock: number
   unit: string
   reorderThreshold: number
+}
+
+/**
+ * Phase 3 — a pending/approved/rejected request to overwrite an InventoryItem's currentStock.
+ * `status` is a plain string ("Pending"/"Approved"/"Rejected") straight off the backend DTO, which
+ * builds it via `.ToString()` rather than serializing the raw enum — same reasoning as
+ * `AuthUser.role`.
+ */
+export type StockAdjustmentStatus = 'Pending' | 'Approved' | 'Rejected'
+
+export interface StockAdjustmentRequest {
+  id: string
+  farmId: string
+  inventoryItemId: string
+  inventoryItemName: string
+  unit: string
+  currentStock: number
+  requestedQuantity: number
+  status: StockAdjustmentStatus
+  notes: string
+  requestedByUserId: string
+  reviewedByUserId: string | null
+  reviewedAt: string | null
+  reviewNotes: string | null
+  createdAt: string
 }
 
 export interface WeatherWidget {
@@ -335,11 +373,21 @@ export interface PagedResult<T> {
 
 // ── AUTH ──
 
+/**
+ * `role` is a plain string ("Admin" | "Member") straight off `AuthUserDto.Role`, which the backend
+ * builds via `user.Role.ToString()` rather than serializing the raw enum — sidesteps this
+ * codebase's usual raw-int enum wire format (see PAY_FREQUENCY_LABELS above) since there's no
+ * JsonStringEnumConverter configured. This is a UX hint only (show/hide approve/reject controls) —
+ * the real security boundary is the backend's own role check, not this field.
+ */
+export type UserRoleLabel = 'Admin' | 'Member'
+
 export interface AuthUser {
   id: string
   email: string
   fullName: string
   companyId: string | null
+  role: UserRoleLabel
 }
 
 export interface AuthResponse {

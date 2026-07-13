@@ -12,11 +12,17 @@ public record LoginRequest(
     string Email,
     string Password);
 
+// Role is a string ("Admin"/"Member") rather than the raw UserRole enum: this codebase has no
+// JsonStringEnumConverter configured (enums serialize as raw ints on the wire otherwise — see
+// PAY_FREQUENCY_LABELS' doc comment in web/src/types/index.ts), and this DTO is hand-constructed
+// by its callers rather than auto-mapped, so using .ToString() here sidesteps that ambiguity
+// entirely instead of repeating it.
 public record AuthUserDto(
     string Id,
     string Email,
     string FullName,
-    string? CompanyId);
+    string? CompanyId,
+    string Role);
 
 public record FarmSummaryDto(
     string Id,

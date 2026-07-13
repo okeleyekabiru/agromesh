@@ -375,13 +375,48 @@ namespace AgroMesh.Infrastructure.Persistence.Migrations
                     b.ToTable("Farms");
                 });
 
+            modelBuilder.Entity("AgroMesh.Domain.Entities.InventoryCategory", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FarmId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FarmId");
+
+                    b.HasIndex("FarmId", "Name");
+
+                    b.ToTable("InventoryCategories");
+                });
+
             modelBuilder.Entity("AgroMesh.Domain.Entities.InventoryItem", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
-                    b.Property<int>("Category")
-                        .HasColumnType("integer");
+                    b.Property<string>("CategoryId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("ChemicalProductId")
                         .HasMaxLength(50)
@@ -416,9 +451,11 @@ namespace AgroMesh.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CategoryId");
+
                     b.HasIndex("ChemicalProductId");
 
-                    b.HasIndex("FarmId", "Category");
+                    b.HasIndex("FarmId", "CategoryId");
 
                     b.ToTable("InventoryItems");
                 });
@@ -568,6 +605,67 @@ namespace AgroMesh.Infrastructure.Persistence.Migrations
                     b.ToTable("States");
                 });
 
+            modelBuilder.Entity("AgroMesh.Domain.Entities.StockAdjustmentRequest", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FarmId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("InventoryItemId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("RequestedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal>("RequestedQuantity")
+                        .HasColumnType("decimal(14,3)");
+
+                    b.Property<string>("ReviewNotes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReviewedByUserId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FarmId");
+
+                    b.HasIndex("InventoryItemId");
+
+                    b.HasIndex("FarmId", "Status");
+
+                    b.ToTable("StockAdjustmentRequests");
+                });
+
             modelBuilder.Entity("AgroMesh.Domain.Entities.StockMovement", b =>
                 {
                     b.Property<string>("Id")
@@ -609,6 +707,10 @@ namespace AgroMesh.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("WorkerId")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
 
@@ -710,6 +812,11 @@ namespace AgroMesh.Infrastructure.Persistence.Migrations
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -832,13 +939,30 @@ namespace AgroMesh.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AgroMesh.Domain.Entities.InventoryCategory", b =>
+                {
+                    b.HasOne("AgroMesh.Domain.Entities.Farm", null)
+                        .WithMany("InventoryCategories")
+                        .HasForeignKey("FarmId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("AgroMesh.Domain.Entities.InventoryItem", b =>
                 {
+                    b.HasOne("AgroMesh.Domain.Entities.InventoryCategory", "Category")
+                        .WithMany("Items")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("AgroMesh.Domain.Entities.Farm", null)
                         .WithMany("InventoryItems")
                         .HasForeignKey("FarmId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("AgroMesh.Domain.Entities.Section", b =>
@@ -894,6 +1018,8 @@ namespace AgroMesh.Infrastructure.Persistence.Migrations
                 {
                     b.Navigation("AllocationRules");
 
+                    b.Navigation("InventoryCategories");
+
                     b.Navigation("InventoryItems");
 
                     b.Navigation("Sections");
@@ -901,6 +1027,11 @@ namespace AgroMesh.Infrastructure.Persistence.Migrations
                     b.Navigation("WorkerRoles");
 
                     b.Navigation("Workers");
+                });
+
+            modelBuilder.Entity("AgroMesh.Domain.Entities.InventoryCategory", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("AgroMesh.Domain.Entities.InventoryItem", b =>

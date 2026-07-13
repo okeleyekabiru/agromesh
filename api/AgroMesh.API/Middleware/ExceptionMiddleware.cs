@@ -37,6 +37,22 @@ public class ExceptionMiddleware
             await context.Response.WriteAsync(JsonSerializer.Serialize(notFound));
             return;
         }
+        catch (ForbiddenException ex)
+        {
+            _logger.LogWarning(ex, "Forbidden: {Message}", ex.Message);
+            context.Response.StatusCode = 403;
+            context.Response.ContentType = "application/problem+json";
+            var forbidden = new
+            {
+                type = "https://tools.ietf.org/html/rfc9110#section-15.5.4",
+                title = "Forbidden",
+                status = 403,
+                detail = ex.Message,
+                traceId = context.TraceIdentifier
+            };
+            await context.Response.WriteAsync(JsonSerializer.Serialize(forbidden));
+            return;
+        }
         catch (DomainException ex)
         {
             _logger.LogWarning(ex, "Domain rule violation: {Message}", ex.Message);

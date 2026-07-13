@@ -152,7 +152,7 @@ public class ClaudeSchedulingService : IClaudeSchedulingService
             sb.AppendLine($"Current season: {DetermineSeason(DateTime.UtcNow.Month)} (no live weather data)");
         }
 
-        var chemicals = inventory.Where(i => i.Category == InventoryCategory.Chemical && i.CurrentStock > 0).ToList();
+        var chemicals = inventory.Where(i => i.Category.Name == "Chemical" && i.CurrentStock > 0).ToList();
         if (chemicals.Any())
         {
             sb.AppendLine("\nAvailable chemicals:");

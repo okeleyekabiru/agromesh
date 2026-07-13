@@ -3,6 +3,7 @@ using AgroMesh.Application.DTOs;
 using AgroMesh.Application.Interfaces;
 using AgroMesh.Application.Queries.Inventory;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AgroMesh.API.Controllers;
@@ -45,10 +46,20 @@ public class InventoryController : ControllerBase
         return Ok(movements.Select(m => new StockMovementDto(m.Id, m.InventoryItemId, m.Type, m.Quantity, m.ActivityLogId, m.TransactionId, m.Notes, m.Date)));
     }
 
+    // Requires [Authorize]: unlike the other actions on this controller (a pre-existing,
+    // out-of-scope gap — see docs/features/inventory-adjustment-approval/spec.md), this one needs
+    // to know who's calling to record RequestedByUserId.
+    [Authorize]
     [HttpPatch("{itemId}/adjust")]
-    public async Task<IActionResult> Adjust(string itemId, [FromBody] AdjustStockRequest request, CancellationToken ct)
+    public async Task<IActionResult> Adjust(string farmId, string itemId, [FromBody] AdjustStockRequest request, CancellationToken ct)
     {
-        await _mediator.Send(new AdjustInventoryStockCommand(itemId, request.NewQuantity, request.Notes), ct);
-        return NoContent();
+        // Submitting now creates a new sub-resource (a pending request) rather than mutating the
+        // item in place — 201, not the old 204 NoContent.
+        var result = await _mediator.Send(new AdjustInventoryStockCommand(farmId, itemId, request.NewQuantity, request.Notes), ct);
+        return Created($"api/farms/{farmId}/inventory-adjustments/{result.Id}", result);
     }
+
+    [HttpPost("{itemId}/pick")]
+    public async Task<IActionResult> Pick(string farmId, string itemId, [FromBody] PickStockRequest request, CancellationToken ct) =>
+        Ok(await _mediator.Send(new PickStockCommand(farmId, itemId, request), ct));
 }

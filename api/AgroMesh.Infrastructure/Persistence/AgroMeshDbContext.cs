@@ -21,7 +21,9 @@ public class AgroMeshDbContext : DbContext
     public DbSet<CropAllocationRule> CropAllocationRules => Set<CropAllocationRule>();
     public DbSet<ChemicalProduct> ChemicalProducts => Set<ChemicalProduct>();
     public DbSet<InventoryItem> InventoryItems => Set<InventoryItem>();
+    public DbSet<InventoryCategory> InventoryCategories => Set<InventoryCategory>();
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+    public DbSet<StockAdjustmentRequest> StockAdjustmentRequests => Set<StockAdjustmentRequest>();
     public DbSet<SchedulingPrediction> SchedulingPredictions => Set<SchedulingPrediction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

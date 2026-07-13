@@ -48,6 +48,13 @@ try
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(opts =>
         {
+            // Without this, ASP.NET Core silently remaps short inbound claim types (e.g. "sub") to
+            // long ClaimTypes.* URIs (JwtSecurityTokenHandler.DefaultInboundClaimTypeMap), which
+            // breaks every FindFirst(JwtRegisteredClaimNames.Sub/...) lookup in
+            // CurrentUserAccessor — a pre-existing gap this phase surfaced (UserId/CompanyId/Role
+            // all resolve to null on every authenticated request without this). Keep claim types
+            // exactly as issued by JwtService.
+            opts.MapInboundClaims = false;
             var key = builder.Configuration["Jwt:Key"]!;
             opts.TokenValidationParameters = new TokenValidationParameters
             {

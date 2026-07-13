@@ -90,9 +90,32 @@ export const TRANSACTIONS = {
 }
 
 export const INVENTORY = [
-  { id: 'inv_1', farmId: 'farm_001', name: 'Glyphosate 360', unit: 'L', category: 'Chemical', currentStock: 105, reorderThreshold: 30, isLowStock: false, chemicalProductId: 'chem_1', chemicalProductName: 'Glyphosate 360', lastMovementDate: '2025-06-17T09:00:00Z' },
-  { id: 'inv_2', farmId: 'farm_001', name: 'NPK 15-15-15',   unit: 'kg', category: 'Fertilizer', currentStock: 2500, reorderThreshold: 500, isLowStock: false, chemicalProductId: null, chemicalProductName: null, lastMovementDate: '2025-06-10T00:00:00Z' },
-  { id: 'inv_3', farmId: 'farm_001', name: 'Diesel',         unit: 'L', category: 'Fuel', currentStock: 85, reorderThreshold: 100, isLowStock: true, chemicalProductId: null, chemicalProductName: null, lastMovementDate: '2025-06-18T08:30:00Z' },
+  { id: 'inv_1', farmId: 'farm_001', name: 'Glyphosate 360', unit: 'L', categoryId: 'cat_chemical', categoryName: 'Chemical', currentStock: 105, reorderThreshold: 30, isLowStock: false, chemicalProductId: 'chem_1', chemicalProductName: 'Glyphosate 360', lastMovementDate: '2025-06-17T09:00:00Z' },
+  { id: 'inv_2', farmId: 'farm_001', name: 'NPK 15-15-15',   unit: 'kg', categoryId: 'cat_fertilizer', categoryName: 'Fertilizer', currentStock: 2500, reorderThreshold: 500, isLowStock: false, chemicalProductId: null, chemicalProductName: null, lastMovementDate: '2025-06-10T00:00:00Z' },
+  { id: 'inv_3', farmId: 'farm_001', name: 'Diesel',         unit: 'L', categoryId: 'cat_fuel', categoryName: 'Fuel', currentStock: 85, reorderThreshold: 100, isLowStock: true, chemicalProductId: null, chemicalProductName: null, lastMovementDate: '2025-06-18T08:30:00Z' },
+]
+
+// Farm-scoped inventory categories, including one ("Farm Tools") that has no counterpart in the
+// old hardcoded filter-pill list — used to prove the pills are now sourced from this fixture,
+// not a hardcoded array (see "inventory — category pills are sourced from fetched categories").
+export const INVENTORY_CATEGORIES = [
+  { id: 'cat_chemical', farmId: 'farm_001', name: 'Chemical', isDefault: true },
+  { id: 'cat_fertilizer', farmId: 'farm_001', name: 'Fertilizer', isDefault: true },
+  { id: 'cat_farm_tools', farmId: 'farm_001', name: 'Farm Tools', isDefault: true },
+  { id: 'cat_seed', farmId: 'farm_001', name: 'Seed', isDefault: true },
+  { id: 'cat_fuel', farmId: 'farm_001', name: 'Fuel', isDefault: true },
+  { id: 'cat_equipment', farmId: 'farm_001', name: 'Equipment', isDefault: true },
+]
+
+// Phase 3 — pending stock adjustment requests. inv_1 (Glyphosate 360, currentStock 105 per
+// INVENTORY) has a pending recount down to 90.
+export const STOCK_ADJUSTMENTS = [
+  {
+    id: 'adj_1', farmId: 'farm_001', inventoryItemId: 'inv_1', inventoryItemName: 'Glyphosate 360', unit: 'L',
+    currentStock: 105, requestedQuantity: 90, status: 'Pending', notes: 'Physical recount — 15L short',
+    requestedByUserId: 'u1', reviewedByUserId: null, reviewedAt: null, reviewNotes: null,
+    createdAt: '2025-06-19T00:00:00Z',
+  },
 ]
 
 export const CHEMICALS = [

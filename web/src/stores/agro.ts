@@ -2,13 +2,13 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type {
   Farm, Section, Block, Worker, WorkerRole, ActivityLog, Transaction,
-  InventoryItem, ChemicalProduct, UpcomingTask, LowStockAlert, WeatherWidget, DashboardData,
+  InventoryItem, InventoryCategory, ChemicalProduct, UpcomingTask, LowStockAlert, WeatherWidget, DashboardData,
   AuthUser, AuthResponse, FeatureFlag, FarmSummary, State,
-  BoundarySubmissionResult
+  BoundarySubmissionResult, PickStockResponse, StockAdjustmentRequest
 } from '@/types'
 import {
   farmApi, sectionApi, activityApi, transactionApi,
-  workerApi, workerRoleApi, inventoryApi, chemicalApi,
+  workerApi, workerRoleApi, inventoryApi, inventoryCategoryApi, inventoryAdjustmentsApi, chemicalApi,
   authApi, featuresApi, referenceApi,
   setFarmId
 } from '@/services/api'
@@ -25,6 +25,8 @@ export const useAgroStore = defineStore('agro', () => {
   const activities = ref<ActivityLog[]>([])
   const transactions = ref<Transaction[]>([])
   const inventoryItems = ref<InventoryItem[]>([])
+  const inventoryCategories = ref<InventoryCategory[]>([])
+  const pendingAdjustments = ref<StockAdjustmentRequest[]>([])
   const chemicals = ref<ChemicalProduct[]>([])
   const upcomingTasks = ref<UpcomingTask[]>([])
   const lowStockAlerts = ref<LowStockAlert[]>([])
@@ -78,6 +80,8 @@ export const useAgroStore = defineStore('agro', () => {
       ? inventoryItems.value.filter(i => i.isLowStock).length
       : lowStockAlerts.value.length
   )
+
+  const pendingAdjustmentsCount = computed(() => pendingAdjustments.value.length)
 
   // ── MULTI-FARM ACTIONS ──
 
@@ -266,6 +270,8 @@ export const useAgroStore = defineStore('agro', () => {
   }
 
   async function fetchInventory() {
+    loading.value = true
+    error.value = null
     try {
       const res = await inventoryApi.getAll()
       inventoryItems.value = res.data
@@ -278,7 +284,22 @@ export const useAgroStore = defineStore('agro', () => {
       }))
     } catch (e) {
       error.value = 'Failed to load inventory'
+    } finally {
+      loading.value = false
     }
+  }
+
+  async function fetchInventoryCategories() {
+    try {
+      const res = await inventoryCategoryApi.getAll()
+      inventoryCategories.value = res.data
+    } catch { /* non-critical — Add Item modal falls back to an empty category list */ }
+  }
+
+  async function createInventoryCategory(name: string): Promise<InventoryCategory> {
+    const res = await inventoryCategoryApi.create({ name })
+    inventoryCategories.value.push(res.data)
+    return res.data as InventoryCategory
   }
 
   async function fetchChemicals() {
@@ -305,9 +326,65 @@ export const useAgroStore = defineStore('agro', () => {
     return res.data
   }
 
-  async function adjustStock(itemId: string, body: unknown) {
-    await inventoryApi.adjust(itemId, body)
+  /**
+   * Phase 3 — submitting an adjustment no longer applies immediately: it creates a Pending
+   * StockAdjustmentRequest, so unlike the pre-Phase-3 version this does NOT call fetchInventory()
+   * afterward (CurrentStock hasn't changed yet). It does refresh the pending-adjustments list so
+   * the nav badge/queue reflect the new request right away.
+   */
+  async function adjustStock(itemId: string, body: { newQuantity: number; notes: string }): Promise<StockAdjustmentRequest> {
+    const res = await inventoryApi.adjust(itemId, body)
+    await fetchPendingAdjustments()
+    return res.data as StockAdjustmentRequest
+  }
+
+  async function fetchPendingAdjustments() {
+    try {
+      const res = await inventoryAdjustmentsApi.getAll('Pending')
+      pendingAdjustments.value = res.data ?? []
+    } catch { /* non-critical — nav badge/queue just show nothing until the next successful fetch */ }
+  }
+
+  /** Approving applies the adjustment server-side — refresh both the queue and the item's stock. */
+  async function approveStockAdjustment(requestId: string, reviewNotes?: string) {
+    await inventoryAdjustmentsApi.approve(requestId, { reviewNotes })
+    await Promise.all([fetchPendingAdjustments(), fetchInventory()])
+  }
+
+  /** Rejecting never touches stock — only the queue needs refreshing. */
+  async function rejectStockAdjustment(requestId: string, reviewNotes?: string) {
+    await inventoryAdjustmentsApi.reject(requestId, { reviewNotes })
+    await fetchPendingAdjustments()
+  }
+
+  /**
+   * Manual "pick / issue from stock" — a genuinely separate code path from activity-log-driven
+   * auto-deduction. Refreshes the list the same way adjustStock does, but also returns the response
+   * (item + lowStockWarning) so the caller can surface the warning inline without a second
+   * round-trip.
+   */
+  async function pickStock(
+    itemId: string,
+    body: { quantity: number; workerId: string; purpose: string }
+  ): Promise<PickStockResponse> {
+    const res = await inventoryApi.pick(itemId, body)
     await fetchInventory()
+    return res.data as PickStockResponse
+  }
+
+  /** Creates a brand-new item or restocks an existing one — see CreateInventoryItemRequest. */
+  async function addOrRestockInventoryItem(body: {
+    name: string
+    unit: string
+    categoryId: string
+    quantity: number
+    reorderThreshold: number
+    chemicalProductId?: string | null
+    existingItemId?: string | null
+  }): Promise<InventoryItem> {
+    const res = await inventoryApi.create(body)
+    await fetchInventory()
+    return res.data as InventoryItem
   }
 
   async function addStockFromReceipt(transactionId: string, body: unknown) {
@@ -433,19 +510,21 @@ export const useAgroStore = defineStore('agro', () => {
   return {
     // state
     farm, sections, workers, workerRoles, activities, transactions,
-    inventoryItems, chemicals, upcomingTasks, lowStockAlerts, weather, dashboard,
+    inventoryItems, inventoryCategories, pendingAdjustments, chemicals, upcomingTasks, lowStockAlerts, weather, dashboard,
     isOnline, lastSynced, loading, error, needsOnboarding,
     // auth state
     currentUser, token, enabledFeatures,
     // multi-farm state
     companyId, farms, activeFarmId, states, wizardSections,
     // computed
-    isAuthenticated, pendingReviews, supervisors, lowStockCount,
+    isAuthenticated, pendingReviews, supervisors, lowStockCount, pendingAdjustmentsCount,
     activeFarmSummary, hasMultipleFarms,
     // actions
     fetchFarm, fetchDashboard, fetchWeather, fetchSections, fetchActivities,
-    fetchTransactions, fetchWorkers, fetchWorkerRoles, fetchInventory, fetchChemicals,
-    logActivity, reviewTransaction, adjustStock, addStockFromReceipt,
+    fetchTransactions, fetchWorkers, fetchWorkerRoles, fetchInventory, fetchInventoryCategories,
+    createInventoryCategory, fetchChemicals,
+    logActivity, reviewTransaction, adjustStock, pickStock, addStockFromReceipt, addOrRestockInventoryItem,
+    fetchPendingAdjustments, approveStockAdjustment, rejectStockAdjustment,
     discoverFarm, updateFarmProfile, initDashboard,
     // multi-farm actions
     fetchFarms, switchFarm, addFarm, setActiveFarm, fetchStates, setFarmLocation,

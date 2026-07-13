@@ -27,6 +27,7 @@ public class JwtService : IJwtService
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim("fullName",                    user.FullName),
             new Claim("companyId",                    user.CompanyId ?? string.Empty),
+            new Claim("role",                        user.Role.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti,   Guid.NewGuid().ToString()),
         };
 

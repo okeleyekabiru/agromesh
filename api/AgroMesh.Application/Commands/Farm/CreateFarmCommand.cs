@@ -12,11 +12,13 @@ public record CreateFarmCommand(CreateFarmRequest Request) : IRequest<FarmDto>;
 public class CreateFarmCommandHandler : IRequestHandler<CreateFarmCommand, FarmDto>
 {
     private readonly IFarmRepository _farmRepo;
+    private readonly IInventoryCategoryRepository _categoryRepo;
     private readonly ICurrentUserAccessor _currentUser;
 
-    public CreateFarmCommandHandler(IFarmRepository farmRepo, ICurrentUserAccessor currentUser)
+    public CreateFarmCommandHandler(IFarmRepository farmRepo, IInventoryCategoryRepository categoryRepo, ICurrentUserAccessor currentUser)
     {
         _farmRepo = farmRepo;
+        _categoryRepo = categoryRepo;
         _currentUser = currentUser;
     }
 
@@ -28,6 +30,7 @@ public class CreateFarmCommandHandler : IRequestHandler<CreateFarmCommand, FarmD
 
         var farm = Domain.Entities.Farm.Create(req.Name, companyId, _currentUser.UserId ?? string.Empty, req.StateId, req.LgaFreetext);
         await _farmRepo.AddAsync(farm, ct);
+        await _categoryRepo.AddRangeAsync(Domain.Entities.InventoryCategory.CreateDefaults(farm.Id), ct);
 
         return GetFarmsQueryHandler.MapToDto(farm);
     }

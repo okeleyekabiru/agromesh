@@ -228,6 +228,9 @@ test('Edit section — pre-fills existing corners and allows re-marking the boun
   await intercept('**/api/farms/farm_001/workers**', WORKERS)
   await intercept('**/api/farms/farm_001/worker-roles', WORKER_ROLES)
   await intercept('**/api/farms/farm_001/inventory', INVENTORY)
+  // Sidebar now self-fetches the pending-adjustments count on mount for every authenticated
+  // route (Phase 3 nav badge) — mock it here too, same reasoning as the rest of this list.
+  await intercept('**/api/farms/farm_001/inventory-adjustments**', [])
   await intercept('**/api/chemicals', CHEMICALS)
   await intercept('**/api/farms', [FARM])
   await page.route('**/api/farms/farm_001/sections', route =>

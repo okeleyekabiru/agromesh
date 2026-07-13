@@ -11,12 +11,13 @@ public class InventoryRepository : IInventoryRepository
     public InventoryRepository(AgroMeshDbContext db) => _db = db;
 
     public async Task<InventoryItem?> GetByIdAsync(string id, CancellationToken ct = default) =>
-        await _db.InventoryItems.FindAsync([id], ct);
+        await _db.InventoryItems.Include(i => i.Category).FirstOrDefaultAsync(i => i.Id == id, ct);
 
     public async Task<List<InventoryItem>> GetByFarmIdAsync(string farmId, CancellationToken ct = default) =>
         await _db.InventoryItems
+            .Include(i => i.Category)
             .Where(i => i.FarmId == farmId)
-            .OrderBy(i => i.Category)
+            .OrderBy(i => i.Category.Name)
             .ThenBy(i => i.Name)
             .ToListAsync(ct);
 
@@ -27,6 +28,7 @@ public class InventoryRepository : IInventoryRepository
 
     public async Task<InventoryItem?> FindByNameAsync(string farmId, string name, CancellationToken ct = default) =>
         await _db.InventoryItems
+            .Include(i => i.Category)
             .FirstOrDefaultAsync(i => i.FarmId == farmId && i.Name.ToLower() == name.ToLower(), ct);
 
     public async Task<InventoryItem> AddAsync(InventoryItem item, CancellationToken ct = default)

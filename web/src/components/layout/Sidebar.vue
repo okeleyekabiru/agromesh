@@ -157,6 +157,9 @@ function openAddFarm() {
 
 onMounted(() => {
   if (!store.farms.length) store.fetchFarms()
+  // Independently fetched here (not via the dashboard payload) so the badge is populated
+  // regardless of which page the user lands on first — mirrors the farm-list self-fetch above.
+  store.fetchPendingAdjustments()
 })
 
 const ALL_NAV = [
@@ -215,6 +218,14 @@ const ALL_NAV = [
     icon: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
     feature: 'reports',
     badgeFn: () => null
+  },
+  {
+    id: 'inventory-approvals',
+    path: '/inventory-approvals',
+    label: 'Approvals',
+    icon: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>',
+    feature: 'inventory',
+    badgeFn: () => store.pendingAdjustmentsCount > 0 ? store.pendingAdjustmentsCount : null
   },
 ]
 
