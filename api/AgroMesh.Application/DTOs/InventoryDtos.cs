@@ -43,8 +43,14 @@ public record AdjustStockRequest(decimal NewQuantity, string? Notes);
 /// activity-log-driven auto-deduction (IInventoryDeductionService). Always records an Out
 /// StockMovement via InventoryItem.DeductStock; insufficient stock throws DomainException (422)
 /// rather than being caught into a soft warning like the auto-deduction path does.
+///
+/// <see cref="SectionId"/> (required) / <see cref="BlockId"/> (required only when the section has
+/// blocks) record which farm area the picked stock is going to — who performed the pick is no
+/// longer client-supplied (see the removed WorkerId field): PickStockCommandHandler now
+/// auto-attributes the authenticated caller via ICurrentUserAccessor instead of trusting a
+/// client-chosen Worker.
 /// </summary>
-public record PickStockRequest(decimal Quantity, string WorkerId, string Purpose);
+public record PickStockRequest(decimal Quantity, string SectionId, string? BlockId, string Purpose);
 
 /// <summary>
 /// <see cref="LowStockWarning"/> is non-null only when the pick pushed the item's stock to/below its
@@ -52,7 +58,7 @@ public record PickStockRequest(decimal Quantity, string WorkerId, string Purpose
 /// </summary>
 public record PickStockResponse(InventoryItemDto Item, string? LowStockWarning);
 
-public record StockMovementDto(string Id, string InventoryItemId, StockMovementType Type, decimal Quantity, string? ActivityLogId, string? TransactionId, string? Notes, DateTime Date);
+public record StockMovementDto(string Id, string InventoryItemId, StockMovementType Type, decimal Quantity, string? ActivityLogId, string? TransactionId, string? OrderId, string? Notes, DateTime Date);
 
 public record LowStockAlertDto(string InventoryItemId, string InventoryItemName, decimal CurrentStock, string Unit, decimal ReorderThreshold);
 

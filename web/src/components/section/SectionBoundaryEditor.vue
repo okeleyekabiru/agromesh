@@ -17,7 +17,7 @@
         </div>
         <div class="form-group" style="flex:1">
           <label class="form-label">Area <span class="label-hint">hectares</span></label>
-          <input class="form-input" v-model.number="detailsForm.areaValue" type="number" min="0.1" step="0.5" />
+          <input class="form-input" v-model.number="detailsForm.areaValue" type="number" min="0.1" step="0.5" @wheel.prevent />
         </div>
       </div>
 
@@ -28,7 +28,7 @@
             <option v-for="ct in CROP_TYPES" :key="ct" :value="ct">{{ ct }}</option>
           </select>
           <input class="form-input" v-model.number="c.percentage" type="number"
-                 min="1" max="100" style="width:64px" placeholder="%" />
+                 min="1" max="100" style="width:64px" placeholder="%" @wheel.prevent />
           <button class="btn-icon" @click="detailsForm.crops.splice(i,1)" :disabled="detailsForm.crops.length === 1">✕</button>
         </div>
         <button class="btn-add-crop" @click="detailsForm.crops.push({ cropType: 'OilPalm', percentage: 0 })">
@@ -84,8 +84,8 @@
         <div v-if="gpsWarning" class="gps-warning">{{ gpsWarning }}</div>
 
         <div class="manual-corner-row">
-          <input class="form-input" v-model.number="manualLat" type="number" step="0.00001" placeholder="Latitude e.g. 7.3775" />
-          <input class="form-input" v-model.number="manualLng" type="number" step="0.00001" placeholder="Longitude e.g. 3.9470" />
+          <input class="form-input" v-model.number="manualLat" type="number" step="0.00001" placeholder="Latitude e.g. 7.3775" @wheel.prevent />
+          <input class="form-input" v-model.number="manualLng" type="number" step="0.00001" placeholder="Longitude e.g. 3.9470" @wheel.prevent />
           <button class="btn-add-crop" style="width:auto;padding:7px 14px;" :disabled="manualLat == null || manualLng == null" @click="addManualCorner">
             + Add point
           </button>

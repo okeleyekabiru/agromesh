@@ -4,14 +4,16 @@ import type {
   Farm, Section, Block, Worker, WorkerRole, ActivityLog, Transaction,
   InventoryItem, InventoryCategory, ChemicalProduct, UpcomingTask, LowStockAlert, WeatherWidget, DashboardData,
   AuthUser, AuthResponse, FeatureFlag, FarmSummary, State,
-  BoundarySubmissionResult, PickStockResponse, StockAdjustmentRequest
+  BoundarySubmissionResult, PickStockResponse, StockAdjustmentRequest,
+  Supplier, Order, CreateOrderLineItemRequest
 } from '@/types'
 import {
   farmApi, sectionApi, activityApi, transactionApi,
   workerApi, workerRoleApi, inventoryApi, inventoryCategoryApi, inventoryAdjustmentsApi, chemicalApi,
-  authApi, featuresApi, referenceApi,
+  authApi, featuresApi, referenceApi, supplierApi, orderApi,
   setFarmId
 } from '@/services/api'
+import { normalizeBlobError } from '@/utils/http'
 
 const ACTIVE_FARM_KEY = 'agro_active_farm_id'
 
@@ -27,6 +29,8 @@ export const useAgroStore = defineStore('agro', () => {
   const inventoryItems = ref<InventoryItem[]>([])
   const inventoryCategories = ref<InventoryCategory[]>([])
   const pendingAdjustments = ref<StockAdjustmentRequest[]>([])
+  const suppliers = ref<Supplier[]>([])
+  const orders = ref<Order[]>([])
   const chemicals = ref<ChemicalProduct[]>([])
   const upcomingTasks = ref<UpcomingTask[]>([])
   const lowStockAlerts = ref<LowStockAlert[]>([])
@@ -362,10 +366,14 @@ export const useAgroStore = defineStore('agro', () => {
    * auto-deduction. Refreshes the list the same way adjustStock does, but also returns the response
    * (item + lowStockWarning) so the caller can surface the warning inline without a second
    * round-trip.
+   *
+   * Who performed the pick is no longer client-supplied (see the removed `workerId` field) — the
+   * backend auto-attributes the authenticated caller (ICurrentUserAccessor). `sectionId`/`blockId`
+   * record which farm area the stock is going to instead.
    */
   async function pickStock(
     itemId: string,
-    body: { quantity: number; workerId: string; purpose: string }
+    body: { quantity: number; sectionId: string; blockId?: string | null; purpose: string }
   ): Promise<PickStockResponse> {
     const res = await inventoryApi.pick(itemId, body)
     await fetchInventory()
@@ -390,6 +398,85 @@ export const useAgroStore = defineStore('agro', () => {
   async function addStockFromReceipt(transactionId: string, body: unknown) {
     await transactionApi.recordReceipt(transactionId, body)
     await fetchInventory()
+  }
+
+  // ── Suppliers (Phase 4) ──
+
+  async function fetchSuppliers() {
+    try {
+      const res = await supplierApi.getAll()
+      suppliers.value = res.data ?? []
+    } catch { /* non-critical — the create-order supplier picker falls back to an empty list */ }
+  }
+
+  async function createSupplier(body: { name: string; phone?: string | null; email?: string | null }): Promise<Supplier> {
+    const res = await supplierApi.create(body)
+    suppliers.value.push(res.data)
+    return res.data as Supplier
+  }
+
+  // ── Orders (Phase 4) ──
+
+  async function fetchOrders(status?: string) {
+    try {
+      loading.value = true
+      const res = await orderApi.getAll(status)
+      orders.value = res.data ?? []
+    } catch (e) {
+      error.value = 'Failed to load orders'
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function createOrder(body: { supplierId: string; lineItems: CreateOrderLineItemRequest[] }): Promise<Order> {
+    const res = await orderApi.create(body)
+    orders.value.unshift(res.data)
+    return res.data as Order
+  }
+
+  /** Placing has no stock side effects — only the order's own status changes. */
+  async function placeOrder(orderId: string): Promise<Order> {
+    const res = await orderApi.place(orderId)
+    const idx = orders.value.findIndex(o => o.id === orderId)
+    if (idx !== -1) orders.value[idx] = res.data
+    return res.data as Order
+  }
+
+  /**
+   * Receiving converts every line item into real stock server-side — refresh inventory afterward
+   * the same "refetch the thing that changed" convention approveStockAdjustment already uses.
+   */
+  async function receiveOrder(orderId: string): Promise<Order> {
+    const res = await orderApi.receive(orderId)
+    const idx = orders.value.findIndex(o => o.id === orderId)
+    if (idx !== -1) orders.value[idx] = res.data
+    await fetchInventory()
+    return res.data as Order
+  }
+
+  /**
+   * Fetches the invoice PDF as a Blob (see orderApi.downloadInvoice's doc comment for why not
+   * window.open) and triggers a synthetic anchor-click download — the standard pattern for an
+   * authenticated (Bearer-token, non-cookie) file download in the browser. On failure, re-throws
+   * via normalizeBlobError so the caller's extractErrorMessage(e, ...) still surfaces the backend's
+   * real detail instead of falling back to a generic message (responseType: 'blob' means error
+   * bodies come back as a Blob too, not parsed JSON).
+   */
+  async function downloadOrderInvoice(orderId: string): Promise<void> {
+    try {
+      const res = await orderApi.downloadInvoice(orderId)
+      const blobUrl = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }))
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = `invoice-${orderId}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(blobUrl)
+    } catch (e) {
+      throw await normalizeBlobError(e)
+    }
   }
 
   // ── AUTH ACTIONS ──
@@ -510,7 +597,7 @@ export const useAgroStore = defineStore('agro', () => {
   return {
     // state
     farm, sections, workers, workerRoles, activities, transactions,
-    inventoryItems, inventoryCategories, pendingAdjustments, chemicals, upcomingTasks, lowStockAlerts, weather, dashboard,
+    inventoryItems, inventoryCategories, pendingAdjustments, suppliers, orders, chemicals, upcomingTasks, lowStockAlerts, weather, dashboard,
     isOnline, lastSynced, loading, error, needsOnboarding,
     // auth state
     currentUser, token, enabledFeatures,
@@ -525,6 +612,7 @@ export const useAgroStore = defineStore('agro', () => {
     createInventoryCategory, fetchChemicals,
     logActivity, reviewTransaction, adjustStock, pickStock, addStockFromReceipt, addOrRestockInventoryItem,
     fetchPendingAdjustments, approveStockAdjustment, rejectStockAdjustment,
+    fetchSuppliers, createSupplier, fetchOrders, createOrder, placeOrder, receiveOrder, downloadOrderInvoice,
     discoverFarm, updateFarmProfile, initDashboard,
     // multi-farm actions
     fetchFarms, switchFarm, addFarm, setActiveFarm, fetchStates, setFarmLocation,

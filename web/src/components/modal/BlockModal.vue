@@ -21,9 +21,9 @@
           <div class="add-block-form">
             <div class="form-row">
               <input class="form-input" v-model="name" placeholder="Block name e.g. Block A" style="flex:2" />
-              <input class="form-input" v-model.number="areaValue" type="number" min="0.1" step="0.5" placeholder="Area (ha)" style="flex:1" />
+              <input class="form-input" v-model.number="areaValue" type="number" min="0.1" step="0.5" placeholder="Area (ha)" style="flex:1" @wheel.prevent />
             </div>
-            <input class="form-input" v-model.number="treeCount" type="number" min="0" placeholder="Tree count (optional)" />
+            <input class="form-input" v-model.number="treeCount" type="number" min="0" placeholder="Tree count (optional)" @wheel.prevent />
             <div v-if="error" class="error-msg">{{ error }}</div>
             <button class="btn btn-primary" :disabled="!canAdd || saving" @click="addBlock">
               {{ saving ? 'Adding…' : '+ Add Block' }}

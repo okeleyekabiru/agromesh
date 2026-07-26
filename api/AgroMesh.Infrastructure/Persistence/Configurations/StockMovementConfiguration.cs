@@ -16,11 +16,16 @@ public class StockMovementConfiguration : IEntityTypeConfiguration<StockMovement
         builder.Property(m => m.ActivityLogId).HasMaxLength(50);
         builder.Property(m => m.TransactionId).HasMaxLength(50);
         builder.Property(m => m.WorkerId).HasMaxLength(50);
+        builder.Property(m => m.OrderId).HasMaxLength(50);
+        builder.Property(m => m.PerformedByUserId).HasMaxLength(50);
+        builder.Property(m => m.SectionId).HasMaxLength(50);
+        builder.Property(m => m.BlockId).HasMaxLength(50);
         builder.Property(m => m.Notes).HasMaxLength(500);
         builder.Property(m => m.Date).IsRequired();
 
         builder.HasIndex(m => new { m.FarmId, m.Date });
         builder.HasIndex(m => m.InventoryItemId);
         builder.HasIndex(m => m.ActivityLogId);
+        builder.HasIndex(m => m.SectionId);
     }
 }

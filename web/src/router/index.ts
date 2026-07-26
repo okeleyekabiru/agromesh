@@ -8,6 +8,7 @@ import WorkersView     from '@/views/WorkersView.vue'
 import ReportsView     from '@/views/ReportsView.vue'
 import InventoryView   from '@/views/InventoryView.vue'
 import InventoryApprovalsView from '@/views/InventoryApprovalsView.vue'
+import OrdersView from '@/views/OrdersView.vue'
 import OnboardingView    from '@/views/OnboardingView.vue'
 import SectionsSetupView from '@/views/SectionsSetupView.vue'
 import ReviewConfirmView from '@/views/ReviewConfirmView.vue'
@@ -28,6 +29,11 @@ const routes = [
   { path: '/reports',    name: 'reports',    component: ReportsView,    meta: { title: 'Reports',        sub: 'OPERATIONAL',    feature: 'reports' } },
   { path: '/inventory',  name: 'inventory',  component: InventoryView,  meta: { title: 'Inventory',      sub: 'STOCK & SUPPLIES', feature: 'inventory' } },
   { path: '/inventory-approvals', name: 'inventory-approvals', component: InventoryApprovalsView, meta: { title: 'Stock Approvals', sub: 'PENDING ADJUSTMENTS', feature: 'inventory' } },
+  // Phase 4 — reuses the 'inventory' feature flag rather than introducing a new 'orders' one:
+  // there's no backend /api/farms/{farmId}/features endpoint at all (fetchFeatures()'s catch block
+  // enables every known flag by default), and ordering exists specifically to restock inventory, so
+  // gating it on the same flag is both simplest and semantically correct.
+  { path: '/orders', name: 'orders', component: OrdersView, meta: { title: 'Orders', sub: 'PURCHASING', feature: 'inventory' } },
 ]
 
 const router = createRouter({

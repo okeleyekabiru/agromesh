@@ -43,7 +43,7 @@ public class InventoryController : ControllerBase
     public async Task<IActionResult> GetMovements(string itemId, [FromQuery] int limit = 50, CancellationToken ct = default)
     {
         var movements = await _inventoryRepo.GetMovementsAsync(itemId, limit, ct);
-        return Ok(movements.Select(m => new StockMovementDto(m.Id, m.InventoryItemId, m.Type, m.Quantity, m.ActivityLogId, m.TransactionId, m.Notes, m.Date)));
+        return Ok(movements.Select(m => new StockMovementDto(m.Id, m.InventoryItemId, m.Type, m.Quantity, m.ActivityLogId, m.TransactionId, m.OrderId, m.Notes, m.Date)));
     }
 
     // Requires [Authorize]: unlike the other actions on this controller (a pre-existing,
@@ -59,6 +59,11 @@ public class InventoryController : ControllerBase
         return Created($"api/farms/{farmId}/inventory-adjustments/{result.Id}", result);
     }
 
+    // Requires [Authorize]: PickStockCommandHandler now auto-attributes the authenticated caller
+    // (ICurrentUserAccessor.UserId) instead of trusting a client-chosen WorkerId — same reasoning
+    // as Adjust above, and the same scoped-not-controller-wide gate this codebase already uses
+    // (the other actions on this controller stay open, a pre-existing, out-of-scope gap).
+    [Authorize]
     [HttpPost("{itemId}/pick")]
     public async Task<IActionResult> Pick(string farmId, string itemId, [FromBody] PickStockRequest request, CancellationToken ct) =>
         Ok(await _mediator.Send(new PickStockCommand(farmId, itemId, request), ct));

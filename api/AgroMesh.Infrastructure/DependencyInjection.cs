@@ -52,12 +52,15 @@ public static class DependencyInjection
         services.AddScoped<IInventoryRepository, InventoryRepository>();
         services.AddScoped<IInventoryCategoryRepository, InventoryCategoryRepository>();
         services.AddScoped<IStockAdjustmentRequestRepository, StockAdjustmentRequestRepository>();
+        services.AddScoped<ISupplierRepository, SupplierRepository>();
+        services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<ISchedulingPredictionRepository, SchedulingPredictionRepository>();
         services.AddScoped<ICropAllocationRuleRepository, CropAllocationRuleRepository>();
 
         services.AddScoped<IWeatherService, WeatherService>();
         services.AddScoped<IClaudeSchedulingService, ClaudeSchedulingService>();
         services.AddScoped<IInventoryDeductionService, InventoryDeductionService>();
+        services.AddScoped<IOrderInvoiceService, OrderInvoiceService>();
         services.AddScoped<IFinancialCategorizationService, FinancialCategorizationService>();
         services.AddScoped<MonoApiService>();
         services.AddScoped<IMonoBankService, MonoApiService>();

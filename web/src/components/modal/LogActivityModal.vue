@@ -116,7 +116,7 @@
                   {{ w.name }} ({{ w.roleTitle }} · ₦{{ w.payRate.toLocaleString() }}/{{ PAY_FREQUENCY_LABELS[w.payFrequency].toLowerCase() }})
                 </option>
               </select>
-              <input class="form-input" placeholder="Hours" v-model.number="workerHours" type="number" min="1" max="12" style="width:80px">
+              <input class="form-input" placeholder="Hours" v-model.number="workerHours" type="number" min="1" max="12" style="width:80px" @wheel.prevent>
               <button class="btn btn-primary" @click="addWorker">+ Add</button>
             </div>
           </div>
@@ -132,7 +132,7 @@
             </div>
             <div class="add-row">
               <input class="form-input" placeholder="e.g. NPK Fertilizer" v-model="inputItem" style="flex:1">
-              <input class="form-input" placeholder="Qty" v-model.number="inputQty" type="number" style="width:64px">
+              <input class="form-input" placeholder="Qty" v-model.number="inputQty" type="number" style="width:64px" @wheel.prevent>
               <select class="form-select" v-model="inputUnit" style="width:72px">
                 <option>kg</option>
                 <option>L</option>

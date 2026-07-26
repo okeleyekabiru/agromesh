@@ -250,6 +250,7 @@ export interface StockMovement {
   quantity: number
   activityLogId: string | null
   transactionId: string | null
+  orderId: string | null
   notes: string | null
   date: string
 }
@@ -308,6 +309,49 @@ export interface StockAdjustmentRequest {
   reviewedAt: string | null
   reviewNotes: string | null
   createdAt: string
+}
+
+/** A farm-scoped supplier (from GET/POST /api/farms/{farmId}/suppliers). */
+export interface Supplier {
+  id: string
+  farmId: string
+  name: string
+  phone: string | null
+  email: string | null
+}
+
+/**
+ * Phase 4 — order lifecycle. `status` is a plain string ("Draft"/"Placed"/"Received") straight off
+ * the backend DTO, which builds it via `order.Status.ToString()` — same convention as
+ * StockAdjustmentRequest.status/AuthUser.role.
+ */
+export type OrderStatus = 'Draft' | 'Placed' | 'Received'
+
+export interface OrderLineItem {
+  inventoryItemId: string
+  inventoryItemName: string
+  unit: string
+  quantity: number
+  unitPrice: number
+  lineTotal: number
+}
+
+export interface Order {
+  id: string
+  farmId: string
+  supplierId: string
+  supplierName: string
+  status: OrderStatus
+  lineItems: OrderLineItem[]
+  total: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateOrderLineItemRequest {
+  inventoryItemId: string
+  quantity: number
+  unitPrice: number
 }
 
 export interface WeatherWidget {

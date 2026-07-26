@@ -122,6 +122,30 @@ export const inventoryAdjustmentsApi = {
     api.patch(`/api/farms/${FARM_ID}/inventory-adjustments/${requestId}/reject`, body ?? {})
 }
 
+// ── Suppliers (Phase 4) ──
+export const supplierApi = {
+  getAll: () => api.get(`/api/farms/${FARM_ID}/suppliers`),
+  create: (body: { name: string; phone?: string | null; email?: string | null }) =>
+    api.post(`/api/farms/${FARM_ID}/suppliers`, body)
+}
+
+// ── Orders (Phase 4) ──
+export const orderApi = {
+  getAll: (status?: string) => api.get(`/api/farms/${FARM_ID}/orders${status ? `?status=${status}` : ''}`),
+  getById: (orderId: string) => api.get(`/api/farms/${FARM_ID}/orders/${orderId}`),
+  create: (body: { supplierId: string; lineItems: { inventoryItemId: string; quantity: number; unitPrice: number }[] }) =>
+    api.post(`/api/farms/${FARM_ID}/orders`, body),
+  place: (orderId: string) => api.patch(`/api/farms/${FARM_ID}/orders/${orderId}/place`),
+  receive: (orderId: string) => api.patch(`/api/farms/${FARM_ID}/orders/${orderId}/receive`),
+  // responseType 'blob': auth here is a Bearer JWT header (see the request interceptor above), not
+  // a cookie — a plain `window.open`/anchor navigation to this URL would hit the API with no
+  // Authorization header and get a 401. Fetching as a blob through axios (which does attach the
+  // header) and handing the caller raw bytes to turn into a download is the correct pattern for an
+  // authenticated file download here.
+  downloadInvoice: (orderId: string) =>
+    api.get(`/api/farms/${FARM_ID}/orders/${orderId}/invoice`, { responseType: 'blob' })
+}
+
 // ── Chemicals ──
 export const chemicalApi = {
   getAll: () => api.get('/api/chemicals')

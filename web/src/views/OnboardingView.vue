@@ -29,7 +29,7 @@
         <div class="form-row">
           <div class="form-group" style="flex:1">
             <label class="form-label">Total Area</label>
-            <input class="form-input" v-model.number="farm.areaValue" type="number" min="0.1" step="0.5" placeholder="45" />
+            <input class="form-input" v-model.number="farm.areaValue" type="number" min="0.1" step="0.5" placeholder="45" @wheel.prevent />
           </div>
           <div class="form-group" style="width:120px">
             <label class="form-label">Unit</label>
@@ -83,7 +83,7 @@
             </select>
             <div class="rate-input-wrap">
               <span class="rate-prefix">₦</span>
-              <input class="form-input rate-input" v-model.number="r.payRate" type="number" min="500" step="100" placeholder="2200" />
+              <input class="form-input rate-input" v-model.number="r.payRate" type="number" min="500" step="100" placeholder="2200" @wheel.prevent />
             </div>
             <select class="form-select" v-model="r.payFrequency" style="width:110px">
               <option v-for="f in PAY_FREQUENCIES" :key="f" :value="f">/ {{ f.toLowerCase() }}</option>

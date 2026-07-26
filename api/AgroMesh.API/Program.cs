@@ -13,6 +13,11 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();
 
+// QuestPDF (Phase 4 order invoices — see AgroMesh.Infrastructure.Services.OrderInvoiceService)
+// throws at render time unless a license is set once for the process. Community is free for
+// this app's scale (see QuestPDF's licensing terms) — set here, not per-request.
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
 try
 {
     var builder = WebApplication.CreateBuilder(args);

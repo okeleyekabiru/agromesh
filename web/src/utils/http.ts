@@ -20,3 +20,25 @@ export function isImplausibleGeometryError(e: unknown): boolean {
   const err = e as { response?: { status?: number; data?: { detail?: string } } }
   return err?.response?.status === 422 && /confirm to proceed anyway/i.test(err?.response?.data?.detail ?? '')
 }
+
+/**
+ * A request made with axios `responseType: 'blob'` (e.g. orderApi.downloadInvoice) gets its error
+ * body back as a Blob too, not parsed JSON — `err.response.data.detail` would be `undefined` on a
+ * Blob, so extractErrorMessage silently falls back to its generic message instead of surfacing the
+ * backend's real detail (e.g. "Order not found"). This re-reads the Blob as text and, if it parses
+ * as JSON, returns an equivalent error with `.response.data` replaced by the parsed object so
+ * extractErrorMessage keeps working unmodified. Not blob-specific error shapes (network errors,
+ * etc.) are returned unchanged.
+ */
+export async function normalizeBlobError(e: unknown): Promise<unknown> {
+  const err = e as { response?: { data?: unknown } }
+  const data = err?.response?.data
+  if (!(data instanceof Blob)) return e
+  try {
+    const text = await data.text()
+    const parsed = JSON.parse(text)
+    return { ...err, response: { ...err.response, data: parsed } }
+  } catch {
+    return e
+  }
+}

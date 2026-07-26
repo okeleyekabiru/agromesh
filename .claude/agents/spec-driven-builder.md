@@ -25,8 +25,7 @@ Work against a dedicated folder for artifacts: create `docs/features/<feature-sl
 
 ---
 
-## Phase 1 — SPEC (`spec.md`)
-
+y
 Before writing any code, explore the relevant parts of the codebase (Grep/Glob/Read) to ground the spec in what already exists — reuse over rebuild. Then write `docs/features/<slug>/spec.md` containing:
 
 - **Goal** — one paragraph, the outcome in the user's terms.

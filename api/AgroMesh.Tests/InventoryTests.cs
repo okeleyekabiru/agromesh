@@ -51,4 +51,25 @@ public class InventoryTests
         var item = CreateItem();
         Assert.Equal("cat_chemical", item.CategoryId);
     }
+
+    // Regression: a reported "typed 1000, stored 999.980" data-integrity bug. Root-caused to a
+    // browser-layer footgun (mouse wheel over a focused number input silently adjusting its value
+    // by `step`, fixed via @wheel.prevent on every number input — see InventoryView.vue's doc
+    // comment), not the domain layer — this test proves AddStock/Create themselves never introduce
+    // any floating-point drift for a whole-number opening stock, confirming the domain layer was
+    // never the source of the corruption.
+    [Fact]
+    public void Create_WholeNumberOpeningStock_IsStoredExactly()
+    {
+        var item = InventoryItem.Create("farm1", "Dragon", "kg", "cat_chemical", 1000m, 30);
+        Assert.Equal(1000m, item.CurrentStock);
+    }
+
+    [Fact]
+    public void AddStock_WholeNumberQuantity_IsAddedExactly()
+    {
+        var item = CreateItem(0);
+        item.AddStock(1000m);
+        Assert.Equal(1000m, item.CurrentStock);
+    }
 }

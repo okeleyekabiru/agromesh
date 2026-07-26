@@ -64,48 +64,58 @@ test('sidebar — farm name and area shown', async ({ page }) => {
   await mockApi(page)
   await page.goto('/')
   await expect(page.locator('.farm-name')).toContainText('Kabiru Farms Ltd.')
-  await expect(page.locator('.farm-sub')).toContainText('111.2')
+  // .farm-sub doesn't exist in Sidebar.vue (stale selector, same class as .farm-area) — the
+  // real class is .farm-area.
+  await expect(page.locator('.farm-area')).toContainText('111.2')
 })
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
+// Note: selectors below target DashboardView.vue's actual class names (.kpi-row, .wx-temp,
+// .season-chip, .wx-stats, .wx-spray/.wx-spray-lbl, .task-sec, .task-badge, .task-reason) — a
+// pre-existing (predates Phase 4) dashboard redesign renamed these from an older
+// .kpi-grid/.weather-temp/.season-badge/.weather-stats/.spray-window/.spray-label/.task-section/
+// .task-due/.task-reasoning set without updating this file, leaving every assertion below
+// permanently unable to find its element. Fixed as part of Phase 4's "keep the whole suite green"
+// verification pass — confirmed via direct inspection of DashboardView.vue, not a flaky timing
+// issue (the wrong selectors matched zero elements, deterministically, in every run).
 test('dashboard — total spend KPI renders', async ({ page }) => {
   await mockApi(page)
   await page.goto('/')
   // 1,540,000 / 1000 = 1,540 → "₦1,540K"
-  await expect(page.locator('.kpi-grid')).toContainText('₦1,540K')
+  await expect(page.locator('.kpi-row')).toContainText('₦1,540K')
 })
 
 test('dashboard — activities this month KPI renders', async ({ page }) => {
   await mockApi(page)
   await page.goto('/')
   // activities KPI card value is "12"
-  await expect(page.locator('.kpi-grid')).toContainText('12')
+  await expect(page.locator('.kpi-row')).toContainText('12')
 })
 
 test('dashboard — weather widget shows season badge', async ({ page }) => {
   await mockApi(page)
   await page.goto('/')
-  await expect(page.locator('.season-badge')).toBeVisible()
-  await expect(page.locator('.season-badge')).toHaveText('Peak Rains')
+  await expect(page.locator('.season-chip')).toBeVisible()
+  await expect(page.locator('.season-chip')).toHaveText('Peak Rains')
 })
 
 test('dashboard — weather widget shows temperature', async ({ page }) => {
   await mockApi(page)
   await page.goto('/')
-  await expect(page.locator('.weather-temp')).toContainText('32°C')
+  await expect(page.locator('.wx-temp')).toContainText('32°C')
 })
 
 test('dashboard — weather widget shows rain stat', async ({ page }) => {
   await mockApi(page)
   await page.goto('/')
-  await expect(page.locator('.weather-stats')).toContainText('4.2 mm')
+  await expect(page.locator('.wx-stats')).toContainText('4.2 mm')
 })
 
 test('dashboard — weather widget shows best spray window', async ({ page }) => {
   await mockApi(page)
   await page.goto('/')
-  await expect(page.locator('.spray-window')).toBeVisible()
-  await expect(page.locator('.spray-label')).toHaveText('BEST SPRAY WINDOW')
+  await expect(page.locator('.wx-spray')).toBeVisible()
+  await expect(page.locator('.wx-spray-lbl')).toHaveText('BEST SPRAY WINDOW')
 })
 
 test('dashboard — upcoming tasks panel visible', async ({ page }) => {
@@ -117,8 +127,8 @@ test('dashboard — upcoming tasks panel visible', async ({ page }) => {
 test('dashboard — upcoming task shows section name', async ({ page }) => {
   await mockApi(page)
   await page.goto('/')
-  // .task-section is specific to the tasks panel
-  await expect(page.locator('.task-section').first()).toContainText('Section A')
+  // .task-sec is specific to the tasks panel
+  await expect(page.locator('.task-sec').first()).toContainText('Section A')
 })
 
 test('dashboard — upcoming task shows activity type', async ({ page }) => {
@@ -130,13 +140,13 @@ test('dashboard — upcoming task shows activity type', async ({ page }) => {
 test('dashboard — upcoming task shows due-days badge', async ({ page }) => {
   await mockApi(page)
   await page.goto('/')
-  await expect(page.locator('.task-due').first()).toContainText('in 5d')
+  await expect(page.locator('.task-badge').first()).toContainText('in 5d')
 })
 
 test('dashboard — upcoming task shows Claude reasoning', async ({ page }) => {
   await mockApi(page)
   await page.goto('/')
-  await expect(page.locator('.task-reasoning').first()).toContainText('Peak rains season')
+  await expect(page.locator('.task-reason').first()).toContainText('Peak rains season')
 })
 
 test('dashboard — low stock alert banner shown', async ({ page }) => {
@@ -359,7 +369,7 @@ test('workers — worker role title shown', async ({ page }) => {
 test('workers — daily rate shown from role', async ({ page }) => {
   await mockApi(page)
   await page.goto('/workers')
-  await expect(page.locator('.w-pay').first()).toContainText('₦3,500 / day')
+  await expect(page.locator('.w-pay').first()).toContainText('₦3,500 / daily')
 })
 
 test('workers — days logged this month shown', async ({ page }) => {
@@ -378,7 +388,7 @@ test('workers — wage bands card renders', async ({ page }) => {
 test('workers — role daily rate shown in wage bands', async ({ page }) => {
   await mockApi(page)
   await page.goto('/workers')
-  await expect(page.locator('.role-rate').first()).toContainText('₦3,500 / day')
+  await expect(page.locator('.role-rate').first()).toContainText('₦3,500 / daily')
 })
 
 test('workers — KPI shows employee count', async ({ page }) => {
@@ -542,6 +552,57 @@ test('inventory — add item modal creates a brand-new item and it appears in th
   expect(capturedBody!.existingItemId ?? null).toBeNull()
 })
 
+// Regression for a reported data-integrity bug: typing "1000" into the Quantity field and then
+// having the mouse wheel scroll while the field is still focused (e.g. scrolling down to reach the
+// Reorder Threshold field or the submit button) must NOT silently change the typed value. Chrome
+// treats a wheel notch over a focused <input type="number"> the same as clicking its native
+// up/down spinner (± one `step`) — confirmed via direct reproduction that the typed value and the
+// POST payload were both correct (1000) for a plain fill+submit, isolating the corruption to this
+// wheel-adjustment behavior. Fixed via @wheel.prevent on every number input in this app (see
+// InventoryView.vue's doc comment on its modals).
+test('inventory — scrolling the mouse wheel over a focused quantity field does not change its value', async ({ page }) => {
+  await mockApi(page)
+  let capturedBody: Record<string, unknown> | null = null
+
+  await page.route('**/api/farms/farm_001/inventory', async route => {
+    if (route.request().method() === 'POST') {
+      capturedBody = route.request().postDataJSON()
+      await route.fulfill({
+        status: 201, contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'inv_new', farmId: 'farm_001', name: 'Dragon', unit: 'kg', categoryId: 'cat_chemical',
+          categoryName: 'Chemical', currentStock: capturedBody!.quantity, reorderThreshold: 0,
+          isLowStock: false, chemicalProductId: null, chemicalProductName: null, lastMovementDate: null,
+        }),
+      })
+    } else {
+      await route.fallback()
+    }
+  })
+
+  await page.goto('/inventory')
+  await page.locator('button[aria-label="Add inventory item or stock"]').click()
+  await page.locator('input[placeholder="e.g. Glyphosate 360"]').fill('Dragon')
+  await page.locator('select').filter({ hasText: 'Select category' }).selectOption('cat_chemical')
+  await page.locator('input[placeholder="e.g. L, kg, bags"]').fill('kg')
+
+  const qtyInput = page.locator('input[placeholder="e.g. 50"]')
+  await qtyInput.click()
+  await qtyInput.fill('1000')
+
+  // Simulate the mouse sitting over the still-focused input while the page scrolls.
+  const box = await qtyInput.boundingBox()
+  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2)
+  await page.mouse.wheel(0, 100)
+  await page.mouse.wheel(0, 100)
+
+  await expect(qtyInput).toHaveValue('1000')
+
+  await page.locator('.modal-footer button', { hasText: 'Add Item' }).click()
+  expect(capturedBody).not.toBeNull()
+  expect(capturedBody!.quantity).toBe(1000)
+})
+
 test('inventory — add item modal restocks an existing item via the item picker', async ({ page }) => {
   await mockApi(page)
   let stock = 105
@@ -641,8 +702,8 @@ test('inventory — add item modal shows an inline error on a failed submit and 
   await expect(page.locator('.modal')).toBeVisible()
 })
 
-// ── Inventory: Pick / Issue Stock (Phase 2) ─────────────────────────────────────
-test('inventory — Pick Stock button opens the pick modal with worker options', async ({ page }) => {
+// ── Inventory: Pick / Issue Stock (Phase 2, reworked — auto-attributed picker + section/block) ──
+test('inventory — Pick Stock button opens the pick modal with the current user shown read-only and a section select', async ({ page }) => {
   await mockApi(page)
   await page.goto('/inventory')
   await page.locator('button', { hasText: 'Pick Stock' }).first().click()
@@ -651,13 +712,15 @@ test('inventory — Pick Stock button opens the pick modal with worker options',
   await expect(page.locator('.modal-title')).toContainText('Glyphosate 360')
   // Available stock shown read-only
   await expect(page.locator('.modal-body')).toContainText('105')
-  // Worker select sourced from store.workers (existing Workers feature), not a new endpoint
-  const workerSelect = page.locator('select').filter({ hasText: 'Select worker' })
-  await expect(workerSelect).toContainText('Ibrahim Musa')
-  await expect(workerSelect).toContainText('Tunde Adeyemi')
+  // Picked-by is auto-attributed from the authenticated session — shown read-only, not selectable.
+  await expect(page.locator('.modal-body')).toContainText('Test User')
+  // Section select sourced from store.sections (existing Sections feature), not a new endpoint
+  const sectionSelect = page.locator('select').filter({ hasText: 'Select section' })
+  await expect(sectionSelect).toContainText('Section A')
+  await expect(sectionSelect).toContainText('Section D')
 })
 
-test('inventory — Pick Stock submit is disabled until quantity, worker, and purpose are all filled', async ({ page }) => {
+test('inventory — Pick Stock submit is disabled until quantity, section, block, and purpose are all filled', async ({ page }) => {
   await mockApi(page)
   await page.goto('/inventory')
   await page.locator('button', { hasText: 'Pick Stock' }).first().click()
@@ -666,16 +729,19 @@ test('inventory — Pick Stock submit is disabled until quantity, worker, and pu
   await expect(submit).toBeDisabled()
 
   await page.locator('input[placeholder="e.g. Spraying Section A"]').fill('Spraying Section A')
-  await expect(submit).toBeDisabled() // still missing quantity + worker
+  await expect(submit).toBeDisabled() // still missing quantity + section
 
   await page.locator('.modal input[type="number"]').fill('10')
-  await expect(submit).toBeDisabled() // still missing worker
+  await expect(submit).toBeDisabled() // still missing section
 
-  await page.locator('select').filter({ hasText: 'Select worker' }).selectOption('w1')
+  await page.locator('select').filter({ hasText: 'Select section' }).selectOption('sec_a')
+  await expect(submit).toBeDisabled() // Section A has blocks — block is required too
+
+  await page.locator('select').filter({ hasText: 'Select block' }).selectOption('blk_a1')
   await expect(submit).toBeEnabled()
 })
 
-test('inventory — a valid pick reduces stock, records who/quantity/purpose, and closes the modal', async ({ page }) => {
+test('inventory — a valid pick reduces stock, records section/block/quantity/purpose, and closes the modal', async ({ page }) => {
   await mockApi(page)
   let stock = 105
   let capturedBody: Record<string, unknown> | null = null
@@ -708,15 +774,19 @@ test('inventory — a valid pick reduces stock, records who/quantity/purpose, an
   await page.goto('/inventory')
   await page.locator('button', { hasText: 'Pick Stock' }).first().click()
   await page.locator('.modal input[type="number"]').fill('20')
-  await page.locator('select').filter({ hasText: 'Select worker' }).selectOption('w1')
+  await page.locator('select').filter({ hasText: 'Select section' }).selectOption('sec_a')
+  await page.locator('select').filter({ hasText: 'Select block' }).selectOption('blk_a1')
   await page.locator('input[placeholder="e.g. Spraying Section A"]').fill('Spraying Section A')
   await page.locator('.modal-footer button', { hasText: 'Pick Stock' }).click()
 
   await expect(page.locator('.modal')).not.toBeVisible()
   expect(capturedBody).not.toBeNull()
   expect(capturedBody!.quantity).toBe(20)
-  expect(capturedBody!.workerId).toBe('w1')
+  expect(capturedBody!.sectionId).toBe('sec_a')
+  expect(capturedBody!.blockId).toBe('blk_a1')
   expect(capturedBody!.purpose).toBe('Spraying Section A')
+  // No workerId is ever sent — the picker is auto-attributed server-side, not client-chosen.
+  expect(capturedBody!.workerId).toBeUndefined()
 
   const row = page.locator('.inv-row').filter({ hasText: 'Glyphosate 360' })
   await expect(row.locator('.inv-stock-num')).toContainText('85')
@@ -739,7 +809,8 @@ test('inventory — Pick Stock shows an inline error and stays open when quantit
   await page.goto('/inventory')
   await page.locator('button', { hasText: 'Pick Stock' }).first().click()
   await page.locator('.modal input[type="number"]').fill('500')
-  await page.locator('select').filter({ hasText: 'Select worker' }).selectOption('w1')
+  await page.locator('select').filter({ hasText: 'Select section' }).selectOption('sec_a')
+  await page.locator('select').filter({ hasText: 'Select block' }).selectOption('blk_a1')
   await page.locator('input[placeholder="e.g. Spraying Section A"]').fill('Spraying Section A')
   await page.locator('.modal-footer button', { hasText: 'Pick Stock' }).click()
 
@@ -776,7 +847,8 @@ test('inventory — Pick Stock shows a low-stock warning (not a block) when stoc
   const dieselRow = page.locator('.inv-row').filter({ hasText: 'Diesel' })
   await dieselRow.locator('button', { hasText: 'Pick Stock' }).click()
   await page.locator('.modal input[type="number"]').fill('15')
-  await page.locator('select').filter({ hasText: 'Select worker' }).selectOption('w1')
+  await page.locator('select').filter({ hasText: 'Select section' }).selectOption('sec_a')
+  await page.locator('select').filter({ hasText: 'Select block' }).selectOption('blk_a1')
   await page.locator('input[placeholder="e.g. Spraying Section A"]').fill('Generator top-up')
   await page.locator('.modal-footer button', { hasText: 'Pick Stock' }).click()
 
@@ -1129,7 +1201,9 @@ test('navigation — back navigation from activities to dashboard', async ({ pag
   await mockApi(page)
   await page.goto('/activities')
   await page.locator('.nav-item', { hasText: 'Dashboard' }).click()
-  await expect(page).toHaveURL('/')
+  // The Dashboard nav item routes to /dashboard (router/index.ts), not / (landing) — the stale
+  // assertion here predates Phase 4; fixed alongside the other stale-selector dashboard fixes above.
+  await expect(page).toHaveURL('/dashboard')
 })
 
 // ── Reports ───────────────────────────────────────────────────────────────────

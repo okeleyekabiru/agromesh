@@ -212,6 +212,14 @@ const ALL_NAV = [
     badgeFn: () => store.lowStockCount > 0 ? store.lowStockCount : null
   },
   {
+    id: 'orders',
+    path: '/orders',
+    label: 'Orders',
+    icon: '<path d="M9 11V6a3 3 0 016 0v5"/><path d="M5 9h14l1 11H4L5 9z"/>',
+    feature: 'inventory',
+    badgeFn: () => null
+  },
+  {
     id: 'reports',
     path: '/reports',
     label: 'Reports',

@@ -69,6 +69,15 @@
       </div>
     </div>
 
+    <!-- Every `type="number"` input in this file carries `@wheel.prevent`: Chrome silently
+         changes a focused number input's value by one `step` per mouse-wheel notch (the same
+         behavior as clicking its native up/down spinner) — a well-known footgun where scrolling
+         the page while the cursor happens to sit over a still-focused quantity/price field can
+         silently corrupt data the user believes they already finished typing (e.g. typed "1000",
+         two accidental wheel notches at step=0.01 silently leaves "999.98"). preventDefault on
+         wheel suppresses just that spinner behavior; the input keeps focus and the page still
+         scrolls normally via the outer container. -->
+
     <!-- Adjust modal — Phase 3: submitting creates a Pending approval request, it does not touch
          stock immediately. See closeAdjust()/submitAdjust() below. -->
     <div v-if="adjustTarget" class="modal-overlay" @click.self="closeAdjust">
@@ -86,7 +95,7 @@
           </div>
           <div class="form-group">
             <label class="form-label">New Quantity ({{ adjustTarget.unit }})</label>
-            <input type="number" class="form-input" v-model.number="adjustQty" min="0" :disabled="!!adjustSuccess" />
+            <input type="number" class="form-input" v-model.number="adjustQty" min="0" :disabled="!!adjustSuccess" @wheel.prevent />
           </div>
           <div class="form-group">
             <label class="form-label">Reason</label>
@@ -121,15 +130,29 @@
               {{ pickTarget.currentStock }} {{ pickTarget.unit }}
             </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Quantity to Pick ({{ pickTarget.unit }})</label>
-            <input type="number" class="form-input" v-model.number="pickQty" min="0" step="0.01" :disabled="!!pickWarning" />
+          <!-- Who performed the pick is auto-attributed server-side from the authenticated session
+               (see PickStockCommandHandler's doc comment) — shown here read-only for transparency,
+               not as a field the user chooses. -->
+          <div class="form-group" v-if="store.currentUser">
+            <label class="form-label">Picked By</label>
+            <div style="font-size:13px;color:var(--stone);">{{ store.currentUser.fullName }} (you)</div>
           </div>
           <div class="form-group">
-            <label class="form-label">Picked By</label>
-            <select class="form-select" v-model="pickWorkerId" :disabled="!!pickWarning">
-              <option value="" disabled>— Select worker —</option>
-              <option v-for="w in store.workers" :key="w.id" :value="w.id">{{ w.name }}</option>
+            <label class="form-label">Quantity to Pick ({{ pickTarget.unit }})</label>
+            <input type="number" class="form-input" v-model.number="pickQty" min="0" step="0.01" :disabled="!!pickWarning" @wheel.prevent />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Section</label>
+            <select class="form-select" v-model="pickSectionId" :disabled="!!pickWarning" @change="onPickSectionChange">
+              <option value="" disabled>— Select section —</option>
+              <option v-for="s in store.sections" :key="s.id" :value="s.id">{{ s.name }}</option>
+            </select>
+          </div>
+          <div class="form-group" v-if="pickSectionBlocks.length">
+            <label class="form-label">Block</label>
+            <select class="form-select" v-model="pickBlockId" :disabled="!!pickWarning">
+              <option value="" disabled>— Select block —</option>
+              <option v-for="b in pickSectionBlocks" :key="b.id" :value="b.id">{{ b.name }}</option>
             </select>
           </div>
           <div class="form-group">
@@ -201,12 +224,12 @@
 
           <div class="form-group">
             <label class="form-label">Quantity {{ isExistingItemMode ? 'to Add' : '(Opening Stock)' }}</label>
-            <input type="number" class="form-input" v-model.number="quantity" min="0" step="0.01" placeholder="e.g. 50" />
+            <input type="number" class="form-input" v-model.number="quantity" min="0" step="0.01" placeholder="e.g. 50" @wheel.prevent />
           </div>
 
           <div class="form-group" v-if="!isExistingItemMode">
             <label class="form-label">Reorder Threshold</label>
-            <input type="number" class="form-input" v-model.number="reorderThreshold" min="0" step="0.01" placeholder="e.g. 10" />
+            <input type="number" class="form-input" v-model.number="reorderThreshold" min="0" step="0.01" placeholder="e.g. 10" @wheel.prevent />
           </div>
 
           <div v-if="submitError" class="error-msg">{{ submitError }}</div>
@@ -303,32 +326,48 @@ async function submitAdjust() {
   }
 }
 
-// ── Pick / Issue Stock (Phase 2) ──
+// ── Pick / Issue Stock (Phase 2, reworked) ──
 // A genuinely separate action from Adjust: Adjust overwrites an absolute quantity (a correction),
-// Pick records a real withdrawal (who/how much/why) and always leaves an Out movement behind.
+// Pick records a real withdrawal (how much/where/why) and always leaves an Out movement behind.
+// Who performed the pick is no longer chosen here — the backend auto-attributes the authenticated
+// session (see PickStockCommandHandler) — this modal instead requires WHERE the stock is going
+// (Section, and Block if the section has any).
 const pickTarget = ref<InventoryItem | null>(null)
 const pickQty = ref<number | ''>('')
-const pickWorkerId = ref('')
+const pickSectionId = ref('')
+const pickBlockId = ref('')
 const pickPurpose = ref('')
 const picking = ref(false)
 const pickError = ref('')
 const pickWarning = ref('')
 
+const pickSectionBlocks = computed(() => {
+  const section = store.sections.find(s => s.id === pickSectionId.value)
+  return section?.blocks ?? []
+})
+
 const canSubmitPick = computed(() =>
   !!pickTarget.value &&
   !!pickQty.value && Number(pickQty.value) > 0 &&
-  !!pickWorkerId.value &&
+  !!pickSectionId.value &&
+  (pickSectionBlocks.value.length === 0 || !!pickBlockId.value) &&
   pickPurpose.value.trim().length > 0
 )
 
 function openPick(item: InventoryItem) {
   pickTarget.value = item
   pickQty.value = ''
-  pickWorkerId.value = ''
+  pickSectionId.value = ''
+  pickBlockId.value = ''
   pickPurpose.value = ''
   pickError.value = ''
   pickWarning.value = ''
-  if (!store.workers.length) store.fetchWorkers()
+  if (!store.sections.length) store.fetchSections()
+}
+
+function onPickSectionChange() {
+  // Switched section — a Block id from the previous section is meaningless here.
+  pickBlockId.value = ''
 }
 
 function closePick() {
@@ -343,7 +382,8 @@ async function submitPick() {
   try {
     const res = await store.pickStock(pickTarget.value.id, {
       quantity: Number(pickQty.value),
-      workerId: pickWorkerId.value,
+      sectionId: pickSectionId.value,
+      blockId: pickBlockId.value || null,
       purpose: pickPurpose.value.trim()
     })
     if (res.lowStockWarning) {
@@ -489,7 +529,8 @@ onMounted(() => {
   store.fetchInventory()
   store.fetchInventoryCategories()
   store.fetchChemicals()
-  store.fetchWorkers()
+  // Sections (for the Pick Stock modal's Section/Block dropdowns) are lazily fetched in
+  // openPick() instead — no view here needs the section list before a Pick modal is opened.
 })
 </script>
 

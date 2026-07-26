@@ -44,15 +44,17 @@ export const SECTIONS = [
   },
 ]
 
+// payFrequency is the raw enum ordinal (0=Daily, 1=Weekly, 2=Monthly — see PAY_FREQUENCY_LABELS in
+// types/index.ts), matching the wire format every other enum on this app's DTOs already uses.
 export const WORKERS = [
-  { id: 'w1', farmId: 'farm_001', name: 'Ibrahim Musa',  initials: 'IM', workerRoleId: 'r1', roleTitle: 'Field Supervisor', dailyRate: 3500, type: 'Employee', active: true, daysLoggedThisMonth: 22 },
-  { id: 'w2', farmId: 'farm_001', name: 'Tunde Adeyemi', initials: 'TA', workerRoleId: 'r2', roleTitle: 'Farm Worker',       dailyRate: 2200, type: 'Employee', active: true, daysLoggedThisMonth: 20 },
+  { id: 'w1', farmId: 'farm_001', name: 'Ibrahim Musa',  initials: 'IM', workerRoleId: 'r1', roleTitle: 'Field Supervisor', payRate: 3500, payFrequency: 0, type: 'Employee', active: true, daysLoggedThisMonth: 22 },
+  { id: 'w2', farmId: 'farm_001', name: 'Tunde Adeyemi', initials: 'TA', workerRoleId: 'r2', roleTitle: 'Farm Worker',       payRate: 2200, payFrequency: 0, type: 'Employee', active: true, daysLoggedThisMonth: 20 },
 ]
 
 export const WORKER_ROLES = [
-  { id: 'r1', farmId: 'farm_001', title: 'Field Supervisor', defaultType: 'Employee', dailyRate: 3500, workerCount: 1 },
-  { id: 'r2', farmId: 'farm_001', title: 'Farm Worker',       defaultType: 'Employee', dailyRate: 2200, workerCount: 3 },
-  { id: 'r3', farmId: 'farm_001', title: 'Contractor',        defaultType: 'Contractor', dailyRate: 4000, workerCount: 1 },
+  { id: 'r1', farmId: 'farm_001', title: 'Field Supervisor', defaultType: 'Employee', payRate: 3500, payFrequency: 0, workerCount: 1 },
+  { id: 'r2', farmId: 'farm_001', title: 'Farm Worker',       defaultType: 'Employee', payRate: 2200, payFrequency: 0, workerCount: 3 },
+  { id: 'r3', farmId: 'farm_001', title: 'Contractor',        defaultType: 'Contractor', payRate: 4000, payFrequency: 0, workerCount: 1 },
 ]
 
 export const ACTIVITIES = {
@@ -64,7 +66,7 @@ export const ACTIVITIES = {
       createdOffline: false, syncedAt: '2025-06-18T08:30:00Z',
       workedAreaGeoJson: null, workedArea: null,
       chemicalProductId: null, chemicalProductName: null,
-      workers: [{ workerId: 'w1', workerName: 'Ibrahim Musa', workerType: 'Employee', hoursWorked: 8, dailyRate: 3500 }],
+      workers: [{ workerId: 'w1', workerName: 'Ibrahim Musa', workerType: 'Employee', hoursWorked: 8, payRate: 3500, payFrequency: 0 }],
       inputs: [{ item: 'Diesel', quantity: 12, unit: 'L' }],
     },
     {
@@ -74,7 +76,7 @@ export const ACTIVITIES = {
       createdOffline: false, syncedAt: '2025-06-17T09:00:00Z',
       workedAreaGeoJson: null, workedArea: null,
       chemicalProductId: 'chem_1', chemicalProductName: 'Glyphosate 360',
-      workers: [{ workerId: 'w2', workerName: 'Tunde Adeyemi', workerType: 'Employee', hoursWorked: 7, dailyRate: 2200 }],
+      workers: [{ workerId: 'w2', workerName: 'Tunde Adeyemi', workerType: 'Employee', hoursWorked: 7, payRate: 2200, payFrequency: 0 }],
       inputs: [{ item: 'Glyphosate 360', quantity: 15, unit: 'L' }],
     },
   ],
@@ -115,6 +117,32 @@ export const STOCK_ADJUSTMENTS = [
     currentStock: 105, requestedQuantity: 90, status: 'Pending', notes: 'Physical recount — 15L short',
     requestedByUserId: 'u1', reviewedByUserId: null, reviewedAt: null, reviewNotes: null,
     createdAt: '2025-06-19T00:00:00Z',
+  },
+]
+
+// Phase 4 — farm-scoped suppliers, orders. sup_1's ord_1 (Draft) / ord_2 (Placed) / ord_3
+// (Received) cover all three statuses so status-gated Place/Receive button tests don't need
+// per-test route overrides just to get a starting status.
+export const SUPPLIERS = [
+  { id: 'sup_1', farmId: 'farm_001', name: 'Saro Agro Sciences', phone: '08012345678', email: 'sales@saroagro.com' },
+  { id: 'sup_2', farmId: 'farm_001', name: 'Candel Company', phone: null, email: null },
+]
+
+export const ORDERS = [
+  {
+    id: 'ord_1', farmId: 'farm_001', supplierId: 'sup_1', supplierName: 'Saro Agro Sciences', status: 'Draft',
+    lineItems: [{ inventoryItemId: 'inv_1', inventoryItemName: 'Glyphosate 360', unit: 'L', quantity: 10, unitPrice: 500, lineTotal: 5000 }],
+    total: 5000, createdAt: '2025-06-20T00:00:00Z', updatedAt: '2025-06-20T00:00:00Z',
+  },
+  {
+    id: 'ord_2', farmId: 'farm_001', supplierId: 'sup_1', supplierName: 'Saro Agro Sciences', status: 'Placed',
+    lineItems: [{ inventoryItemId: 'inv_3', inventoryItemName: 'Diesel', unit: 'L', quantity: 50, unitPrice: 800, lineTotal: 40000 }],
+    total: 40000, createdAt: '2025-06-19T00:00:00Z', updatedAt: '2025-06-19T00:00:00Z',
+  },
+  {
+    id: 'ord_3', farmId: 'farm_001', supplierId: 'sup_2', supplierName: 'Candel Company', status: 'Received',
+    lineItems: [{ inventoryItemId: 'inv_2', inventoryItemName: 'NPK 15-15-15', unit: 'kg', quantity: 200, unitPrice: 300, lineTotal: 60000 }],
+    total: 60000, createdAt: '2025-06-18T00:00:00Z', updatedAt: '2025-06-18T00:00:00Z',
   },
 ]
 

@@ -23,6 +23,14 @@
   <ItemGroup>
     <ProjectReference Include="..\AgroMesh.Application\AgroMesh.Application.csproj" />
     <ProjectReference Include="..\AgroMesh.Domain\AgroMesh.Domain.csproj" />
+    <!-- Phase 4: first test in this repo that needs Infrastructure directly — proving the real
+         QuestPDF-backed OrderInvoiceService actually produces valid PDF bytes (not fake-able, and
+         has no DB/Redis dependency of its own — the test never touches AgroMeshDbContext). -->
+    <ProjectReference Include="..\AgroMesh.Infrastructure\AgroMesh.Infrastructure.csproj" />
+    <!-- Phase 4: needed for OrdersAuthorizeAttributeTests.cs's plain reflection check against the
+         real controller types — no ASP.NET Core TestServer/WebApplicationFactory precedent exists
+         in this repo, so this is the lightest-weight way to prove [Authorize] placement. -->
+    <ProjectReference Include="..\AgroMesh.API\AgroMesh.API.csproj" />
   </ItemGroup>
 
 </Project>
