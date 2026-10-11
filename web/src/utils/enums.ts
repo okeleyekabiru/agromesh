@@ -1,4 +1,4 @@
-import type { ActivityLog, ActivityType, Block, UpcomingTask, WorkerType } from '@/types'
+import type { ActivityLog, ActivityType, Block, Transaction, UpcomingTask, WorkerType } from '@/types'
 
 // The API serialises enums as ordinals (no string-enum converter is configured), but the UI
 // compares and displays them by name. These must mirror the backend enum declaration order.
@@ -7,6 +7,12 @@ const ACTIVITY_TYPES: ActivityType[] = [
   'Harvesting', 'Clearing', 'Pruning', 'PestControl',
 ]
 const WORKER_TYPES: WorkerType[] = ['Employee', 'Contractor']
+
+export const TRANSACTION_CATEGORIES = [
+  'Labour', 'Fertilizer', 'Chemicals', 'Fuel', 'Equipment', 'Maintenance', 'Transportation', 'Seeds', 'Sales', 'Other',
+] as const
+const CONFIDENCE = ['High', 'Medium', 'Low']
+const SOURCES = ['Dictionary', 'Pattern', 'Llm', 'Manual']
 
 function nameOf<T extends string>(value: unknown, names: T[]): T {
   if (typeof value === 'number') return names[value] ?? (String(value) as T)
@@ -39,6 +45,23 @@ export function normalizeBlock(b: Block): Block {
 export function normalizeTask<T extends UpcomingTask | null | undefined>(t: T): T {
   if (!t) return t
   return { ...t, activityType: nameOf(t.activityType, ACTIVITY_TYPES) } as T
+}
+
+/** Index of a category name, which is what the API expects when a transaction is categorised. */
+export function categoryOrdinal(name: string): number {
+  return (TRANSACTION_CATEGORIES as readonly string[]).indexOf(name)
+}
+
+/** Accepts a transaction as sent by the API (ordinal enums) or already normalised. */
+export function normalizeTransaction(t: Transaction): Transaction {
+  return {
+    ...t,
+    category: nameOf(t.category, [...TRANSACTION_CATEGORIES]),
+    confidence: nameOf(t.confidence, CONFIDENCE as Transaction['confidence'][]),
+    source: nameOf(t.source, SOURCES as Transaction['source'][]),
+    kind: nameOf(t.kind as unknown, ['Expense', 'Income', 'Capital']),
+    reconciliation: nameOf(t.reconciliation as unknown, ['None', 'Matched', 'NeedsReview', 'Dismissed']),
+  }
 }
 
 const SPLIT_LABELS: Record<string, string> = {

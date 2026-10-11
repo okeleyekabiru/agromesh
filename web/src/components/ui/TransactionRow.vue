@@ -1,5 +1,7 @@
 <template>
-  <div class="txn-row" :style="`--i: ${index ?? 0}`">
+  <div class="txn-row" :class="{ clickable: clickable }" :style="`--i: ${index ?? 0}`"
+       :role="clickable ? 'button' : undefined" :tabindex="clickable ? 0 : undefined"
+       @click="clickable && emit('open')" @keydown.enter="clickable && emit('open')">
     <div class="txn-icon" :style="{ background: categoryBg }">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
@@ -23,6 +25,7 @@
       </div>
       <div class="txn-amount">₦{{ txn.amount.toLocaleString() }}</div>
     </div>
+    <div v-if="$slots.actions" class="txn-actions"><slot name="actions" /></div>
   </div>
 </template>
 
@@ -31,7 +34,8 @@ import { computed } from 'vue'
 import StatBadge from './StatBadge.vue'
 import type { Transaction } from '@/types'
 
-const props = defineProps<{ txn: Transaction; showAlloc?: boolean; index?: number }>()
+const props = defineProps<{ txn: Transaction; showAlloc?: boolean; index?: number; clickable?: boolean }>()
+const emit = defineEmits<{ open: [] }>()
 
 const CAT_ICONS: Record<string, string> = {
   Labour:         '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>',
@@ -110,6 +114,9 @@ function formatDate(iso: string) {
   margin-top: 2px;
 }
 
+.txn-row.clickable { cursor: pointer; }
+.txn-row.clickable:hover { background: rgba(45,122,79,0.04); }
+.txn-actions { flex-basis: 100%; padding: 8px 0 0 40px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .txn-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .txn-alloc { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--stone); }
 .txn-badges { display: flex; gap: 6px; }

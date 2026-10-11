@@ -63,6 +63,10 @@ public class Farm : BaseEntity
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>The bank is synced once a day: due when linked and not synced in the last 24 hours.</summary>
+    public bool BankSyncDue(DateTime nowUtc) =>
+        BankAccountId is not null && (LastBankSyncAt is null || nowUtc - LastBankSyncAt.Value >= TimeSpan.FromHours(24));
+
     public void MarkBankSynced()
     {
         LastBankSyncAt = DateTime.UtcNow;

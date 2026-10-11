@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:http/http.dart' as http;
 import 'auth_service.dart';
 
@@ -36,7 +36,7 @@ class ApiClient {
   /// platforms use localhost. A physical phone must pass --dart-define=API_BASE_URL=http://<PC LAN IP>:5000.
   static final String baseUrl = _override.isNotEmpty
       ? _override
-      : (Platform.isAndroid ? 'http://10.0.2.2:5000' : 'http://localhost:5000');
+      : (!kIsWeb && defaultTargetPlatform == TargetPlatform.android ? 'http://10.0.2.2:5000' : 'http://localhost:5000');
 
   static const _timeout = Duration(seconds: 15);
 

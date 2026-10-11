@@ -14,7 +14,7 @@ import {
   setFarmId
 } from '@/services/api'
 import { normalizeBlobError } from '@/utils/http'
-import { normalizeActivity, normalizeTask, normalizeBlock } from '@/utils/enums'
+import { normalizeActivity, normalizeTask, normalizeBlock, normalizeTransaction } from '@/utils/enums'
 
 const ACTIVE_FARM_KEY = 'agro_active_farm_id'
 
@@ -257,7 +257,7 @@ export const useAgroStore = defineStore('agro', () => {
   async function fetchTransactions(page = 1, pendingReview?: boolean) {
     try {
       const res = await transactionApi.getAll(page, 20, pendingReview)
-      transactions.value = res.data.items
+      transactions.value = (res.data.items as Transaction[]).map(normalizeTransaction)
     } catch (e) {
       error.value = 'Failed to load transactions'
     }
@@ -357,8 +357,9 @@ export const useAgroStore = defineStore('agro', () => {
   async function reviewTransaction(id: string, body: unknown) {
     const res = await transactionApi.review(id, body)
     const idx = transactions.value.findIndex(t => t.id === id)
-    if (idx !== -1) transactions.value[idx] = res.data
-    return res.data
+    const updated = normalizeTransaction(res.data)
+    if (idx !== -1) transactions.value[idx] = updated
+    return updated
   }
 
   /**

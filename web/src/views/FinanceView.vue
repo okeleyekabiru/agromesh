@@ -12,7 +12,7 @@
     <div v-if="queue.length" class="card review-card">
       <div class="review-head">Transfers that need a person</div>
       <div v-for="t in queue" :key="t.id" class="review-row">
-        <div class="review-main">
+        <div class="review-main" style="cursor:pointer;" @click="selected = t">
           <div class="review-narr">{{ t.narration }}</div>
           <div class="review-note">{{ t.reconciliationNote }}</div>
           <div class="review-meta">{{ new Date(t.date).toLocaleDateString('en-GB') }} · ₦{{ Math.abs(t.amount).toLocaleString() }}</div>
@@ -24,6 +24,8 @@
       </div>
       <div v-if="resolveError" class="error-msg" style="padding:0 16px 12px;">{{ resolveError }}</div>
     </div>
+
+    <TransactionDetailModal v-if="selected" :txn="selected" @close="selected = null" @saved="reload" />
 
     <div class="kpi-grid">
       <KpiCard label="Total · MTD"     :value="store.dashboard ? `₦${(store.dashboard.totalSpendMtd/1000).toFixed(0)}K` : '—'"  delta="auto-categorized" deltaType="down" :dark="true" />
@@ -40,7 +42,7 @@
       </div>
 
       <div v-if="store.loading" style="padding:24px;text-align:center;color:var(--stone);font-size:12px;">Loading transactions…</div>
-      <TransactionRow v-for="t in filtered" :key="t.id" :txn="t" :showAlloc="true" />
+      <TransactionRow v-for="t in filtered" :key="t.id" :txn="t" :showAlloc="true" :clickable="true" @open="selected = t" />
       <EmptyState
         v-if="!store.loading && filtered.length === 0"
         icon="🔍"
@@ -53,18 +55,23 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAgroStore } from '@/stores/agro'
 import KpiCard from '@/components/ui/KpiCard.vue'
 import FilterPill from '@/components/ui/FilterPill.vue'
 import TransactionRow from '@/components/ui/TransactionRow.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import BankAccountCard from '@/components/ui/BankAccountCard.vue'
+import TransactionDetailModal from '@/components/modal/TransactionDetailModal.vue'
 import { transactionApi } from '@/services/api'
 import { extractErrorMessage } from '@/utils/http'
 import type { FinanceSummary, Transaction } from '@/types'
 
 const store = useAgroStore()
-const activeFilter = ref('All')
+const route = useRoute()
+// Arriving from the dashboard's "Review now" / Pending Review card opens straight on the unreviewed ones.
+const activeFilter = ref(route.query.filter === 'pending' ? 'Pending Review' : 'All')
+const selected = ref<Transaction | null>(null)
 const filters = ['All', 'Fertilizer', 'Labour', 'Fuel', 'Equipment', 'Pending Review']
 
 const filtered = computed(() => {
@@ -108,7 +115,7 @@ async function resolve(id: string, confirm: boolean) {
   }
 }
 
-onMounted(reload)
+onMounted(() => { reload(); store.fetchOrders?.() })
 </script>
 
 <style scoped>

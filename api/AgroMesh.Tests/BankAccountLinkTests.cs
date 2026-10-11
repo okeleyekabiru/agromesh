@@ -100,4 +100,20 @@ public class BankAccountLinkTests
         Assert.Equal(2, await handler.Handle(new SyncBankAccountByIdCommand("acc-9"), default));
         Assert.Equal(0, await handler.Handle(new SyncBankAccountByIdCommand("unknown"), default));
     }
+
+    [Fact]
+    public void A_linked_farm_is_synced_once_a_day()
+    {
+        var now = new DateTime(2026, 10, 12, 12, 0, 0, DateTimeKind.Utc);
+        var farm = NewFarm();
+        Assert.False(farm.BankSyncDue(now));                  // nothing linked: nothing to sync
+
+        farm.LinkBankAccount("acc-1");
+        Assert.True(farm.BankSyncDue(now));                   // never synced
+
+        farm.MarkBankSynced();
+        var justSynced = DateTime.UtcNow;
+        Assert.False(farm.BankSyncDue(justSynced.AddHours(23)));  // synced today: wait
+        Assert.True(farm.BankSyncDue(justSynced.AddHours(24)));   // a day later: due again
+    }
 }

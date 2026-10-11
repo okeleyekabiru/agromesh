@@ -11,7 +11,7 @@
     <AlertBanner
       v-if="store.pendingReviews > 0"
       action="Review now"
-      @action="router.push('/finance')"
+      @action="router.push({ path: '/finance', query: { filter: 'pending' } })"
     >
       <strong>{{ store.pendingReviews }} transactions</strong> need categorization review before tonight's P&amp;L update.
     </AlertBanner>
@@ -94,7 +94,10 @@
       </div>
 
       <!-- Pending review -->
-      <div class="kpi-card-sm" :class="{ 'kpi-warn': store.pendingReviews > 0 }">
+      <div class="kpi-card-sm kpi-link" :class="{ 'kpi-warn': store.pendingReviews > 0 }"
+           role="button" tabindex="0"
+           @click="router.push({ path: '/finance', query: { filter: 'pending' } })"
+           @keydown.enter="router.push({ path: '/finance', query: { filter: 'pending' } })">
         <div class="kpi-lbl">PENDING REVIEW</div>
         <div class="kpi-val">{{ store.dashboard?.pendingReviewCount ?? '—' }}</div>
         <div :class="store.pendingReviews > 0 ? 'kpi-sub-warn' : 'kpi-sub-up'">
@@ -490,6 +493,8 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.kpi-link { cursor: pointer; }
+.kpi-link:hover { box-shadow: var(--shadow-sm, 0 2px 8px rgba(0,0,0,0.08)); }
 /* ── Hero ─────────────────────────────────────────────────────────────── */
 .hero {
   display: flex;
