@@ -8,7 +8,7 @@
 
       <div class="review-body">
         <div class="review-title">Review your farm setup</div>
-        <p class="review-lead">Take a last look before you finish — you can always adjust sections and boundaries later from the Sections page.</p>
+        <p class="review-lead">Take a last look before you finish — you can always adjust blocks and boundaries later from the Blocks page.</p>
 
         <!-- Farm summary -->
         <div class="summary-block">
@@ -26,20 +26,20 @@
           </div>
         </div>
 
-        <!-- Sections list -->
-        <div class="sections-block">
-          <div class="sections-block-label">
-            Sections ({{ store.wizardSections.length }})
+        <!-- Blocks list -->
+        <div class="blocks-list">
+          <div class="blocks-list-label">
+            Blocks ({{ store.wizardBlocks.length }})
           </div>
-          <div v-if="!store.wizardSections.length" class="sections-empty">
-            No sections added yet — you can add them later from the Sections page.
+          <div v-if="!store.wizardBlocks.length" class="blocks-empty">
+            No blocks added yet — you can add them later from the Blocks page.
           </div>
-          <div v-else class="section-row" v-for="s in store.wizardSections" :key="s.id">
-            <div class="section-row-name">{{ s.name }}</div>
-            <div class="section-row-meta">
-              <span class="section-row-area">{{ s.area.hectares.toFixed(2) }} ha</span>
+          <div v-else class="block-row" v-for="s in store.wizardBlocks" :key="s.id">
+            <div class="block-row-name">{{ s.name }}</div>
+            <div class="block-row-meta">
+              <span class="block-row-area">{{ s.area.hectares.toFixed(2) }} ha</span>
               <span class="boundary-src-badge" :class="`src-${boundarySrcClass(s.boundarySource)}`">
-                {{ s.boundarySource != null ? SECTION_BOUNDARY_SOURCE_LABELS[s.boundarySource] : 'Manual estimate' }}
+                {{ s.boundarySource != null ? BLOCK_BOUNDARY_SOURCE_LABELS[s.boundarySource] : 'Manual estimate' }}
               </span>
             </div>
           </div>
@@ -51,8 +51,8 @@
           <span v-if="confirming" class="spinner-sm" />
           {{ confirming ? 'Finishing…' : 'Confirm & Go to Dashboard' }}
         </button>
-        <button class="btn-back" @click="router.push({ name: 'sections-setup' })" :disabled="confirming">
-          ← Back to sections
+        <button class="btn-back" @click="router.push({ name: 'blocks-setup' })" :disabled="confirming">
+          ← Back to blocks
         </button>
       </div>
     </div>
@@ -64,7 +64,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAgroStore } from '@/stores/agro'
 import { extractErrorMessage } from '@/utils/http'
-import { SECTION_BOUNDARY_SOURCE_LABELS } from '@/types'
+import { BLOCK_BOUNDARY_SOURCE_LABELS } from '@/types'
 
 const router = useRouter()
 const store = useAgroStore()
@@ -89,7 +89,7 @@ async function confirm() {
   confirmError.value = ''
   try {
     await store.completeFarmSetup(store.activeFarmId)
-    store.wizardSections.length = 0
+    store.wizardBlocks.length = 0
     router.push({ name: 'dashboard' })
   } catch (e) {
     confirmError.value = extractErrorMessage(e, 'Could not finish setup. Please try again.')
@@ -164,19 +164,19 @@ onMounted(async () => {
 .summary-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--stone); }
 .summary-value { font-size: 12.5px; font-weight: 600; color: var(--forest); }
 
-.sections-block { margin-bottom: 16px; }
-.sections-block-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--stone); margin-bottom: 8px; }
-.sections-empty { font-size: 12px; color: var(--stone); padding: 12px; text-align: center; background: var(--mist); border-radius: 8px; }
-.section-row {
+.blocks-list { margin-bottom: 16px; }
+.blocks-list-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--stone); margin-bottom: 8px; }
+.blocks-empty { font-size: 12px; color: var(--stone); padding: 12px; text-align: center; background: var(--mist); border-radius: 8px; }
+.block-row {
   display: flex; align-items: center; justify-content: space-between;
   padding: 9px 12px;
   border: 1px solid var(--fog);
   border-radius: 8px;
   margin-bottom: 6px;
 }
-.section-row-name { font-size: 12.5px; font-weight: 600; color: var(--forest); }
-.section-row-meta { display: flex; align-items: center; gap: 8px; }
-.section-row-area { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--stone); }
+.block-row-name { font-size: 12.5px; font-weight: 600; color: var(--forest); }
+.block-row-meta { display: flex; align-items: center; gap: 8px; }
+.block-row-area { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--stone); }
 
 .boundary-src-badge {
   font-family: 'JetBrains Mono', monospace;

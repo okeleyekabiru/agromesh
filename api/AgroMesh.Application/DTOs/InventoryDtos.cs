@@ -14,7 +14,10 @@ public record InventoryItemDto(
     bool IsLowStock,
     string? ChemicalProductId,
     string? ChemicalProductName,
-    DateTime? LastMovementDate);
+    DateTime? LastMovementDate,
+    decimal PackSize,
+    string PackLabel,
+    decimal UnitCost);
 
 /// <summary>
 /// The unified "stock in" request — used both to onboard a brand-new item and to restock an
@@ -30,7 +33,18 @@ public record CreateInventoryItemRequest(
     decimal Quantity,
     decimal ReorderThreshold,
     string? ChemicalProductId,
-    string? ExistingItemId = null);
+    string? ExistingItemId = null,
+    decimal? PackSize = null,
+    string? PackLabel = null,
+    decimal? PricePerPack = null);
+
+/// <summary>
+/// Prices stock that is already on hand. <see cref="BackfillActivities"/> also fills in the input cost
+/// of past activities that used this item and have no input cost yet.
+/// </summary>
+public record SetItemPricingRequest(decimal PackSize, string PackLabel, decimal PricePerPack, bool BackfillActivities);
+
+public record SetItemPricingResponse(InventoryItemDto Item, int ActivitiesUpdated);
 
 public record InventoryCategoryDto(string Id, string FarmId, string Name, bool IsDefault);
 
@@ -44,19 +58,37 @@ public record AdjustStockRequest(decimal NewQuantity, string? Notes);
 /// StockMovement via InventoryItem.DeductStock; insufficient stock throws DomainException (422)
 /// rather than being caught into a soft warning like the auto-deduction path does.
 ///
-/// <see cref="SectionId"/> (required) / <see cref="BlockId"/> (required only when the section has
-/// blocks) record which farm area the picked stock is going to — who performed the pick is no
+/// <see cref="BlockId"/> (required) records which farm area the picked stock is going to — who performed the pick is no
 /// longer client-supplied (see the removed WorkerId field): PickStockCommandHandler now
 /// auto-attributes the authenticated caller via ICurrentUserAccessor instead of trusting a
 /// client-chosen Worker.
 /// </summary>
-public record PickStockRequest(decimal Quantity, string SectionId, string? BlockId, string Purpose);
+public record PickStockRequest(decimal Quantity, string BlockId, string Purpose);
 
 /// <summary>
 /// <see cref="LowStockWarning"/> is non-null only when the pick pushed the item's stock to/below its
-/// reorder threshold — a warning, not a block (the pick already succeeded by the time this is set).
+/// reorder threshold — a warning, not a failure (the pick already succeeded by the time this is set).
 /// </summary>
 public record PickStockResponse(InventoryItemDto Item, string? LowStockWarning);
+
+/// <summary>Leftover stock handed back to the store; <see cref="BlockId"/> is the block it was picked for.</summary>
+public record ReturnStockRequest(decimal Quantity, string? BlockId, string? Notes);
+
+/// <summary>
+/// A pick with stock still out on the farm: <see cref="QuantityOutstanding"/> = picked - used - returned.
+/// </summary>
+public record OutstandingStockDto(
+    string PickId,
+    string InventoryItemId,
+    string InventoryItemName,
+    string Unit,
+    string BlockId,
+    decimal QuantityPicked,
+    decimal QuantityUsed,
+    decimal QuantityReturned,
+    decimal QuantityOutstanding,
+    DateTime PickedAt,
+    string PickedByUserId);
 
 public record StockMovementDto(string Id, string InventoryItemId, StockMovementType Type, decimal Quantity, string? ActivityLogId, string? TransactionId, string? OrderId, string? Notes, DateTime Date);
 

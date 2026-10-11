@@ -16,6 +16,9 @@ public class InventoryItemConfiguration : IEntityTypeConfiguration<InventoryItem
         builder.Property(i => i.CurrentStock).IsRequired().HasColumnType("decimal(14,3)");
         builder.Property(i => i.ReorderThreshold).IsRequired().HasColumnType("decimal(14,3)");
         builder.Property(i => i.ChemicalProductId).HasMaxLength(50);
+        builder.Property(i => i.PackSize).IsRequired().HasColumnType("decimal(14,3)").HasDefaultValue(1m);
+        builder.Property(i => i.PackLabel).IsRequired().HasMaxLength(30).HasDefaultValue("unit");
+        builder.Property(i => i.UnitCost).IsRequired().HasColumnType("decimal(14,4)").HasDefaultValue(0m);
 
         builder.Ignore(i => i.IsLowStock);
 

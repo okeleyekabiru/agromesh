@@ -1,5 +1,8 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
+import '../services/api_client.dart';
 import '../services/auth_service.dart';
 
 enum AuthStatus { bootstrapping, loggedOut, needsFarmSelection, ready }
@@ -101,13 +104,18 @@ class AuthStore extends ChangeNotifier {
   }
 
   String _friendlyError(Object e) {
-    final s = e.toString();
-    if (s.contains('401') || s.contains('400') || s.contains('404')) {
-      return 'Invalid email or password.';
+    debugPrint('login failed: $e');
+    // The server's own reason first (it says "Invalid email or password." for a wrong login).
+    if (e is ApiException) {
+      if (e.statusCode == 400 || e.statusCode == 401 || e.statusCode == 404 || e.statusCode == 422) {
+        return e.message.isNotEmpty ? e.message : 'Invalid email or password.';
+      }
+      return 'The server could not log you in (${e.statusCode ?? 'error'}): ${e.message}';
     }
-    if (s.contains('SocketException') || s.contains('TimeoutException') || s.contains('ClientException')) {
-      return 'Could not reach the server. Check your connection and try again.';
+    if (e is SocketException || e is TimeoutException || e.runtimeType.toString().contains('ClientException')) {
+      return 'Could not reach the server at ${ApiClient.baseUrl}. Make sure the API is running; a physical phone needs the address of your PC (API_BASE_URL).';
     }
-    return 'Login failed. Please try again.';
+    return 'Login failed: $e';
   }
+
 }

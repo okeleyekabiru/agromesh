@@ -1,7 +1,12 @@
 import axios from 'axios'
 
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000'
-export let FARM_ID = import.meta.env.VITE_FARM_ID || 'farm_001'
+// Start from the last active farm so a hard reload on any page (not just the dashboard) talks to the
+// real farm; the store keeps this in sync via setFarmId. 'farm_001' is only a dev placeholder.
+function savedFarmId(): string | null {
+  try { return localStorage.getItem('agro_active_farm_id') } catch { return null }
+}
+export let FARM_ID = savedFarmId() || import.meta.env.VITE_FARM_ID || 'farm_001'
 export function setFarmId(id: string) { FARM_ID = id }
 
 export const api = axios.create({
@@ -45,20 +50,19 @@ export const farmApi = {
   setAllocationRules: (rules: unknown[]) => api.post(`/api/farms/${FARM_ID}/allocation-rules`, rules)
 }
 
-// ── Sections ──
-export const sectionApi = {
-  getAll: () => api.get(`/api/farms/${FARM_ID}/sections`),
-  create: (body: unknown) => api.post(`/api/farms/${FARM_ID}/sections`, body),
-  update: (sectionId: string, body: unknown) => api.patch(`/api/farms/${FARM_ID}/sections/${sectionId}`, body),
-  createBlock: (sectionId: string, body: unknown) => api.post(`/api/farms/${FARM_ID}/sections/${sectionId}/blocks`, body),
+// ── Blocks ──
+export const blockApi = {
+  getAll: () => api.get(`/api/farms/${FARM_ID}/blocks`),
+  create: (body: unknown) => api.post(`/api/farms/${FARM_ID}/blocks`, body),
+  update: (blockId: string, body: unknown) => api.patch(`/api/farms/${FARM_ID}/blocks/${blockId}`, body),
   submitBoundaryPoints: (
-    sectionId: string,
+    blockId: string,
     body: { operationId: string; points: { lat: number; lng: number }[]; confirmImplausibleGeometry?: boolean }
-  ) => api.post(`/api/sections/${sectionId}/boundary/points`, body),
+  ) => api.post(`/api/blocks/${blockId}/boundary/points`, body),
   uploadBoundaryFile: (
-    sectionId: string,
+    blockId: string,
     body: { operationId: string; fileName: string; content: string; confirmImplausibleGeometry?: boolean }
-  ) => api.post(`/api/sections/${sectionId}/boundary/upload`, body)
+  ) => api.post(`/api/blocks/${blockId}/boundary/upload`, body)
 }
 
 // ── Reference data ──
@@ -67,8 +71,13 @@ export const referenceApi = {
 }
 
 // ── Activities ──
+export const reportApi = {
+  get: (year: number, month: number) => api.get(`/api/farms/${FARM_ID}/reports?year=${year}&month=${month}`)
+}
+
 export const activityApi = {
   getAll: (page = 1, pageSize = 20) => api.get(`/api/farms/${FARM_ID}/activities?page=${page}&pageSize=${pageSize}`),
+  get: (id: string) => api.get(`/api/farms/${FARM_ID}/activities/${id}`),
   log: (body: unknown) => api.post(`/api/farms/${FARM_ID}/activities`, body)
 }
 
@@ -80,7 +89,22 @@ export const transactionApi = {
   },
   review: (id: string, body: unknown) => api.patch(`/api/farms/${FARM_ID}/transactions/${id}/review`, body),
   recordReceipt: (id: string, body: unknown) => api.post(`/api/farms/${FARM_ID}/transactions/${id}/inventory-receipt`, body),
-  sync: (monoAccountId: string) => api.post(`/api/farms/${FARM_ID}/transactions/sync?monoAccountId=${monoAccountId}`)
+  summary: (from?: string, to?: string) => {
+    const q = [from ? `from=${from}` : '', to ? `to=${to}` : ''].filter(Boolean).join('&')
+    return api.get(`/api/farms/${FARM_ID}/transactions/summary${q ? '?' + q : ''}`)
+  },
+  needsReview: () => api.get(`/api/farms/${FARM_ID}/transactions/needs-review`),
+  reconcile: (id: string, body: { confirm: boolean; orderId?: string }) =>
+    api.post(`/api/farms/${FARM_ID}/transactions/${id}/reconcile`, body),
+  setKind: (id: string, kind: number) => api.patch(`/api/farms/${FARM_ID}/transactions/${id}/kind`, { kind })
+}
+
+// ── Bank account (Mono Connect) ──
+export const bankApi = {
+  status: () => api.get(`/api/farms/${FARM_ID}/bank-account`),
+  link: (code: string) => api.post(`/api/farms/${FARM_ID}/bank-account/link`, { code }),
+  sync: () => api.post(`/api/farms/${FARM_ID}/bank-account/sync`),
+  unlink: () => api.delete(`/api/farms/${FARM_ID}/bank-account`)
 }
 
 // ── Workers ──
@@ -104,7 +128,10 @@ export const inventoryApi = {
   create: (body: unknown) => api.post(`/api/farms/${FARM_ID}/inventory`, body),
   adjust: (itemId: string, body: unknown) => api.patch(`/api/farms/${FARM_ID}/inventory/${itemId}/adjust`, body),
   getMovements: (itemId: string) => api.get(`/api/farms/${FARM_ID}/inventory/${itemId}/movements`),
-  pick: (itemId: string, body: unknown) => api.post(`/api/farms/${FARM_ID}/inventory/${itemId}/pick`, body)
+  pick: (itemId: string, body: unknown) => api.post(`/api/farms/${FARM_ID}/inventory/${itemId}/pick`, body),
+  getOutstanding: () => api.get(`/api/farms/${FARM_ID}/inventory/outstanding`),
+  setPricing: (itemId: string, body: unknown) => api.put(`/api/farms/${FARM_ID}/inventory/${itemId}/pricing`, body),
+  returnStock: (itemId: string, body: unknown) => api.post(`/api/farms/${FARM_ID}/inventory/${itemId}/return`, body)
 }
 
 // ── Inventory Categories ──

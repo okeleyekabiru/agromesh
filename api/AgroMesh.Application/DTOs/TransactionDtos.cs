@@ -14,8 +14,26 @@ public record TransactionDto(
     ConfidenceLevel Confidence,
     CategorizationSource Source,
     bool ReviewedByUser,
-    string? ReviewNotes);
+    string? ReviewNotes,
+    TransactionKind Kind = TransactionKind.Expense,
+    string? OrderId = null,
+    ReconciliationStatus Reconciliation = ReconciliationStatus.None,
+    string? ReconciliationNote = null);
 
 public record ReviewTransactionRequest(TransactionCategory Category, Dictionary<string, double>? CropAllocation, string? Notes);
+
+/// <summary>Confirm = this transfer paid the order (OrderId overrides the one in the narration); otherwise it is not an order payment.</summary>
+public record ResolveReconciliationRequest(bool Confirm, string? OrderId = null);
+
+public record SetTransactionKindRequest(TransactionKind Kind);
+
+/// <summary>Money in and out over a period. Capital is the owner's own investment, so it is kept apart from income.</summary>
+public record FinanceSummaryDto(
+    DateTime From,
+    DateTime To,
+    decimal Income,
+    decimal Capital,
+    decimal Expenses,
+    int NeedsReview);
 
 public record RecordInventoryReceiptRequest(string InventoryItemId, decimal Quantity);

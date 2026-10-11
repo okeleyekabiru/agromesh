@@ -13,6 +13,12 @@ public class InventoryItem : BaseEntity
     public decimal ReorderThreshold { get; private set; }
     public string? ChemicalProductId { get; private set; }
 
+    // Stock is counted in Unit (kg, L ...) but bought by the pack (a 50 kg bag, a 20 L container).
+    // UnitCost is the running average price of one Unit, so using 38 kg of a bag costs 38 x UnitCost.
+    public decimal PackSize { get; private set; } = 1;
+    public string PackLabel { get; private set; } = "unit";
+    public decimal UnitCost { get; private set; }
+
     public bool IsLowStock => CurrentStock <= ReorderThreshold;
 
     public List<StockMovement> Movements { get; private set; } = [];
@@ -45,6 +51,41 @@ public class InventoryItem : BaseEntity
         if (quantity <= 0)
             throw new DomainException("Stock quantity to add must be positive.");
         CurrentStock += quantity;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Describes how this item is bought, e.g. ("bag", 50) for a 50 kg bag of fertilizer.</summary>
+    public void SetPack(string label, decimal size)
+    {
+        if (size <= 0)
+            throw new DomainException("Pack size must be greater than zero.");
+        PackLabel = string.IsNullOrWhiteSpace(label) ? "unit" : label.Trim();
+        PackSize = size;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Adds bought stock at <paramref name="unitPrice"/> per Unit and folds it into the average cost.
+    /// Stock that had no price yet takes the new price rather than diluting it.
+    /// </summary>
+    public void ReceiveStock(decimal quantity, decimal? unitPrice)
+    {
+        var before = CurrentStock;
+        AddStock(quantity);
+        if (unitPrice is null) return;
+        if (unitPrice < 0)
+            throw new DomainException("Price cannot be negative.");
+        UnitCost = before <= 0 || UnitCost == 0
+            ? unitPrice.Value
+            : Math.Round((before * UnitCost + quantity * unitPrice.Value) / (before + quantity), 4);
+    }
+
+    /// <summary>Sets the price of one Unit directly (used when pricing stock that is already on hand).</summary>
+    public void SetUnitCost(decimal unitCost)
+    {
+        if (unitCost < 0)
+            throw new DomainException("Price cannot be negative.");
+        UnitCost = unitCost;
         UpdatedAt = DateTime.UtcNow;
     }
 

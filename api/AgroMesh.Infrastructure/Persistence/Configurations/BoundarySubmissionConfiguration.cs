@@ -9,7 +9,7 @@ public class BoundarySubmissionConfiguration : IEntityTypeConfiguration<Boundary
     public void Configure(EntityTypeBuilder<BoundarySubmission> builder)
     {
         builder.HasKey(b => b.Id);
-        builder.Property(b => b.SectionId).IsRequired().HasMaxLength(50);
+        builder.Property(b => b.BlockId).IsRequired().HasMaxLength(50);
         builder.Property(b => b.OperationId).IsRequired().HasMaxLength(100);
         builder.Property(b => b.SubmissionType).IsRequired();
         builder.Property(b => b.RawPointsJson).HasColumnType("text");
@@ -17,6 +17,6 @@ public class BoundarySubmissionConfiguration : IEntityTypeConfiguration<Boundary
         builder.Property(b => b.ComputedHectares).IsRequired();
 
         builder.HasIndex(b => b.OperationId).IsUnique();
-        builder.HasIndex(b => b.SectionId);
+        builder.HasIndex(b => b.BlockId);
     }
 }

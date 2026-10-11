@@ -11,7 +11,7 @@ namespace AgroMesh.Tests;
 /// <summary>
 /// Handler tests for the reworked Pick Stock flow — the picker is now the authenticated caller
 /// (via ICurrentUserAccessor), not a client-chosen Worker, and every pick now records which
-/// Section/Block the stock is going to. Fakes mirror StockAdjustmentApprovalTests.cs's shape (no
+/// Block the stock is going to. Fakes mirror StockAdjustmentApprovalTests.cs's shape (no
 /// mocking library, no in-memory EF).
 /// </summary>
 public class PickStockCommandTests
@@ -54,33 +54,35 @@ public class PickStockCommandTests
             return Task.CompletedTask;
         }
 
+        public Task UpdateMovementAsync(StockMovement movement, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task<List<StockMovement>> GetOutstandingPicksAsync(string farmId, string? inventoryItemId = null, string? blockId = null, CancellationToken ct = default) =>
+            Task.FromResult(new List<StockMovement>());
+
         public Task<List<StockMovement>> GetMovementsAsync(string inventoryItemId, int limit = 50, CancellationToken ct = default) =>
             Task.FromResult(Movements.Where(m => m.InventoryItemId == inventoryItemId).ToList());
     }
 
-    private class FakeSectionRepository : ISectionRepository
+    private class FakeBlockRepository : IBlockRepository
     {
-        public List<Section> Sections = [];
+        public List<Block> Blocks = [];
 
-        public Task<Section?> GetByIdAsync(string id, CancellationToken ct = default) =>
-            Task.FromResult(Sections.FirstOrDefault(s => s.Id == id));
+        public Task<Block?> GetByIdAsync(string id, CancellationToken ct = default) =>
+            Task.FromResult(Blocks.FirstOrDefault(s => s.Id == id));
 
-        public Task<Section?> GetByIdWithBlocksAsync(string id, CancellationToken ct = default) =>
-            Task.FromResult(Sections.FirstOrDefault(s => s.Id == id));
+        public Task<List<Block>> GetByFarmIdAsync(string farmId, CancellationToken ct = default) =>
+            Task.FromResult(Blocks.Where(s => s.FarmId == farmId).ToList());
 
-        public Task<List<Section>> GetByFarmIdAsync(string farmId, CancellationToken ct = default) =>
-            Task.FromResult(Sections.Where(s => s.FarmId == farmId).ToList());
-
-        public Task<Section> AddAsync(Section section, CancellationToken ct = default)
+        public Task<Block> AddAsync(Block block, CancellationToken ct = default)
         {
-            Sections.Add(section);
-            return Task.FromResult(section);
+            Blocks.Add(block);
+            return Task.FromResult(block);
         }
 
-        public Task UpdateAsync(Section section, CancellationToken ct = default) => Task.CompletedTask;
+        public Task UpdateAsync(Block block, CancellationToken ct = default) => Task.CompletedTask;
 
         public Task<bool> ExistsAsync(string id, CancellationToken ct = default) =>
-            Task.FromResult(Sections.Any(s => s.Id == id));
+            Task.FromResult(Blocks.Any(s => s.Id == id));
     }
 
     private class FakeCurrentUserAccessor : ICurrentUserAccessor
@@ -108,20 +110,20 @@ public class PickStockCommandTests
         return item;
     }
 
-    private static Section CreateSection(string farmId = "farm-1") =>
-        Section.Create(farmId, "Section A", [new SectionCrop(CropType.OilPalm, 10, 100)], 10);
+    private static Block CreateBlock(string farmId = "farm-1") =>
+        Block.Create(farmId, "Block A", [new BlockCrop(CropType.OilPalm, 10, 100)], 10);
 
     [Fact]
-    public async Task Pick_ValidRequest_DeductsStockAndAttributesCurrentUserAndSection()
+    public async Task Pick_ValidRequest_DeductsStockAndAttributesCurrentUserAndBlock()
     {
         var item = CreateItem(stock: 100);
-        var section = CreateSection();
+        var block = CreateBlock();
         var inventoryRepo = new FakeInventoryRepository { Items = [item] };
-        var sectionRepo = new FakeSectionRepository { Sections = [section] };
+        var blockRepo = new FakeBlockRepository { Blocks = [block] };
         var currentUser = new FakeCurrentUserAccessor("user-1");
-        var handler = new PickStockCommandHandler(inventoryRepo, sectionRepo, currentUser);
+        var handler = new PickStockCommandHandler(inventoryRepo, blockRepo, currentUser);
 
-        var request = new PickStockRequest(20, section.Id, null, "Spraying Section A");
+        var request = new PickStockRequest(20, block.Id, "Spraying Block A");
         var result = await handler.Handle(new PickStockCommand("farm-1", item.Id, request), CancellationToken.None);
 
         Assert.Equal(80m, result.Item.CurrentStock);
@@ -129,39 +131,20 @@ public class PickStockCommandTests
         Assert.Equal(1, inventoryRepo.AddMovementCallCount);
         var movement = inventoryRepo.Movements.Single();
         Assert.Equal("user-1", movement.PerformedByUserId);
-        Assert.Equal(section.Id, movement.SectionId);
-        Assert.Null(movement.BlockId);
+        Assert.Equal(block.Id, movement.BlockId);
         Assert.Null(movement.WorkerId);
     }
 
     [Fact]
-    public async Task Pick_WithBlock_SetsBlockIdOnMovement()
-    {
-        var item = CreateItem(stock: 100);
-        var section = CreateSection();
-        var block = Block.Create(section.Id, "farm-1", "Block A", 5);
-        section.Blocks.Add(block);
-        var inventoryRepo = new FakeInventoryRepository { Items = [item] };
-        var sectionRepo = new FakeSectionRepository { Sections = [section] };
-        var currentUser = new FakeCurrentUserAccessor("user-1");
-        var handler = new PickStockCommandHandler(inventoryRepo, sectionRepo, currentUser);
-
-        var request = new PickStockRequest(20, section.Id, block.Id, "Spraying Block A");
-        var result = await handler.Handle(new PickStockCommand("farm-1", item.Id, request), CancellationToken.None);
-
-        Assert.Equal(block.Id, inventoryRepo.Movements.Single().BlockId);
-    }
-
-    [Fact]
-    public async Task Pick_MissingSectionId_ThrowsDomainException_NoSideEffects()
+    public async Task Pick_MissingBlockId_ThrowsDomainException_NoSideEffects()
     {
         var item = CreateItem(stock: 100);
         var inventoryRepo = new FakeInventoryRepository { Items = [item] };
-        var sectionRepo = new FakeSectionRepository();
+        var blockRepo = new FakeBlockRepository();
         var currentUser = new FakeCurrentUserAccessor("user-1");
-        var handler = new PickStockCommandHandler(inventoryRepo, sectionRepo, currentUser);
+        var handler = new PickStockCommandHandler(inventoryRepo, blockRepo, currentUser);
 
-        var request = new PickStockRequest(20, "", null, "Spraying Section A");
+        var request = new PickStockRequest(20, "", "Spraying Block A");
         await Assert.ThrowsAsync<DomainException>(() =>
             handler.Handle(new PickStockCommand("farm-1", item.Id, request), CancellationToken.None));
 
@@ -174,67 +157,28 @@ public class PickStockCommandTests
     public async Task Pick_BlankPurpose_ThrowsDomainException()
     {
         var item = CreateItem(stock: 100);
-        var section = CreateSection();
+        var block = CreateBlock();
         var inventoryRepo = new FakeInventoryRepository { Items = [item] };
-        var sectionRepo = new FakeSectionRepository { Sections = [section] };
+        var blockRepo = new FakeBlockRepository { Blocks = [block] };
         var currentUser = new FakeCurrentUserAccessor("user-1");
-        var handler = new PickStockCommandHandler(inventoryRepo, sectionRepo, currentUser);
+        var handler = new PickStockCommandHandler(inventoryRepo, blockRepo, currentUser);
 
-        var request = new PickStockRequest(20, section.Id, null, "   ");
+        var request = new PickStockRequest(20, block.Id, "   ");
         await Assert.ThrowsAsync<DomainException>(() =>
             handler.Handle(new PickStockCommand("farm-1", item.Id, request), CancellationToken.None));
     }
 
     [Fact]
-    public async Task Pick_SectionHasBlocksButNoneSelected_ThrowsDomainException_NoSideEffects()
-    {
-        // Server-side enforcement (not just the frontend's canSubmitPick guard) — a section with
-        // blocks must have one selected; the client can't be trusted to enforce this alone.
-        var item = CreateItem(stock: 100);
-        var section = CreateSection();
-        section.Blocks.Add(Block.Create(section.Id, "farm-1", "Block A", 5));
-        var inventoryRepo = new FakeInventoryRepository { Items = [item] };
-        var sectionRepo = new FakeSectionRepository { Sections = [section] };
-        var currentUser = new FakeCurrentUserAccessor("user-1");
-        var handler = new PickStockCommandHandler(inventoryRepo, sectionRepo, currentUser);
-
-        var request = new PickStockRequest(20, section.Id, null, "Spraying Section A");
-        await Assert.ThrowsAsync<DomainException>(() =>
-            handler.Handle(new PickStockCommand("farm-1", item.Id, request), CancellationToken.None));
-
-        Assert.Equal(100m, item.CurrentStock);
-        Assert.Equal(0, inventoryRepo.UpdateCallCount);
-        Assert.Equal(0, inventoryRepo.AddMovementCallCount);
-    }
-
-    [Fact]
-    public async Task Pick_SectionFromDifferentFarm_ThrowsDomainException()
+    public async Task Pick_BlockFromDifferentFarm_ThrowsDomainException()
     {
         var item = CreateItem(farmId: "farm-1", stock: 100);
-        var section = CreateSection(farmId: "farm-2");
+        var block = CreateBlock(farmId: "farm-2");
         var inventoryRepo = new FakeInventoryRepository { Items = [item] };
-        var sectionRepo = new FakeSectionRepository { Sections = [section] };
+        var blockRepo = new FakeBlockRepository { Blocks = [block] };
         var currentUser = new FakeCurrentUserAccessor("user-1");
-        var handler = new PickStockCommandHandler(inventoryRepo, sectionRepo, currentUser);
+        var handler = new PickStockCommandHandler(inventoryRepo, blockRepo, currentUser);
 
-        var request = new PickStockRequest(20, section.Id, null, "Spraying");
-        await Assert.ThrowsAsync<DomainException>(() =>
-            handler.Handle(new PickStockCommand("farm-1", item.Id, request), CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task Pick_BlockNotBelongingToSection_ThrowsDomainException()
-    {
-        var item = CreateItem(stock: 100);
-        var section = CreateSection();
-        var otherSection = CreateSection();
-        var foreignBlock = Block.Create(otherSection.Id, "farm-1", "Block X", 5);
-        var inventoryRepo = new FakeInventoryRepository { Items = [item] };
-        var sectionRepo = new FakeSectionRepository { Sections = [section, otherSection] };
-        var currentUser = new FakeCurrentUserAccessor("user-1");
-        var handler = new PickStockCommandHandler(inventoryRepo, sectionRepo, currentUser);
-
-        var request = new PickStockRequest(20, section.Id, foreignBlock.Id, "Spraying");
+        var request = new PickStockRequest(20, block.Id, "Spraying");
         await Assert.ThrowsAsync<DomainException>(() =>
             handler.Handle(new PickStockCommand("farm-1", item.Id, request), CancellationToken.None));
     }
@@ -246,13 +190,13 @@ public class PickStockCommandTests
         // (should be unreachable in practice once [Authorize] gates this endpoint) never applies a
         // stock change it can't attribute to anyone.
         var item = CreateItem(stock: 100);
-        var section = CreateSection();
+        var block = CreateBlock();
         var inventoryRepo = new FakeInventoryRepository { Items = [item] };
-        var sectionRepo = new FakeSectionRepository { Sections = [section] };
+        var blockRepo = new FakeBlockRepository { Blocks = [block] };
         var currentUser = new FakeCurrentUserAccessor(userId: null);
-        var handler = new PickStockCommandHandler(inventoryRepo, sectionRepo, currentUser);
+        var handler = new PickStockCommandHandler(inventoryRepo, blockRepo, currentUser);
 
-        var request = new PickStockRequest(20, section.Id, null, "Spraying Section A");
+        var request = new PickStockRequest(20, block.Id, "Spraying Block A");
         await Assert.ThrowsAsync<DomainException>(() =>
             handler.Handle(new PickStockCommand("farm-1", item.Id, request), CancellationToken.None));
 
@@ -265,13 +209,13 @@ public class PickStockCommandTests
     public async Task Pick_InsufficientStock_ThrowsDomainException_Uncaught()
     {
         var item = CreateItem(stock: 10);
-        var section = CreateSection();
+        var block = CreateBlock();
         var inventoryRepo = new FakeInventoryRepository { Items = [item] };
-        var sectionRepo = new FakeSectionRepository { Sections = [section] };
+        var blockRepo = new FakeBlockRepository { Blocks = [block] };
         var currentUser = new FakeCurrentUserAccessor("user-1");
-        var handler = new PickStockCommandHandler(inventoryRepo, sectionRepo, currentUser);
+        var handler = new PickStockCommandHandler(inventoryRepo, blockRepo, currentUser);
 
-        var request = new PickStockRequest(20, section.Id, null, "Spraying Section A");
+        var request = new PickStockRequest(20, block.Id, "Spraying Block A");
         await Assert.ThrowsAsync<DomainException>(() =>
             handler.Handle(new PickStockCommand("farm-1", item.Id, request), CancellationToken.None));
 

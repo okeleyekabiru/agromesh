@@ -21,8 +21,10 @@ public class FarmConfiguration : IEntityTypeConfiguration<Farm>
         builder.Property(f => f.PreferredAreaUnit).IsRequired();
         builder.Property(f => f.CentroidLat);
         builder.Property(f => f.CentroidLng);
+        builder.Property(f => f.BankAccountId).HasMaxLength(100);
+        builder.HasIndex(f => f.BankAccountId);
 
-        builder.HasMany(f => f.Sections)
+        builder.HasMany(f => f.Blocks)
                .WithOne()
                .HasForeignKey(s => s.FarmId)
                .OnDelete(DeleteBehavior.Cascade);

@@ -3,9 +3,9 @@
     <div class="card-header">
       <div class="card-title">All Activities</div>
       <div style="display:flex;gap:8px;">
-        <select class="form-select" style="width:auto;padding:5px 10px;font-size:11px;" v-model="filterSection">
-          <option value="">All Sections</option>
-          <option v-for="s in store.sections" :key="s.id" :value="s.id">{{ s.name }}</option>
+        <select class="form-select" style="width:auto;padding:5px 10px;font-size:11px;" v-model="filterBlock">
+          <option value="">All Blocks</option>
+          <option v-for="s in store.blocks" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
         <select class="form-select" style="width:auto;padding:5px 10px;font-size:11px;" v-model="filterType">
           <option value="">All Types</option>
@@ -32,7 +32,7 @@ import ActivityRow from '@/components/ui/ActivityRow.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 
 const store = useAgroStore()
-const filterSection = ref('')
+const filterBlock = ref('')
 const filterType = ref('')
 
 const activityTypes = [
@@ -48,7 +48,7 @@ const activityTypes = [
 
 const filtered = computed(() =>
   store.activities.filter(a => {
-    const sec = !filterSection.value || a.sectionId === filterSection.value
+    const sec = !filterBlock.value || a.blockId === filterBlock.value
     const typ = !filterType.value || a.activityType === filterType.value
     return sec && typ
   })
@@ -56,6 +56,6 @@ const filtered = computed(() =>
 
 onMounted(() => {
   store.fetchActivities()
-  if (!store.sections.length) store.fetchSections()
+  if (!store.blocks.length) store.fetchBlocks()
 })
 </script>

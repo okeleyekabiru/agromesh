@@ -11,9 +11,8 @@ public class AgroMeshDbContext : DbContext
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<State> States => Set<State>();
     public DbSet<Farm> Farms => Set<Farm>();
-    public DbSet<Section> Sections => Set<Section>();
-    public DbSet<BoundarySubmission> BoundarySubmissions => Set<BoundarySubmission>();
     public DbSet<Block> Blocks => Set<Block>();
+    public DbSet<BoundarySubmission> BoundarySubmissions => Set<BoundarySubmission>();
     public DbSet<WorkerRole> WorkerRoles => Set<WorkerRole>();
     public DbSet<Worker> Workers => Set<Worker>();
     public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();

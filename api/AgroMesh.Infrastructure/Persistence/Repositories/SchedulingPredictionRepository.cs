@@ -17,14 +17,14 @@ public class SchedulingPredictionRepository : ISchedulingPredictionRepository
             .OrderBy(p => p.PredictedNextDue)
             .ToListAsync(ct);
 
-    public async Task<SchedulingPrediction?> GetBySectionAndTypeAsync(
-        string sectionId, ActivityType activityType, CancellationToken ct = default) =>
+    public async Task<SchedulingPrediction?> GetByBlockAndTypeAsync(
+        string blockId, ActivityType activityType, CancellationToken ct = default) =>
         await _db.SchedulingPredictions
-            .FirstOrDefaultAsync(p => p.SectionId == sectionId && p.ActivityType == activityType, ct);
+            .FirstOrDefaultAsync(p => p.BlockId == blockId && p.ActivityType == activityType, ct);
 
     public async Task UpsertAsync(SchedulingPrediction prediction, CancellationToken ct = default)
     {
-        var existing = await GetBySectionAndTypeAsync(prediction.SectionId, prediction.ActivityType, ct);
+        var existing = await GetByBlockAndTypeAsync(prediction.BlockId, prediction.ActivityType, ct);
         if (existing != null)
         {
             existing.Refresh(

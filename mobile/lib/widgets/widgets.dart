@@ -134,33 +134,45 @@ class KpiCard extends StatelessWidget {
 
 enum KpiDeltaType { up, down, warn, mute }
 
-// ── SECTION LIST TILE ──
-class SectionTile extends StatelessWidget {
-  final Section section;
+// ── BLOCK LIST TILE ──
+class BlockTile extends StatelessWidget {
+  final Block block;
   final VoidCallback? onTap;
+  final BlockWork? work;
 
-  const SectionTile({super.key, required this.section, this.onTap});
+  const BlockTile({super.key, required this.block, this.onTap, this.work});
 
   Color get _statusColor {
-    return switch (section.status) {
-      SectionStatus.active      => AgroColors.palm,
-      SectionStatus.harvestSoon => AgroColors.harvest,
-      SectionStatus.idle        => AgroColors.stone,
+    return switch (block.status) {
+      BlockStatus.active      => AgroColors.palm,
+      BlockStatus.harvestSoon => AgroColors.harvest,
+      BlockStatus.idle        => AgroColors.stone,
     };
   }
 
   AgroBadgeVariant get _badgeVariant {
-    return switch (section.status) {
-      SectionStatus.active      => AgroBadgeVariant.green,
-      SectionStatus.harvestSoon => AgroBadgeVariant.harvest,
-      SectionStatus.idle        => AgroBadgeVariant.stone,
+    return switch (block.status) {
+      BlockStatus.active      => AgroBadgeVariant.green,
+      BlockStatus.harvestSoon => AgroBadgeVariant.harvest,
+      BlockStatus.idle        => AgroBadgeVariant.stone,
     };
+  }
+
+  Widget _cycleLine(String label, WorkCycle c) {
+    final color = c.status == 'Overdue'
+        ? AgroColors.alert
+        : c.needsAttention ? AgroColors.harvest : AgroColors.stone;
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Text('$label: ${c.shortText}',
+        style: GoogleFonts.inter(fontSize: 10, color: color, fontWeight: c.needsAttention ? FontWeight.w600 : FontWeight.w400)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
+      onTap: onTap ?? (work == null ? null : () => showBlockWorkSheet(context, block, work!)),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
@@ -175,17 +187,20 @@ class SectionTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(section.name, style: Theme.of(context).textTheme.titleMedium),
-                  Text(section.crop.label, style: Theme.of(context).textTheme.labelSmall),
+                  Text(block.name, style: Theme.of(context).textTheme.titleMedium),
+                  Text(block.crop.label, style: Theme.of(context).textTheme.labelSmall),
+                  if (work?.weeding != null) _cycleLine('🌿 Weeding', work!.weeding!),
+                  if (work?.spraying != null) _cycleLine('💧 Spraying', work!.spraying!),
+                  if (work?.fertilizing != null) _cycleLine('🌱 Fertilizer', work!.fertilizing!),
                 ],
               ),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                AgroBadge(label: section.status.label, variant: _badgeVariant),
+                AgroBadge(label: block.status.label, variant: _badgeVariant),
                 const SizedBox(height: 4),
-                Text('${section.hectares.toStringAsFixed(0)} ha',
+                Text('${block.hectares.toStringAsFixed(0)} ha',
                   style: GoogleFonts.jetBrainsMono(fontSize: 10, color: AgroColors.stone)),
               ],
             ),
@@ -226,7 +241,7 @@ class ActivityTile extends StatelessWidget {
                 Text(activity.activityType.label, style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 2),
                 Text(
-                  '${activity.sectionName} · ${activity.blockName} · ${activity.workers.length} workers',
+                  '${activity.blockName} · ${activity.workers.length} workers',
                   style: GoogleFonts.jetBrainsMono(fontSize: 9, color: AgroColors.stone),
                 ),
                 if (activity.inputs.isNotEmpty) ...[
@@ -339,7 +354,7 @@ class OfflineBanner extends StatelessWidget {
   }
 }
 
-// ── SECTION HEADER LABEL ──
+// ── BLOCK HEADER LABEL ──
 class MonoLabel extends StatelessWidget {
   final String text;
   final Color? color;
@@ -406,4 +421,56 @@ class AgroTextField extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Explains, per block, why weeding and spraying are (or are not) due — the weather and history behind it.
+void showBlockWorkSheet(BuildContext context, Block block, BlockWork work) {
+  Widget section(String title, WorkCycle? c) {
+    if (c == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('$title — ${c.shortText}',
+            style: GoogleFonts.syne(fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+          const SizedBox(height: 4),
+          Text(c.headline, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
+          const SizedBox(height: 6),
+          ...c.factors.map((f) => Padding(
+            padding: const EdgeInsets.only(bottom: 3),
+            child: Text('• $f', style: GoogleFonts.inter(fontSize: 12, color: AgroColors.ink, height: 1.4)),
+          )),
+          if (c.recommendedSprayDate != null)
+            Text('💧 Best spray day: ${c.recommendedSprayDate!.day}/${c.recommendedSprayDate!.month}',
+              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
+        ],
+      ),
+    );
+  }
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: AgroColors.white,
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+    builder: (_) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(block.name, style: GoogleFonts.syne(fontSize: 18, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+              const SizedBox(height: 12),
+              section('Weeding', work.weeding),
+              section('Spraying', work.spraying),
+              section('Fertilizer', work.fertilizing),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }

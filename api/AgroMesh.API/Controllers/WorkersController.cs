@@ -2,6 +2,7 @@ using AgroMesh.Application.Commands.Worker;
 using AgroMesh.Application.DTOs;
 using AgroMesh.Application.Queries.Worker;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AgroMesh.API.Controllers;
@@ -19,6 +20,7 @@ public class WorkersController : ControllerBase
         Ok(await _mediator.Send(new GetWorkersQuery(farmId, activeOnly), ct));
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> Add(string farmId, [FromBody] AddWorkerRequest request, CancellationToken ct)
     {
         var result = await _mediator.Send(new AddWorkerCommand(farmId, request), ct);

@@ -13,11 +13,8 @@ public class BlockRepository : IBlockRepository
     public async Task<Block?> GetByIdAsync(string id, CancellationToken ct = default) =>
         await _db.Blocks.FindAsync([id], ct);
 
-    public async Task<List<Block>> GetBySectionIdAsync(string sectionId, CancellationToken ct = default) =>
-        await _db.Blocks.Where(b => b.SectionId == sectionId).ToListAsync(ct);
-
     public async Task<List<Block>> GetByFarmIdAsync(string farmId, CancellationToken ct = default) =>
-        await _db.Blocks.Where(b => b.FarmId == farmId).ToListAsync(ct);
+        await _db.Blocks.Where(s => s.FarmId == farmId).ToListAsync(ct);
 
     public async Task<Block> AddAsync(Block block, CancellationToken ct = default)
     {
@@ -33,5 +30,5 @@ public class BlockRepository : IBlockRepository
     }
 
     public async Task<bool> ExistsAsync(string id, CancellationToken ct = default) =>
-        await _db.Blocks.AnyAsync(b => b.Id == id, ct);
+        await _db.Blocks.AnyAsync(s => s.Id == id, ct);
 }

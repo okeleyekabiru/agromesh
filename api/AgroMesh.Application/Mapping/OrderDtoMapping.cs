@@ -72,5 +72,10 @@ public static class OrderDtoMapping
             }).ToList(),
             order.Total,
             order.CreatedAt,
-            order.UpdatedAt);
+            order.UpdatedAt,
+            order.Number,
+            order.Reference,
+            order.IsPaid,
+            order.PaidAt,
+            order.PaymentTransactionId);
 }

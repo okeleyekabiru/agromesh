@@ -3,8 +3,8 @@ using AgroMesh.Domain.Enums;
 namespace AgroMesh.Application.DTOs;
 
 public record UpcomingTaskDto(
-    string SectionId,
-    string SectionName,
+    string BlockId,
+    string BlockName,
     ActivityType ActivityType,
     DateTime? LastDone,
     DateTime PredictedNextDue,
@@ -16,7 +16,10 @@ public record UpcomingTaskDto(
     decimal? StockAvailable,
     string? StockUnit,
     bool IsStale,
-    bool WeatherDataUsed);
+    bool WeatherDataUsed,
+    string? Status = null,
+    List<string>? Factors = null,
+    bool AiReviewed = false);
 
 public record WeatherWidgetDto(
     double Latitude,
@@ -26,4 +29,17 @@ public record WeatherWidgetDto(
     double TodayTempMaxC,
     DateTime? NextDryWindowStart,
     DateTime? NextDryWindowEnd,
-    double RainfallLast30Days);
+    double RainfallLast30Days,
+    string? Location = null,
+    List<DailyForecastDto>? Forecast = null);
+
+/// <summary>One day of the forecast. <see cref="GoodSprayDay"/> = dry, calm and unlikely to rain.</summary>
+public record DailyForecastDto(
+    DateTime Date,
+    double PrecipitationMm,
+    int RainChance,
+    double TempMaxC,
+    double TempMinC,
+    double WindKmh,
+    int WeatherCode,
+    bool GoodSprayDay);

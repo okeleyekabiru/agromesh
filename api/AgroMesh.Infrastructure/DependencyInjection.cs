@@ -42,7 +42,6 @@ public static class DependencyInjection
         services.AddScoped<IStateRepository, StateRepository>();
         services.AddScoped<IBoundarySubmissionRepository, BoundarySubmissionRepository>();
         services.AddScoped<IFarmRepository, FarmRepository>();
-        services.AddScoped<ISectionRepository, SectionRepository>();
         services.AddScoped<IBlockRepository, BlockRepository>();
         services.AddScoped<IActivityRepository, ActivityRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
@@ -58,6 +57,7 @@ public static class DependencyInjection
         services.AddScoped<ICropAllocationRuleRepository, CropAllocationRuleRepository>();
 
         services.AddScoped<IWeatherService, WeatherService>();
+        services.AddScoped<IGeocodingService, GeocodingService>();
         services.AddScoped<IClaudeSchedulingService, ClaudeSchedulingService>();
         services.AddScoped<IInventoryDeductionService, InventoryDeductionService>();
         services.AddScoped<IOrderInvoiceService, OrderInvoiceService>();

@@ -67,7 +67,7 @@
 
     <!-- Nav -->
     <nav class="sidebar-nav" aria-label="Main navigation">
-      <div class="nav-section-label">Operations</div>
+      <div class="nav-block-label">Operations</div>
       <RouterLink
         v-for="item in navItems"
         :key="item.id"
@@ -180,9 +180,9 @@ const ALL_NAV = [
     badgeFn: () => null
   },
   {
-    id: 'sections',
-    path: '/sections',
-    label: 'Sections',
+    id: 'blocks',
+    path: '/blocks',
+    label: 'Blocks',
     icon: '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
     feature: null,
     badgeFn: () => null
@@ -396,7 +396,7 @@ const navItems = computed(() =>
 /* ── Nav ── */
 .sidebar-nav { flex: 1; padding: 8px 0 8px; overflow-y: auto; overflow-x: hidden; }
 
-.nav-section-label {
+.nav-block-label {
   font-family: 'JetBrains Mono', monospace;
   font-size: 8px;
   letter-spacing: 0.14em;

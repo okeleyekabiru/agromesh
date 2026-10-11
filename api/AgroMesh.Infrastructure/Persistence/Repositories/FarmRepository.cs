@@ -13,21 +13,21 @@ public class FarmRepository : IFarmRepository
     public async Task<Farm?> GetByIdAsync(string id, CancellationToken ct = default) =>
         await _db.Farms.FindAsync([id], ct);
 
-    public async Task<Farm?> GetByIdWithSectionsAsync(string id, CancellationToken ct = default) =>
+    public async Task<Farm?> GetByIdWithBlocksAsync(string id, CancellationToken ct = default) =>
         await _db.Farms
-            .Include(f => f.Sections).ThenInclude(s => s.Blocks)
+            .Include(f => f.Blocks)
             .Include(f => f.WorkerRoles)
             .Include(f => f.Workers).ThenInclude(w => w.Role)
             .FirstOrDefaultAsync(f => f.Id == id, ct);
 
     public async Task<List<Farm>> GetAllAsync(CancellationToken ct = default) =>
-        await _db.Farms.Include(f => f.Sections).OrderBy(f => f.CreatedAt).ToListAsync(ct);
+        await _db.Farms.Include(f => f.Blocks).OrderBy(f => f.CreatedAt).ToListAsync(ct);
 
     public async Task<List<Farm>> GetByOwnerIdAsync(string ownerId, CancellationToken ct = default) =>
         await _db.Farms.Where(f => f.OwnerId == ownerId).ToListAsync(ct);
 
     public async Task<List<Farm>> GetByCompanyIdAsync(string companyId, CancellationToken ct = default) =>
-        await _db.Farms.Where(f => f.CompanyId == companyId).Include(f => f.Sections).OrderBy(f => f.CreatedAt).ToListAsync(ct);
+        await _db.Farms.Where(f => f.CompanyId == companyId).Include(f => f.Blocks).OrderBy(f => f.CreatedAt).ToListAsync(ct);
 
     public async Task<Farm> AddAsync(Farm farm, CancellationToken ct = default)
     {

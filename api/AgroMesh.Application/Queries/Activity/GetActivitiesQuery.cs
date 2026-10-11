@@ -25,14 +25,7 @@ public class GetActivitiesQueryHandler : IRequestHandler<GetActivitiesQuery, Pag
 
         var (items, total) = await _activityRepo.GetByFarmIdAsync(query.FarmId, query.Page, query.PageSize, ct);
 
-        var dtos = items.Select(a => new ActivityLogDto(
-            a.Id, a.FarmId, a.SectionId, a.BlockId, a.ActivityType, a.Date, a.Notes, a.SupervisorId,
-            a.LabourCost, a.InputCost, a.CreatedOffline, a.SyncedAt, a.WorkedAreaGeoJson,
-            a.WorkedHectares.HasValue ? AreaDto.From(a.WorkedHectares.Value, farm.PreferredAreaUnit) : null,
-            a.ChemicalProductId, a.ChemicalProductName,
-            a.Workers.Select(w => new WorkerLogDto(w.WorkerId, w.WorkerName, w.WorkerType, w.HoursWorked, w.PayRate, w.PayFrequency)).ToList(),
-            a.Inputs.Select(i => new InputUsedDto(i.Item, i.Quantity, i.Unit)).ToList()
-        )).ToList();
+        var dtos = items.Select(a => ActivityDtoMapper.ToDto(a, farm.PreferredAreaUnit)).ToList();
 
         return new PagedResult<ActivityLogDto>(dtos, total, query.Page, query.PageSize);
     }

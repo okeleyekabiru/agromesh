@@ -21,7 +21,7 @@ public class WeatherService : IWeatherService
 
     public async Task<WeatherForecast?> GetFarmWeatherAsync(double lat, double lng, CancellationToken ct = default)
     {
-        var cacheKey = $"weather:{lat:F4}:{lng:F4}";
+        var cacheKey = $"weather2:{lat:F4}:{lng:F4}";
 
         var cached = await TryGetFromCacheAsync(cacheKey, ct);
         if (cached != null) return cached;
@@ -61,7 +61,7 @@ public class WeatherService : IWeatherService
     {
         var url = $"https://api.open-meteo.com/v1/forecast" +
                   $"?latitude={lat}&longitude={lng}" +
-                  $"&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,windspeed_10m_max" +
+                  $"&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,windspeed_10m_max,weathercode,precipitation_probability_max" +
                   $"&forecast_days=16&timezone=Africa%2FLagos";
 
         var json = await _http.GetStringAsync(url, ct);
@@ -93,8 +93,18 @@ public class WeatherService : IWeatherService
         var tempMin = daily.GetProperty("temperature_2m_min").EnumerateArray().Select(e => e.ValueKind == JsonValueKind.Null ? 0.0 : e.GetDouble()).ToList();
         var wind = daily.GetProperty("windspeed_10m_max").EnumerateArray().Select(e => e.ValueKind == JsonValueKind.Null ? 0.0 : e.GetDouble()).ToList();
 
-        return dates.Select((d, i) => new DailyWeather(d, precip[i], tempMax[i], tempMin[i], wind[i])).ToList();
+        // Only the forecast endpoint returns these two; the historical archive does not.
+        var codes = ReadInts(daily, "weathercode");
+        var chance = ReadInts(daily, "precipitation_probability_max");
+
+        return dates.Select((d, i) => new DailyWeather(d, precip[i], tempMax[i], tempMin[i], wind[i],
+            i < codes.Count ? codes[i] : 0, i < chance.Count ? chance[i] : 0)).ToList();
     }
+
+    private static List<int> ReadInts(JsonElement daily, string name) =>
+        daily.TryGetProperty(name, out var arr)
+            ? arr.EnumerateArray().Select(e => e.ValueKind == JsonValueKind.Number ? (int)Math.Round(e.GetDouble()) : 0).ToList()
+            : [];
 
     private static string DetermineSeason(int month) => month switch
     {

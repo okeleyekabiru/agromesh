@@ -22,7 +22,7 @@ public class GetFarmQueryHandler : IRequestHandler<GetFarmQuery, FarmDto>
 
     public async Task<FarmDto> Handle(GetFarmQuery query, CancellationToken ct)
     {
-        var farm = await _farmRepo.GetByIdWithSectionsAsync(query.FarmId, ct)
+        var farm = await _farmRepo.GetByIdWithBlocksAsync(query.FarmId, ct)
             ?? throw new NotFoundException("Farm", query.FarmId);
 
         // Don't reveal existence of farms outside the caller's company.

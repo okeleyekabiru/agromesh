@@ -31,5 +31,5 @@ public class GetFarmsQueryHandler : IRequestHandler<GetFarmsQuery, List<FarmDto>
         AreaDto.From(f.TotalHectares, f.PreferredAreaUnit),
         f.OwnerId, f.CompanyId, f.CountryCode, f.StateId, f.LgaFreetext, f.SetupStatus,
         f.PreferredAreaUnit, f.CentroidLat, f.CentroidLng,
-        f.Sections.Count, 0);
+        f.Blocks.Count, 0);
 }

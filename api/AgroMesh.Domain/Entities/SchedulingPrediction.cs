@@ -5,7 +5,7 @@ namespace AgroMesh.Domain.Entities;
 public class SchedulingPrediction : BaseEntity
 {
     public string FarmId { get; private set; } = string.Empty;
-    public string SectionId { get; private set; } = string.Empty;
+    public string BlockId { get; private set; } = string.Empty;
     public ActivityType ActivityType { get; private set; }
     public DateTime? LastActivityDate { get; private set; }
     public DateTime PredictedNextDue { get; private set; }
@@ -22,7 +22,7 @@ public class SchedulingPrediction : BaseEntity
 
     public static SchedulingPrediction Create(
         string farmId,
-        string sectionId,
+        string blockId,
         ActivityType activityType,
         DateTime predictedNextDue,
         string reasoning,
@@ -35,7 +35,7 @@ public class SchedulingPrediction : BaseEntity
         return new SchedulingPrediction
         {
             FarmId = farmId,
-            SectionId = sectionId,
+            BlockId = blockId,
             ActivityType = activityType,
             PredictedNextDue = predictedNextDue,
             Reasoning = reasoning,

@@ -1,53 +1,76 @@
+using AgroMesh.Application.DTOs;
 using AgroMesh.Application.Interfaces;
 using AgroMesh.Domain.Entities;
 using AgroMesh.Domain.Exceptions;
-using AgroMesh.Domain.ValueObjects;
-using Microsoft.Extensions.Logging;
 
 namespace AgroMesh.Infrastructure.Services;
 
 public class InventoryDeductionService : IInventoryDeductionService
 {
     private readonly IInventoryRepository _repo;
-    private readonly ILogger<InventoryDeductionService> _logger;
 
-    public InventoryDeductionService(IInventoryRepository repo, ILogger<InventoryDeductionService> logger)
+    public InventoryDeductionService(IInventoryRepository repo) => _repo = repo;
+
+    public async Task<List<ResolvedStockInput>> ResolveAsync(
+        string farmId, string blockId, List<InputUsedRequest> inputs, CancellationToken ct = default)
     {
-        _repo = repo;
-        _logger = logger;
+        var resolved = new List<ResolvedStockInput>();
+
+        // Same item entered twice is one demand on stock, validated as a whole.
+        foreach (var group in (inputs ?? []).GroupBy(i => i.InventoryItemId))
+        {
+            var item = await _repo.GetByIdAsync(group.Key, ct);
+            // The id came from the client — it must be a stock item of THIS farm.
+            if (item is null || item.FarmId != farmId)
+                throw new DomainException($"Inventory item '{group.Key}' not found.");
+
+            var quantity = group.Sum(i => (decimal)i.Quantity);
+            if (quantity <= 0)
+                throw new DomainException($"Quantity of '{item.Name}' must be greater than zero.");
+
+            var picked = (await _repo.GetOutstandingPicksAsync(farmId, item.Id, blockId, ct)).Sum(p => p.Outstanding);
+            if (quantity > picked + item.CurrentStock)
+                throw new DomainException(
+                    $"Not enough '{item.Name}': {quantity} {item.Unit} needed, but only {picked} {item.Unit} is picked out " +
+                    $"for this block and {item.CurrentStock} {item.Unit} is in the store.");
+
+            resolved.Add(new ResolvedStockInput(item, quantity));
+        }
+
+        return resolved;
     }
 
-    public async Task<List<string>> DeductAsync(
-        string farmId, string activityLogId, List<InputUsed> inputs, CancellationToken ct = default)
+    public async Task<List<string>> ApplyAsync(
+        string farmId, string blockId, string activityLogId, List<ResolvedStockInput> inputs, CancellationToken ct = default)
     {
         var warnings = new List<string>();
 
-        foreach (var input in inputs)
+        foreach (var (item, quantity) in inputs)
         {
-            var item = await _repo.FindByNameAsync(farmId, input.Item, ct);
-            if (item == null)
+            var remaining = quantity;
+
+            // 1. Use what was already carried out to this block (oldest pick first). Stock for
+            //    these was deducted when they were picked, so only the pick's ledger changes.
+            foreach (var pick in await _repo.GetOutstandingPicksAsync(farmId, item.Id, blockId, ct))
             {
-                _logger.LogWarning("Inventory item '{Item}' not found for farm {FarmId} — skipping deduction", input.Item, farmId);
-                continue;
+                if (remaining <= 0) break;
+                var take = Math.Min(pick.Outstanding, remaining);
+                pick.RecordUsage(take);
+                await _repo.UpdateMovementAsync(pick, ct);
+                remaining -= take;
             }
 
-            try
+            // 2. Anything beyond that comes straight off the shelf.
+            if (remaining > 0)
             {
-                item.DeductStock((decimal)input.Quantity);
+                item.DeductStock(remaining);
                 await _repo.UpdateAsync(item, ct);
-
-                var movement = StockMovement.CreateOut(farmId, item.Id, (decimal)input.Quantity, activityLogId,
-                    $"Activity usage: {input.Quantity} {input.Unit}");
-                await _repo.AddMovementAsync(movement, ct);
-
-                if (item.IsLowStock)
-                    warnings.Add($"{item.Name} is running low ({item.CurrentStock} {item.Unit} remaining — reorder threshold: {item.ReorderThreshold})");
+                await _repo.AddMovementAsync(StockMovement.CreateOut(
+                    farmId, item.Id, remaining, activityLogId, $"Activity usage: {remaining} {item.Unit}", blockId: blockId), ct);
             }
-            catch (DomainException ex)
-            {
-                _logger.LogWarning("Insufficient stock for '{Item}': {Msg}", input.Item, ex.Message);
-                warnings.Add($"Low stock: {ex.Message}");
-            }
+
+            if (item.IsLowStock)
+                warnings.Add($"{item.Name} is running low ({item.CurrentStock} {item.Unit} remaining — reorder threshold: {item.ReorderThreshold})");
         }
 
         return warnings;

@@ -6,7 +6,7 @@ public class CropAllocationRule : BaseEntity
 {
     public string FarmId { get; private set; } = string.Empty;
     public TransactionCategory Category { get; private set; }
-    public string? SectionId { get; private set; }
+    public string? BlockId { get; private set; }
     public List<int>? SeasonMonths { get; private set; }
     public Dictionary<string, double> Allocation { get; private set; } = [];
 
@@ -16,7 +16,7 @@ public class CropAllocationRule : BaseEntity
         string farmId,
         TransactionCategory category,
         Dictionary<string, double> allocation,
-        string? sectionId = null,
+        string? blockId = null,
         List<int>? seasonMonths = null)
     {
         return new CropAllocationRule
@@ -24,7 +24,7 @@ public class CropAllocationRule : BaseEntity
             FarmId = farmId,
             Category = category,
             Allocation = allocation,
-            SectionId = sectionId,
+            BlockId = blockId,
             SeasonMonths = seasonMonths
         };
     }

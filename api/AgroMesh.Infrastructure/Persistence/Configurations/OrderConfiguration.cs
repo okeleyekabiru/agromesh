@@ -13,9 +13,13 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.FarmId).IsRequired().HasMaxLength(50);
         builder.Property(o => o.SupplierId).IsRequired().HasMaxLength(50);
         builder.Property(o => o.Status).IsRequired();
+        builder.Property(o => o.Number).IsRequired();
+        builder.Property(o => o.PaymentTransactionId).HasMaxLength(50);
+        builder.Ignore(o => o.Reference);
+        builder.Ignore(o => o.IsPaid);
 
-        // LineItems stored as a single jsonb column — same mapping shape as Section.Crops (see
-        // SectionConfiguration), since no query ever needs to filter/join on an individual line item.
+        // LineItems stored as a single jsonb column — same mapping shape as Block.Crops (see
+        // BlockConfiguration), since no query ever needs to filter/join on an individual line item.
         builder.Property(o => o.LineItems)
                .HasColumnType("jsonb")
                .HasConversion(
@@ -28,6 +32,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
                .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(o => o.FarmId);
+        builder.HasIndex(o => new { o.FarmId, o.Number }).IsUnique();
         builder.HasIndex(o => new { o.FarmId, o.Status });
     }
 }

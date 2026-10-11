@@ -26,11 +26,11 @@ public class SchedulingBackgroundService : BackgroundService
             {
                 using var scope = _scopeFactory.CreateScope();
                 var schedulingService = scope.ServiceProvider.GetRequiredService<IClaudeSchedulingService>();
-                await schedulingService.RunSchedulingForSectionAsync(job.FarmId, job.SectionId, stoppingToken);
+                await schedulingService.RunSchedulingForBlockAsync(job.FarmId, job.BlockId, stoppingToken);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Background scheduling run failed for section {SectionId}", job.SectionId);
+                _logger.LogError(ex, "Background scheduling run failed for block {BlockId}", job.BlockId);
             }
         }
     }

@@ -10,7 +10,7 @@ public class SchedulingPredictionConfiguration : IEntityTypeConfiguration<Schedu
     {
         builder.HasKey(p => p.Id);
         builder.Property(p => p.FarmId).IsRequired().HasMaxLength(50);
-        builder.Property(p => p.SectionId).IsRequired().HasMaxLength(50);
+        builder.Property(p => p.BlockId).IsRequired().HasMaxLength(50);
         builder.Property(p => p.ActivityType).IsRequired();
         builder.Property(p => p.PredictedNextDue).IsRequired();
         builder.Property(p => p.Reasoning).IsRequired().HasMaxLength(500);
@@ -22,7 +22,7 @@ public class SchedulingPredictionConfiguration : IEntityTypeConfiguration<Schedu
 
         builder.Ignore(p => p.IsStale);
 
-        builder.HasIndex(p => new { p.SectionId, p.ActivityType }).IsUnique();
+        builder.HasIndex(p => new { p.BlockId, p.ActivityType }).IsUnique();
         builder.HasIndex(p => new { p.FarmId, p.PredictedNextDue });
     }
 }

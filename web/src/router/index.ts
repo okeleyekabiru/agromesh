@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LandingView     from '@/views/LandingView.vue'
 import DashboardView   from '@/views/DashboardView.vue'
 import ActivitiesView  from '@/views/ActivitiesView.vue'
-import SectionsView    from '@/views/SectionsView.vue'
+import BlocksView    from '@/views/BlocksView.vue'
 import FinanceView     from '@/views/FinanceView.vue'
 import WorkersView     from '@/views/WorkersView.vue'
 import ReportsView     from '@/views/ReportsView.vue'
@@ -10,20 +10,20 @@ import InventoryView   from '@/views/InventoryView.vue'
 import InventoryApprovalsView from '@/views/InventoryApprovalsView.vue'
 import OrdersView from '@/views/OrdersView.vue'
 import OnboardingView    from '@/views/OnboardingView.vue'
-import SectionsSetupView from '@/views/SectionsSetupView.vue'
+import BlocksSetupView from '@/views/BlocksSetupView.vue'
 import ReviewConfirmView from '@/views/ReviewConfirmView.vue'
 
 const routes = [
   // Public
   { path: '/',              name: 'landing',        component: LandingView,      meta: { public: true } },
   { path: '/onboarding',    name: 'onboarding',     component: OnboardingView,   meta: { public: true } },
-  { path: '/sections-setup', name: 'sections-setup', component: SectionsSetupView, meta: { public: true } },
+  { path: '/blocks-setup', name: 'blocks-setup', component: BlocksSetupView, meta: { public: true } },
   { path: '/setup-review',  name: 'setup-review',   component: ReviewConfirmView, meta: { public: true } },
 
   // App (require auth)
   { path: '/dashboard',  name: 'dashboard',  component: DashboardView,  meta: { title: 'Farm Overview',  sub: 'JUNE 2025' } },
   { path: '/activities', name: 'activities', component: ActivitiesView, meta: { title: 'Activities',     sub: 'ALL ACTIVITY LOGS' } },
-  { path: '/sections',   name: 'sections',   component: SectionsView,   meta: { title: 'Sections',       sub: 'OYO STATE' } },
+  { path: '/blocks',   name: 'blocks',   component: BlocksView,   meta: { title: 'Blocks',       sub: 'OYO STATE' } },
   { path: '/finance',    name: 'finance',    component: FinanceView,    meta: { title: 'Finance',        sub: 'MONO SYNC',      feature: 'finance' } },
   { path: '/workers',    name: 'workers',    component: WorkersView,    meta: { title: 'Workers',        sub: 'WORKFORCE',      feature: 'workers' } },
   { path: '/reports',    name: 'reports',    component: ReportsView,    meta: { title: 'Reports',        sub: 'OPERATIONAL',    feature: 'reports' } },

@@ -17,6 +17,14 @@ public class Order : BaseEntity
     public string FarmId { get; private set; } = string.Empty;
     public string SupplierId { get; private set; } = string.Empty;
     public OrderStatus Status { get; private set; }
+
+    // The number the payer puts in the bank narration ("ORD-1042/chemical"). Counted per farm.
+    public int Number { get; private set; }
+    public string Reference => Utilities.BankNarration.OrderReference(Number);
+
+    public DateTime? PaidAt { get; private set; }
+    public string? PaymentTransactionId { get; private set; }
+    public bool IsPaid => PaidAt.HasValue;
     public List<OrderLineItem> LineItems { get; private set; } = [];
 
     // Computed, not stored — same convention as InventoryItem.IsLowStock.
@@ -24,7 +32,7 @@ public class Order : BaseEntity
 
     private Order() { }
 
-    public static Order Create(string farmId, string supplierId, List<OrderLineItem> lineItems)
+    public static Order Create(string farmId, string supplierId, List<OrderLineItem> lineItems, int number = 0)
     {
         ValidateLineItems(lineItems);
 
@@ -33,6 +41,7 @@ public class Order : BaseEntity
             FarmId = farmId,
             SupplierId = supplierId,
             LineItems = lineItems,
+            Number = number,
             Status = OrderStatus.Draft
         };
     }
@@ -42,6 +51,18 @@ public class Order : BaseEntity
         if (Status != OrderStatus.Draft)
             throw new DomainException($"Only a Draft order can be placed. This order is {Status}.");
         Status = OrderStatus.Placed;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Records that a bank transfer paid for this order. A Draft was never placed, so it cannot be paid.</summary>
+    public void MarkPaid(string transactionId, DateTime paidAt)
+    {
+        if (Status == OrderStatus.Draft)
+            throw new DomainException("A Draft order has not been placed, so it cannot be paid.");
+        if (IsPaid)
+            throw new DomainException($"{Reference} is already paid.");
+        PaidAt = DateTime.SpecifyKind(paidAt, DateTimeKind.Utc);
+        PaymentTransactionId = transactionId;
         UpdatedAt = DateTime.UtcNow;
     }
 

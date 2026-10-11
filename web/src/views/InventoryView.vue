@@ -14,6 +14,9 @@
       <KpiCard label="Fuel & Equipment" :value="`${fuelEquipCount}`" delta="tracked in stock" deltaType="mute" />
     </div>
 
+    <!-- Picked out of the store but not yet used or returned -->
+    <OutstandingStockCard />
+
     <!-- Filter pills + Add Item -->
     <div class="toolbar-row">
       <div class="filter-row">
@@ -44,6 +47,14 @@
         <div class="inv-icon" :class="categoryClass(item.categoryName)">{{ categoryIcon(item.categoryName) }}</div>
         <div class="inv-info">
           <div class="inv-name">{{ item.name }}</div>
+          <div class="inv-price" :class="{ none: !item.unitCost }">
+            <template v-if="item.unitCost">
+              ₦{{ fmtMoney(item.unitCost * item.packSize) }} / {{ item.packLabel }}
+              <template v-if="item.packSize !== 1">({{ item.packSize }} {{ item.unit }})</template>
+              · ₦{{ fmtMoney(item.unitCost) }}/{{ item.unit }}
+            </template>
+            <template v-else>No price set — costs can't be calculated</template>
+          </div>
           <div class="inv-meta">
             <span class="cat-badge">{{ item.categoryName }}</span>
             <span v-if="item.chemicalProductName" style="color:var(--stone);font-size:10px;">· {{ item.chemicalProductName }}</span>
@@ -63,6 +74,7 @@
           <span v-if="item.isLowStock" class="badge badge-warn">LOW STOCK</span>
         </div>
         <div class="inv-actions">
+          <button class="btn btn-ghost btn-sm" @click="openPricing(item)">{{ item.unitCost ? 'Price' : 'Set price' }}</button>
           <button class="btn btn-ghost btn-sm" @click="openPick(item)">Pick Stock</button>
           <button class="btn btn-ghost btn-sm" @click="openAdjust(item)">Adjust</button>
         </div>
@@ -142,22 +154,15 @@
             <input type="number" class="form-input" v-model.number="pickQty" min="0" step="0.01" :disabled="!!pickWarning" @wheel.prevent />
           </div>
           <div class="form-group">
-            <label class="form-label">Section</label>
-            <select class="form-select" v-model="pickSectionId" :disabled="!!pickWarning" @change="onPickSectionChange">
-              <option value="" disabled>— Select section —</option>
-              <option v-for="s in store.sections" :key="s.id" :value="s.id">{{ s.name }}</option>
-            </select>
-          </div>
-          <div class="form-group" v-if="pickSectionBlocks.length">
             <label class="form-label">Block</label>
             <select class="form-select" v-model="pickBlockId" :disabled="!!pickWarning">
               <option value="" disabled>— Select block —</option>
-              <option v-for="b in pickSectionBlocks" :key="b.id" :value="b.id">{{ b.name }}</option>
+              <option v-for="s in store.blocks" :key="s.id" :value="s.id">{{ s.name }}</option>
             </select>
           </div>
           <div class="form-group">
             <label class="form-label">Purpose</label>
-            <input class="form-input" placeholder="e.g. Spraying Section A" v-model="pickPurpose" :disabled="!!pickWarning" />
+            <input class="form-input" placeholder="e.g. Spraying Block A" v-model="pickPurpose" :disabled="!!pickWarning" />
           </div>
           <div v-if="pickError" class="error-msg">{{ pickError }}</div>
           <div v-if="pickWarning" class="warn-msg">{{ pickWarning }}</div>
@@ -170,6 +175,50 @@
             </button>
           </template>
           <button v-else class="btn btn-primary" style="margin-left:auto;" @click="closePick">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Set price modal -->
+    <div v-if="pricingTarget" class="modal-overlay" @click.self="closePricing">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">Price — {{ pricingTarget.name }}</div>
+          <button class="modal-close" @click="closePricing">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">Bought as</label>
+              <input class="form-input" v-model="pricingLabel" :disabled="!!pricingSuccess" placeholder="bag, container…" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Size of one {{ pricingLabel || 'pack' }} ({{ pricingTarget.unit }})</label>
+              <input type="number" class="form-input" v-model.number="pricingSize" min="0" step="0.01" :disabled="!!pricingSuccess" @wheel.prevent />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Price per {{ pricingLabel || 'pack' }} (₦)</label>
+            <input type="number" class="form-input" v-model.number="pricingPrice" min="0" step="0.01" :disabled="!!pricingSuccess" @wheel.prevent />
+            <div v-if="Number(pricingSize) > 0 && Number(pricingPrice) > 0" class="form-hint">
+              = ₦{{ fmtMoney(Number(pricingPrice) / Number(pricingSize)) }} per {{ pricingTarget.unit }}
+            </div>
+          </div>
+          <label class="check-row">
+            <input type="checkbox" v-model="pricingBackfill" :disabled="!!pricingSuccess" />
+            Also cost past activities that used this item and have no input cost yet
+          </label>
+          <div v-if="pricingError" class="error-msg">{{ pricingError }}</div>
+          <div v-if="pricingSuccess" class="success-msg">{{ pricingSuccess }}</div>
+        </div>
+        <div class="modal-footer">
+          <template v-if="!pricingSuccess">
+            <button class="btn btn-ghost" @click="closePricing" :disabled="pricingSaving">Cancel</button>
+            <button class="btn btn-primary" @click="submitPricing" :disabled="pricingSaving || !canSavePricing">
+              {{ pricingSaving ? 'Saving…' : 'Save price' }}
+            </button>
+          </template>
+          <button v-else class="btn btn-primary" style="margin-left:auto;" @click="closePricing">Done</button>
         </div>
       </div>
     </div>
@@ -219,12 +268,34 @@
 
           <div class="form-group">
             <label class="form-label">Unit</label>
-            <input class="form-input" v-model="itemUnit" :disabled="isExistingItemMode" placeholder="e.g. L, kg, bags" />
+            <input class="form-input" v-model="itemUnit" :disabled="isExistingItemMode" placeholder="e.g. kg, L" @input="onUnitInput" />
+            <div class="form-hint">What you measure and use it in. It is bought by the pack below.</div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Quantity {{ isExistingItemMode ? 'to Add' : '(Opening Stock)' }}</label>
-            <input type="number" class="form-input" v-model.number="quantity" min="0" step="0.01" placeholder="e.g. 50" @wheel.prevent />
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">Bought as</label>
+              <input class="form-input" v-model="packLabel" placeholder="bag, container, drum…" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Size of one {{ packLabel || 'pack' }} ({{ itemUnit || 'unit' }}) <span class="opt">optional</span></label>
+              <input type="number" class="form-input" v-model.number="packSize" min="0" step="0.01" @wheel.prevent />
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">Number of {{ packLabel || 'pack' }}s {{ isExistingItemMode ? 'to add' : '(opening stock)' }}</label>
+              <input type="number" class="form-input" v-model.number="packCount" min="0" step="1" placeholder="e.g. 10" @wheel.prevent />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Price per {{ packLabel || 'pack' }} (₦) <span class="opt">optional</span></label>
+              <input type="number" class="form-input" v-model.number="pricePerPack" min="0" step="0.01" placeholder="e.g. 28000" @wheel.prevent />
+            </div>
+          </div>
+          <div v-if="quantityTotal > 0" class="form-hint">
+            = {{ quantityTotal.toLocaleString() }} {{ itemUnit || 'units' }}
+            <template v-if="pricePerPack && Number(packSize) > 0"> · ₦{{ fmtMoney(Number(pricePerPack) / Number(packSize)) }} per {{ itemUnit || 'unit' }}</template>
           </div>
 
           <div class="form-group" v-if="!isExistingItemMode">
@@ -251,6 +322,7 @@ import { useAgroStore } from '@/stores/agro'
 import type { InventoryItem } from '@/types'
 import KpiCard from '@/components/ui/KpiCard.vue'
 import AlertBanner from '@/components/ui/AlertBanner.vue'
+import OutstandingStockCard from '@/components/ui/OutstandingStockCard.vue'
 import { extractErrorMessage } from '@/utils/http'
 
 const store = useAgroStore()
@@ -330,44 +402,30 @@ async function submitAdjust() {
 // A genuinely separate action from Adjust: Adjust overwrites an absolute quantity (a correction),
 // Pick records a real withdrawal (how much/where/why) and always leaves an Out movement behind.
 // Who performed the pick is no longer chosen here — the backend auto-attributes the authenticated
-// session (see PickStockCommandHandler) — this modal instead requires WHERE the stock is going
-// (Section, and Block if the section has any).
+// session (see PickStockCommandHandler) — this modal instead requires WHERE the stock is going (the Block).
 const pickTarget = ref<InventoryItem | null>(null)
 const pickQty = ref<number | ''>('')
-const pickSectionId = ref('')
 const pickBlockId = ref('')
 const pickPurpose = ref('')
 const picking = ref(false)
 const pickError = ref('')
 const pickWarning = ref('')
 
-const pickSectionBlocks = computed(() => {
-  const section = store.sections.find(s => s.id === pickSectionId.value)
-  return section?.blocks ?? []
-})
-
 const canSubmitPick = computed(() =>
   !!pickTarget.value &&
   !!pickQty.value && Number(pickQty.value) > 0 &&
-  !!pickSectionId.value &&
-  (pickSectionBlocks.value.length === 0 || !!pickBlockId.value) &&
+  !!pickBlockId.value &&
   pickPurpose.value.trim().length > 0
 )
 
 function openPick(item: InventoryItem) {
   pickTarget.value = item
   pickQty.value = ''
-  pickSectionId.value = ''
   pickBlockId.value = ''
   pickPurpose.value = ''
   pickError.value = ''
   pickWarning.value = ''
-  if (!store.sections.length) store.fetchSections()
-}
-
-function onPickSectionChange() {
-  // Switched section — a Block id from the previous section is meaningless here.
-  pickBlockId.value = ''
+  if (!store.blocks.length) store.fetchBlocks()
 }
 
 function closePick() {
@@ -382,12 +440,11 @@ async function submitPick() {
   try {
     const res = await store.pickStock(pickTarget.value.id, {
       quantity: Number(pickQty.value),
-      sectionId: pickSectionId.value,
-      blockId: pickBlockId.value || null,
+      blockId: pickBlockId.value,
       purpose: pickPurpose.value.trim()
     })
     if (res.lowStockWarning) {
-      // Warning, not a block — the pick already succeeded. Keep the modal open so it can't be
+      // Warning, not a failure — the pick already succeeded. Keep the modal open so it can't be
       // missed; the user dismisses it explicitly via "Done" instead of it auto-closing.
       pickWarning.value = res.lowStockWarning
     } else {
@@ -411,7 +468,10 @@ const selectedCategoryId = ref('')
 const showNewCategoryInput = ref(false)
 const newCategoryName = ref('')
 const creatingCategory = ref(false)
-const quantity = ref<number | ''>('')
+const packLabel = ref('unit')
+const packSize = ref<number | ''>(1)
+const packCount = ref<number | ''>('')
+const pricePerPack = ref<number | ''>('')
 const reorderThreshold = ref<number | ''>(0)
 const submitting = ref(false)
 const submitError = ref('')
@@ -426,8 +486,30 @@ const matchedExistingItem = computed(() => {
   return store.inventoryItems.find(i => i.name.toLowerCase() === name) ?? null
 })
 
+// Stock is kept in the item's unit (kg, L…): packs bought x size of one pack.
+const quantityTotal = computed(() => {
+  const total = Number(packCount.value || 0) * Number(packSize.value || 0)
+  return Number.isFinite(total) ? Math.round(total * 1000) / 1000 : 0
+})
+
+function fmtMoney(n: number) {
+  return n.toLocaleString('en-NG', { maximumFractionDigits: 2 })
+}
+
+// Sensible defaults: fertilizer by the 50 kg bag, liquids by the container. Both can be changed.
+function applyPackDefaults(unit: string) {
+  const u = unit.trim().toLowerCase()
+  if (['kg', 'kgs', 'kilogram', 'kilograms'].includes(u)) { packLabel.value = 'bag'; packSize.value = 50 }
+  else if (['l', 'ltr', 'litre', 'litres', 'liter', 'liters'].includes(u)) { packLabel.value = 'container'; packSize.value = 20 }
+  else { packLabel.value = 'unit'; packSize.value = 1 }
+}
+
+function onUnitInput() {
+  applyPackDefaults(itemUnit.value)
+}
+
 const canSubmitAddItem = computed(() => {
-  if (!quantity.value || Number(quantity.value) <= 0) return false
+  if (quantityTotal.value <= 0 || !(Number(packSize.value) > 0)) return false
   if (isExistingItemMode.value) {
     // Defensive: only allow submit if the picked id still resolves to a real item (it always
     // should in normal use, but guards against sending a stale/empty categoryId if it doesn't).
@@ -446,7 +528,10 @@ function openAddItem() {
   selectedCategoryId.value = ''
   showNewCategoryInput.value = false
   newCategoryName.value = ''
-  quantity.value = ''
+  packLabel.value = 'unit'
+  packSize.value = 1
+  packCount.value = ''
+  pricePerPack.value = ''
   reorderThreshold.value = 0
   submitError.value = ''
   showAddItem.value = true
@@ -468,6 +553,7 @@ function onExistingItemChange() {
     itemName.value = ''
     itemUnit.value = ''
     selectedCategoryId.value = ''
+    applyPackDefaults('')
     return
   }
   const item = store.inventoryItems.find(i => i.id === selectedExistingItemId.value)
@@ -475,6 +561,8 @@ function onExistingItemChange() {
     itemName.value = item.name
     itemUnit.value = item.unit
     selectedCategoryId.value = item.categoryId
+    packLabel.value = item.packLabel
+    packSize.value = item.packSize
     showNewCategoryInput.value = false
   }
 }
@@ -512,7 +600,10 @@ async function submitAddItem() {
       name: existing ? existing.name : itemName.value.trim(),
       unit: existing ? existing.unit : itemUnit.value.trim(),
       categoryId: existing ? existing.categoryId : selectedCategoryId.value,
-      quantity: Number(quantity.value),
+      quantity: quantityTotal.value,
+      packSize: Number(packSize.value),
+      packLabel: packLabel.value.trim() || 'unit',
+      pricePerPack: pricePerPack.value === '' ? null : Number(pricePerPack.value),
       reorderThreshold: existing ? existing.reorderThreshold : Number(reorderThreshold.value || 0),
       chemicalProductId: null,
       existingItemId: existing ? existing.id : null
@@ -525,12 +616,66 @@ async function submitAddItem() {
   }
 }
 
+// ── Set price on stock already in the store ──
+const pricingTarget = ref<InventoryItem | null>(null)
+const pricingLabel = ref('')
+const pricingSize = ref<number | ''>(1)
+const pricingPrice = ref<number | ''>('')
+const pricingBackfill = ref(true)
+const pricingSaving = ref(false)
+const pricingError = ref('')
+const pricingSuccess = ref('')
+
+const canSavePricing = computed(() => Number(pricingSize.value) > 0 && Number(pricingPrice.value) > 0)
+
+function openPricing(item: InventoryItem) {
+  pricingTarget.value = item
+  pricingLabel.value = item.packLabel
+  // Unpriced items still on the default pack get the usual starting point for their unit.
+  if (!item.unitCost && item.packSize === 1) {
+    applyPackDefaults(item.unit)
+    pricingLabel.value = packLabel.value
+    pricingSize.value = packSize.value
+  } else {
+    pricingSize.value = item.packSize
+  }
+  pricingPrice.value = item.unitCost ? Math.round(item.unitCost * item.packSize * 100) / 100 : ''
+  pricingBackfill.value = true
+  pricingError.value = ''
+  pricingSuccess.value = ''
+}
+
+function closePricing() {
+  pricingTarget.value = null
+}
+
+async function submitPricing() {
+  if (!pricingTarget.value || !canSavePricing.value) return
+  pricingSaving.value = true
+  pricingError.value = ''
+  try {
+    const res = await store.setItemPricing(pricingTarget.value.id, {
+      packSize: Number(pricingSize.value),
+      packLabel: pricingLabel.value.trim() || 'unit',
+      pricePerPack: Number(pricingPrice.value),
+      backfillActivities: pricingBackfill.value
+    })
+    pricingSuccess.value = res.activitiesUpdated > 0
+      ? `Price saved. ${res.activitiesUpdated} past ${res.activitiesUpdated === 1 ? 'activity was' : 'activities were'} costed.`
+      : 'Price saved.'
+  } catch (e) {
+    pricingError.value = extractErrorMessage(e, 'Could not save this price. Please try again.')
+  } finally {
+    pricingSaving.value = false
+  }
+}
+
 onMounted(() => {
   store.fetchInventory()
   store.fetchInventoryCategories()
   store.fetchChemicals()
-  // Sections (for the Pick Stock modal's Section/Block dropdowns) are lazily fetched in
-  // openPick() instead — no view here needs the section list before a Pick modal is opened.
+  // Blocks (for the Pick Stock modal's Block dropdown) are lazily fetched in
+  // openPick() instead — no view here needs the block list before a Pick modal is opened.
 })
 </script>
 
@@ -548,6 +693,11 @@ onMounted(() => {
 .inv-icon { width: 36px; height: 36px; border-radius: 8px; background: var(--fog); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
 .inv-info { flex: 1; min-width: 0; }
 .inv-name { font-size: 13px; font-weight: 600; color: var(--forest); }
+.inv-price { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--leaf); margin-top: 2px; }
+.inv-price.none { color: var(--harvest); }
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.opt { font-weight: 400; color: var(--stone); font-size: 10px; margin-left: 4px; }
+.check-row { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--ink, #223); margin-top: 4px; cursor: pointer; }
 .inv-meta { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
 .cat-badge { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 6px; background: var(--fog); border-radius: 4px; color: var(--stone); }
 .inv-stock { min-width: 160px; }

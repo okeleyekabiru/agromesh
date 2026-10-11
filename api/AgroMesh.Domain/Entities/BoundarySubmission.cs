@@ -4,7 +4,7 @@ namespace AgroMesh.Domain.Entities;
 
 public class BoundarySubmission : BaseEntity
 {
-    public string SectionId { get; private set; } = string.Empty;
+    public string BlockId { get; private set; } = string.Empty;
     public string OperationId { get; private set; } = string.Empty;
     public BoundarySubmissionType SubmissionType { get; private set; }
     public string? RawPointsJson { get; private set; }
@@ -16,7 +16,7 @@ public class BoundarySubmission : BaseEntity
     private BoundarySubmission() { }
 
     public static BoundarySubmission Create(
-        string sectionId,
+        string blockId,
         string operationId,
         BoundarySubmissionType submissionType,
         string? rawPointsJson,
@@ -25,7 +25,7 @@ public class BoundarySubmission : BaseEntity
         double? computedCentroidLat,
         double? computedCentroidLng) => new()
     {
-        SectionId = sectionId,
+        BlockId = blockId,
         OperationId = operationId,
         SubmissionType = submissionType,
         RawPointsJson = rawPointsJson,

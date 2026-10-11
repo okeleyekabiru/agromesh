@@ -5,7 +5,9 @@ import '../../models/models.dart';
 import '../../stores/app_store.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/widgets.dart';
+import '../../widgets/weather_card.dart';
 import '../activity/log_activity_screen.dart';
+import '../stock/out_on_farm_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -53,6 +55,46 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(height: 14),
             ],
 
+            // Stock picked out of the store and not yet used or returned
+            if (store.outstanding.isNotEmpty) ...[
+              InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const OutOnFarmScreen()),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AgroColors.leaf.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AgroColors.leaf.withOpacity(0.25)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.inventory_2_outlined, color: AgroColors.leaf, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${store.outstanding.length} pick${store.outstanding.length == 1 ? '' : 's'} of stock out on the farm',
+                          style: GoogleFonts.inter(fontSize: 12, color: AgroColors.ink),
+                        ),
+                      ),
+                      Text('Return leftover', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
+                      const Icon(Icons.chevron_right, color: AgroColors.leaf, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+            ],
+
+            // Weather + 7-day forecast
+            if (store.weather != null && store.weather!.forecast.isNotEmpty) ...[
+              WeatherCard(weather: store.weather!),
+              const SizedBox(height: 14),
+            ],
+
             // KPI grid
             GridView.count(
               crossAxisCount: 2,
@@ -62,7 +104,7 @@ class DashboardScreen extends StatelessWidget {
               mainAxisSpacing: 10,
               childAspectRatio: 1.5,
               children: [
-                KpiCard(label: 'Active Sections', value: '${store.sections.where((s) => s.status == SectionStatus.active).length}/${store.sections.length}', delta: 'Today', deltaType: KpiDeltaType.up, dark: true),
+                KpiCard(label: 'Active Blocks', value: '${store.blocks.where((s) => s.status == BlockStatus.active).length}/${store.blocks.length}', delta: 'Today', deltaType: KpiDeltaType.up, dark: true),
                 KpiCard(label: 'Activities Logged', value: '${store.activities.length}', delta: 'All time', deltaType: KpiDeltaType.mute),
                 KpiCard(label: 'Workers', value: '${store.workers.length}', delta: '${store.workers.where((w) => w.type == WorkerType.employee).length} employees', deltaType: KpiDeltaType.mute),
                 KpiCard(label: 'Pending Sync', value: '${store.pendingSyncCount}', delta: store.isOnline ? 'Will sync' : 'Offline', deltaType: store.pendingSyncCount > 0 ? KpiDeltaType.warn : KpiDeltaType.up),
@@ -111,12 +153,12 @@ class DashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Sections summary
+            // Blocks summary
             AgroCard(
               child: Column(
                 children: [
-                  const AgroCardHeader(title: 'Sections', subtitle: 'Status'),
-                  ...store.sections.map((s) => SectionTile(section: s)),
+                  const AgroCardHeader(title: 'Blocks', subtitle: 'Status'),
+                  ...store.blocks.map((s) => BlockTile(block: s, work: store.blockWork[s.id])),
                 ],
               ),
             ),

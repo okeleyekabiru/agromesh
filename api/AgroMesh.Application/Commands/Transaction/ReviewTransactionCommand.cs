@@ -22,9 +22,6 @@ public class ReviewTransactionCommandHandler : IRequestHandler<ReviewTransaction
         transaction.Review(req.Category, req.CropAllocation, req.Notes);
         await _transactionRepo.UpdateAsync(transaction, ct);
 
-        return new TransactionDto(
-            transaction.Id, transaction.FarmId, transaction.MonoId, transaction.Narration,
-            transaction.Amount, transaction.Date, transaction.Category, transaction.CropAllocation,
-            transaction.Confidence, transaction.Source, transaction.ReviewedByUser, transaction.ReviewNotes);
+        return Mapping.TransactionMapping.ToDto(transaction);
     }
 }

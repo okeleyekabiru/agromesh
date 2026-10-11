@@ -13,4 +13,8 @@ public interface ITransactionRepository
     Task<bool> ExistsByMonoIdAsync(string monoId, CancellationToken ct = default);
     Task<int> GetPendingReviewCountAsync(string farmId, CancellationToken ct = default);
     Task<decimal> GetTotalSpendMtdAsync(string farmId, CancellationToken ct = default);
+    Task<List<MonthAmount>> GetMonthlySpendAsync(string farmId, DateTime from, CancellationToken ct = default);
+    Task<List<Transaction>> GetBetweenAsync(string farmId, DateTime from, DateTime to, CancellationToken ct = default);
+    Task<List<Transaction>> GetNeedingReviewAsync(string farmId, CancellationToken ct = default);
+    Task<List<Transaction>> GetMtdAsync(string farmId, CancellationToken ct = default);
 }

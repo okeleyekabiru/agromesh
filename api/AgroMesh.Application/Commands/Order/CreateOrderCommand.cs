@@ -31,7 +31,8 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Ord
         var lineItems = req.LineItems.Select(l => new OrderLineItem(l.InventoryItemId, l.Quantity, l.UnitPrice)).ToList();
         var itemsById = await OrderDtoMapping.ResolveLineItemsAsync(_inventoryRepo, command.FarmId, lineItems, ct);
 
-        var order = Domain.Entities.Order.Create(command.FarmId, req.SupplierId, lineItems);
+        var number = await _orderRepo.GetNextNumberAsync(command.FarmId, ct);
+        var order = Domain.Entities.Order.Create(command.FarmId, req.SupplierId, lineItems, number);
         await _orderRepo.AddAsync(order, ct);
 
         return OrderDtoMapping.ToDto(order, supplier, itemsById);

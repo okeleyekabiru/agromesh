@@ -2,7 +2,7 @@
 
 export type CropType = 'OilPalm' | 'Maize' | 'Mixed' | 'Cocoa' | 'Cassava'
 
-export type SectionStatus = 'Active' | 'Idle' | 'HarvestSoon'
+export type BlockStatus = 'Active' | 'Idle' | 'HarvestSoon'
 
 export type ActivityType =
   | 'Weeding'
@@ -61,7 +61,7 @@ export interface AreaDto {
   displayUnit: string
 }
 
-export interface SectionCrop {
+export interface BlockCrop {
   cropType: CropType
   area: AreaDto
   percentage: number
@@ -83,7 +83,7 @@ export interface Farm {
   preferredAreaUnit: AreaUnit
   centroidLat: number | null
   centroidLng: number | null
-  sectionCount: number
+  blockCount: number
   workerCount: number
 }
 
@@ -101,9 +101,9 @@ export interface State {
   code: string
 }
 
-/** Response shape from POST /api/sections/{id}/boundary/points and /upload. */
+/** Response shape from POST /api/blocks/{id}/boundary/points and /upload. */
 export interface BoundarySubmissionResult {
-  sectionId: string
+  blockId: string
   operationId: string
   submissionType: 0 | 1 // 0 = GpsPoints, 1 = FileUpload
   computedGeoJson: string
@@ -112,32 +112,26 @@ export interface BoundarySubmissionResult {
   computedCentroidLng: number | null
 }
 
-// Backend BoundarySource enum ordinal on Section: 0=GpsCapture, 1=SurveyUpload, 2=ManualEstimate.
-export const SECTION_BOUNDARY_SOURCE_LABELS = ['GPS capture', 'Survey upload', 'Manual estimate'] as const
+// Backend BoundarySource enum ordinal on Block: 0=GpsCapture, 1=SurveyUpload, 2=ManualEstimate.
+export const BLOCK_BOUNDARY_SOURCE_LABELS = ['GPS capture', 'Survey upload', 'Manual estimate'] as const
 
-export interface Section {
+export interface Block {
   id: string
   farmId: string
   name: string
-  crops: SectionCrop[]
+  crops: BlockCrop[]
   area: AreaDto
-  status: SectionStatus
+  status: BlockStatus
   lastActivityDate: string | null
   boundaryGeoJson: string | null
   boundarySource: number | null
   centroidLat: number | null
   centroidLng: number | null
-  blocks: Block[]
+  treeCount: number | null
   nextWeedingPrediction: UpcomingTask | null
   nextSprayingPrediction: UpcomingTask | null
-}
-
-export interface Block {
-  id: string
-  sectionId: string
-  name: string
-  area: AreaDto
-  treeCount: number | null
+  nextFertilizingPrediction: UpcomingTask | null
+  plantingYear: number | null
 }
 
 export interface WorkerRole {
@@ -182,7 +176,6 @@ export interface InputUsedDto {
 export interface ActivityLog {
   id: string
   farmId: string
-  sectionId: string
   blockId: string
   activityType: ActivityType
   date: string
@@ -217,6 +210,27 @@ export interface Transaction {
   source: CategorizationSource
   reviewedByUser: boolean
   reviewNotes: string | null
+  // Enums arrive as ordinals from the API: kind 0=Expense 1=Income 2=Capital; reconciliation 0=None 1=Matched 2=NeedsReview 3=Dismissed.
+  kind?: number | string
+  orderId?: string | null
+  reconciliation?: number | string
+  reconciliationNote?: string | null
+}
+
+export interface FinanceSummary {
+  from: string
+  to: string
+  income: number
+  capital: number
+  expenses: number
+  needsReview: number
+}
+
+export interface BankStatus {
+  linked: boolean
+  linkedAt: string | null
+  lastSyncAt: string | null
+  publicKey?: string | null
 }
 
 export interface ChemicalProduct {
@@ -226,6 +240,21 @@ export interface ChemicalProduct {
   chemType: ChemicalCategory
   typicalIntervalDays: number
   active: boolean
+}
+
+/** Stock picked out of the store that hasn't been used in an activity or returned yet. */
+export interface OutstandingStock {
+  pickId: string
+  inventoryItemId: string
+  inventoryItemName: string
+  unit: string
+  blockId: string
+  quantityPicked: number
+  quantityUsed: number
+  quantityReturned: number
+  quantityOutstanding: number
+  pickedAt: string
+  pickedByUserId: string
 }
 
 export interface InventoryItem {
@@ -241,6 +270,9 @@ export interface InventoryItem {
   chemicalProductId: string | null
   chemicalProductName: string | null
   lastMovementDate: string | null
+  packSize: number
+  packLabel: string
+  unitCost: number
 }
 
 export interface StockMovement {
@@ -256,8 +288,8 @@ export interface StockMovement {
 }
 
 export interface UpcomingTask {
-  sectionId: string
-  sectionName: string
+  blockId: string
+  blockName: string
   activityType: ActivityType
   lastDone: string | null
   predictedNextDue: string
@@ -270,6 +302,11 @@ export interface UpcomingTask {
   stockUnit: string | null
   isStale: boolean
   weatherDataUsed: boolean
+  /** NotNeeded | Unknown | OnTrack | DueSoon | Overdue — from the weather-based cycle. */
+  status: string | null
+  factors: string[] | null
+  /** True when the AI reviewed and adjusted this date. */
+  aiReviewed: boolean
 }
 
 /** Response shape from POST /api/farms/{farmId}/inventory/{itemId}/pick. */
@@ -346,6 +383,11 @@ export interface Order {
   total: number
   createdAt: string
   updatedAt: string
+  // The number to quote in the bank transfer narration, e.g. ORD-1042/chemical.
+  number?: number
+  reference?: string
+  isPaid?: boolean
+  paidAt?: string | null
 }
 
 export interface CreateOrderLineItemRequest {
@@ -363,6 +405,34 @@ export interface WeatherWidget {
   nextDryWindowStart: string | null
   nextDryWindowEnd: string | null
   rainfallLast30Days: number
+  location: string | null
+  forecast: DailyForecast[] | null
+}
+
+export interface DailyForecast {
+  date: string
+  precipitationMm: number
+  rainChance: number
+  tempMaxC: number
+  tempMinC: number
+  windKmh: number
+  weatherCode: number
+  goodSprayDay: boolean
+}
+
+export interface Report {
+  year: number
+  month: number
+  areaUnit: string
+  totalExpenditure: number
+  labourCost: number
+  inputCost: number
+  bankSpend: number
+  activityCount: number
+  categories: { label: string; amount: number; percent: number }[]
+  blocks: { blockId: string; blockName: string; cropType: string | null; area: number; cost: number; costPerArea: number | null; activityCount: number }[]
+  byActivityType: { activityType: string; count: number; cost: number }[]
+  spendTrend: { year: number; month: number; amount: number }[]
 }
 
 export interface DashboardData {
@@ -371,18 +441,24 @@ export interface DashboardData {
   labourCostMtd: number
   activitiesThisMonth: number
   pendingReviewCount: number
-  sectionsMtd: SectionMtdDto[]
+  inputCostMtd: number
+  maintenanceCostMtd: number
+  spendTrend: { year: number; month: number; amount: number }[]
+  blocksMtd: BlockMtdDto[]
   cropPnl: CropPnlDto[]
   recentActivities: ActivityLog[]
   upcomingTasks: UpcomingTask[]
   lowStockAlerts: LowStockAlert[]
 }
 
-export interface SectionMtdDto {
-  sectionId: string
-  sectionName: string
+export interface BlockMtdDto {
+  blockId: string
+  blockName: string
   cost: number
   activityCount: number
+  labourCost: number
+  inputCost: number
+  maintenanceCost: number
 }
 
 export interface CropPnlDto {
@@ -424,7 +500,7 @@ export interface PagedResult<T> {
  * JsonStringEnumConverter configured. This is a UX hint only (show/hide approve/reject controls) —
  * the real security boundary is the backend's own role check, not this field.
  */
-export type UserRoleLabel = 'Admin' | 'Member'
+export type UserRoleLabel = 'Admin' | 'Member' | 'FarmManager' | 'Supervisor'
 
 export interface AuthUser {
   id: string

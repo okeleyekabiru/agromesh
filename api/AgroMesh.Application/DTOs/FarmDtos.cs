@@ -16,7 +16,7 @@ public record FarmDto(
     AreaUnit PreferredAreaUnit,
     double? CentroidLat,
     double? CentroidLng,
-    int SectionCount,
+    int BlockCount,
     int WorkerCount);
 
 public record CreateFarmRequest(string Name, string StateId, string? LgaFreetext);

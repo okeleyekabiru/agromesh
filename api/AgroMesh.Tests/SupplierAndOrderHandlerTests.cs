@@ -93,6 +93,11 @@ public class SupplierAndOrderHandlerTests
             return Task.CompletedTask;
         }
 
+        public Task UpdateMovementAsync(StockMovement movement, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task<List<StockMovement>> GetOutstandingPicksAsync(string farmId, string? inventoryItemId = null, string? blockId = null, CancellationToken ct = default) =>
+            Task.FromResult(new List<StockMovement>());
+
         public Task<List<StockMovement>> GetMovementsAsync(string inventoryItemId, int limit = 50, CancellationToken ct = default) =>
             Task.FromResult(Movements.Where(m => m.InventoryItemId == inventoryItemId).ToList());
     }
@@ -105,6 +110,12 @@ public class SupplierAndOrderHandlerTests
 
         public Task<Domain.Entities.Order?> GetByIdAsync(string id, CancellationToken ct = default) =>
             Task.FromResult(Orders.FirstOrDefault(o => o.Id == id));
+
+        public Task<Domain.Entities.Order?> GetByNumberAsync(string farmId, int number, CancellationToken ct = default) =>
+            Task.FromResult(Orders.FirstOrDefault(o => o.FarmId == farmId && o.Number == number));
+
+        public Task<int> GetNextNumberAsync(string farmId, CancellationToken ct = default) =>
+            Task.FromResult(Math.Max(Orders.Where(o => o.FarmId == farmId).Select(o => o.Number).DefaultIfEmpty(0).Max(), 1000) + 1);
 
         public Task<List<Domain.Entities.Order>> GetByFarmIdAsync(string farmId, OrderStatus? status = null, CancellationToken ct = default) =>
             Task.FromResult(Orders.Where(o => o.FarmId == farmId && (status == null || o.Status == status)).ToList());
@@ -547,7 +558,7 @@ public class SupplierAndOrderHandlerTests
         public Task<Farm?> GetByIdAsync(string id, CancellationToken ct = default) =>
             Task.FromResult(Farms.FirstOrDefault(f => f.Id == id));
 
-        public Task<Farm?> GetByIdWithSectionsAsync(string id, CancellationToken ct = default) =>
+        public Task<Farm?> GetByIdWithBlocksAsync(string id, CancellationToken ct = default) =>
             Task.FromResult(Farms.FirstOrDefault(f => f.Id == id));
 
         public Task<List<Farm>> GetAllAsync(CancellationToken ct = default) => Task.FromResult(Farms);

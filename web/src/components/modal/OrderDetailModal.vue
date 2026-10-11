@@ -9,7 +9,14 @@
         <div class="modal-body">
           <div class="status-row">
             <StatBadge :variant="statusVariant(localOrder.status)">{{ localOrder.status }}</StatBadge>
+            <StatBadge v-if="localOrder.isPaid" variant="green">Paid</StatBadge>
             <span class="created-at">Created {{ formatDate(localOrder.createdAt) }}</span>
+          </div>
+
+          <div v-if="localOrder.reference && localOrder.status !== 'Draft' && !localOrder.isPaid" class="pay-ref">
+            To pay by bank transfer, put <b>{{ localOrder.reference }}</b> in the narration, for example
+            <b>{{ localOrder.reference }}/chemical</b>, and send exactly ₦{{ localOrder.total.toLocaleString() }}.
+            The order is marked paid automatically.
           </div>
 
           <div class="line-item-list">
@@ -72,8 +79,7 @@ defineEmits<{ close: [] }>()
 const store = useAgroStore()
 
 // Local copy so a Place/Receive transition (or a re-downloaded invoice) reflects immediately in
-// this modal without needing the whole Orders list to re-render — same pattern BlockModal.vue uses
-// for its local block list.
+// this modal without needing the whole Orders list to re-render.
 const localOrder = ref<Order>({ ...props.order })
 
 const busy = ref<'place' | 'receive' | undefined>()
@@ -142,6 +148,7 @@ async function downloadInvoice() {
 .modal-footer { padding: 16px 24px; border-top: 1px solid var(--fog); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .footer-actions { display: flex; gap: 8px; }
 
+.pay-ref { background: rgba(45,122,79,0.08); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: var(--forest); margin-bottom: 14px; }
 .status-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
 .created-at { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--stone); }
 

@@ -66,7 +66,7 @@
           <div class="h-stat-sep" />
           <div class="h-stat">
             <div class="h-stat-n">4 crops</div>
-            <div class="h-stat-l">per section</div>
+            <div class="h-stat-l">per block</div>
           </div>
           <div class="h-stat-sep" />
           <div class="h-stat">
@@ -177,7 +177,7 @@
                        placeholder="you@example.com" autocomplete="email" required />
               </div>
               <div class="hint-box">
-                You'll set your farm's state/LGA and section boundaries in the setup wizard right after this.
+                You'll set your farm's state/LGA and block boundaries in the setup wizard right after this.
               </div>
               <div class="field-group">
                 <label class="field-label" for="reg-password">Password</label>
@@ -389,7 +389,7 @@ const features = [
   {
     id: 'finance',
     name: 'AI Financial Intelligence',
-    desc: 'Connect your bank via Mono. AI auto-categorizes every transaction — Labour, Chemicals, Fuel — with crop allocation for P&L by section.',
+    desc: 'Connect your bank via Mono. AI auto-categorizes every transaction — Labour, Chemicals, Fuel — with crop allocation for P&L by block.',
     icon: '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>',
     iconBg: 'rgba(61,170,106,0.12)',
     iconColor: '#3DAA6A',
@@ -432,9 +432,9 @@ const features = [
     flagged: true,
   },
   {
-    id: 'sections',
-    name: 'Multi-Crop Sections',
-    desc: 'Map your farm into sections on a live Leaflet map. Each section supports multiple crops with percentage allocation. Hectares or acres — your preference.',
+    id: 'blocks',
+    name: 'Multi-Crop Blocks',
+    desc: 'Map your farm into blocks on a live Leaflet map. Each block supports multiple crops with percentage allocation. Hectares or acres — your preference.',
     icon: '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
     iconBg: 'rgba(0,200,150,0.10)',
     iconColor: 'var(--data)',

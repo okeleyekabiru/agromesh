@@ -49,6 +49,12 @@ public class TransactionRepository : ITransactionRepository
         await _db.SaveChangesAsync(ct);
     }
 
+    public async Task<List<Transaction>> GetNeedingReviewAsync(string farmId, CancellationToken ct = default) =>
+        await _db.Transactions
+            .Where(t => t.FarmId == farmId && t.Reconciliation == Domain.Enums.ReconciliationStatus.NeedsReview)
+            .OrderByDescending(t => t.Date)
+            .ToListAsync(ct);
+
     public async Task<bool> ExistsByMonoIdAsync(string monoId, CancellationToken ct = default) =>
         await _db.Transactions.AnyAsync(t => t.MonoId == monoId, ct);
 
@@ -57,9 +63,31 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task<decimal> GetTotalSpendMtdAsync(string farmId, CancellationToken ct = default)
     {
-        var start = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+        var start = MonthStart();
         return await _db.Transactions
             .Where(t => t.FarmId == farmId && t.Date >= start && t.Amount < 0)
             .SumAsync(t => Math.Abs(t.Amount), ct);
+    }
+
+    public async Task<List<MonthAmount>> GetMonthlySpendAsync(string farmId, DateTime from, CancellationToken ct = default) =>
+        await _db.Transactions
+            .Where(t => t.FarmId == farmId && t.Date >= from && t.Amount < 0)
+            .GroupBy(t => new { t.Date.Year, t.Date.Month })
+            .Select(g => new MonthAmount(g.Key.Year, g.Key.Month, g.Sum(t => -t.Amount)))
+            .ToListAsync(ct);
+
+    public async Task<List<Transaction>> GetBetweenAsync(string farmId, DateTime from, DateTime to, CancellationToken ct = default) =>
+        await _db.Transactions.Where(t => t.FarmId == farmId && t.Date >= from && t.Date < to).ToListAsync(ct);
+
+    public async Task<List<Transaction>> GetMtdAsync(string farmId, CancellationToken ct = default)
+    {
+        var start = MonthStart();
+        return await _db.Transactions.Where(t => t.FarmId == farmId && t.Date >= start).ToListAsync(ct);
+    }
+
+    private static DateTime MonthStart()
+    {
+        var now = DateTime.UtcNow;
+        return new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
     }
 }

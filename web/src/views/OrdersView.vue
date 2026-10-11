@@ -36,7 +36,7 @@
       </div>
       <div class="ord-row" v-for="order in filteredOrders" :key="order.id">
         <div class="ord-info">
-          <div class="ord-supplier">{{ order.supplierName }}</div>
+          <div class="ord-supplier">{{ order.supplierName }} <span v-if="order.reference" class="ord-ref">{{ order.reference }}</span></div>
           <div class="ord-meta">
             <span>{{ order.lineItems.length }} item{{ order.lineItems.length === 1 ? '' : 's' }}</span>
             <span> · {{ formatDate(order.createdAt) }}</span>
@@ -44,6 +44,7 @@
         </div>
         <div class="ord-total">₦{{ order.total.toLocaleString() }}</div>
         <StatBadge :variant="statusVariant(order.status)">{{ order.status }}</StatBadge>
+        <StatBadge v-if="order.isPaid" variant="green">Paid</StatBadge>
         <div class="ord-actions">
           <button class="btn btn-ghost btn-sm" @click="viewOrder(order)">View</button>
         </div>
@@ -289,6 +290,7 @@ onMounted(() => {
 .ord-row:last-child { border-bottom: none; }
 .ord-info { flex: 1; min-width: 0; }
 .ord-supplier { font-size: 13px; font-weight: 600; color: var(--forest); }
+.ord-ref { margin-left: 6px; font-size: 11px; font-weight: 600; color: var(--stone); background: var(--fog); padding: 1px 6px; border-radius: 4px; }
 .ord-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--stone); margin-top: 2px; }
 .ord-total { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--forest); min-width: 100px; text-align: right; }
 .ord-actions { flex-shrink: 0; }

@@ -38,7 +38,9 @@ public class CreateInventoryItemCommandHandler : IRequestHandler<CreateInventory
                 throw new DomainException(
                     $"'{item.Name}' is tracked in {item.Unit}, not {req.Unit}. Enter the quantity in {item.Unit}.");
 
-            item.AddStock(req.Quantity);
+            if (req.PackSize.HasValue)
+                item.SetPack(req.PackLabel ?? item.PackLabel, req.PackSize.Value);
+            item.ReceiveStock(req.Quantity, UnitPrice(req, item.PackSize));
             await _inventoryRepo.UpdateAsync(item, ct);
             categoryName = item.Category.Name;
         }
@@ -51,7 +53,9 @@ public class CreateInventoryItemCommandHandler : IRequestHandler<CreateInventory
 
             item = Domain.Entities.InventoryItem.Create(
                 command.FarmId, req.Name, req.Unit, category.Id, 0, req.ReorderThreshold, req.ChemicalProductId);
-            item.AddStock(req.Quantity);
+            if (req.PackSize.HasValue)
+                item.SetPack(req.PackLabel ?? "unit", req.PackSize.Value);
+            item.ReceiveStock(req.Quantity, UnitPrice(req, item.PackSize));
             await _inventoryRepo.AddAsync(item, ct);
             categoryName = category.Name;
         }
@@ -60,8 +64,13 @@ public class CreateInventoryItemCommandHandler : IRequestHandler<CreateInventory
         await _inventoryRepo.AddMovementAsync(movement, ct);
 
         return new InventoryItemDto(item.Id, item.FarmId, item.Name, item.Unit, item.CategoryId, categoryName,
-            item.CurrentStock, item.ReorderThreshold, item.IsLowStock, item.ChemicalProductId, null, null);
+            item.CurrentStock, item.ReorderThreshold, item.IsLowStock, item.ChemicalProductId, null, null,
+            item.PackSize, item.PackLabel, item.UnitCost);
     }
+
+    // Price per pack -> price per unit (e.g. 28,000 per 50 kg bag = 560 per kg).
+    private static decimal? UnitPrice(CreateInventoryItemRequest req, decimal packSize) =>
+        req.PricePerPack.HasValue ? Math.Round(req.PricePerPack.Value / packSize, 4) : null;
 
     private async Task<Domain.Entities.InventoryItem?> ResolveTargetItemAsync(
         string farmId, CreateInventoryItemRequest req, CancellationToken ct)

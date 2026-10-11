@@ -6,7 +6,7 @@ import '../theme/app_theme.dart';
 import '../widgets/widgets.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'activity/log_activity_screen.dart';
-import 'sections_screen.dart';
+import 'blocks_screen.dart';
 import 'workers_screen.dart';
 
 class MainShell extends StatefulWidget {
@@ -21,11 +21,11 @@ class _MainShellState extends State<MainShell> {
 
   final _screens = const [
     DashboardScreen(),
-    SectionsScreen(),
+    BlocksScreen(),
     WorkersScreen(),
   ];
 
-  final _titles = ['Farm Overview', 'Sections', 'Workers'];
+  final _titles = ['Farm Overview', 'Blocks', 'Workers'];
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +99,7 @@ class _MainShellState extends State<MainShell> {
         unselectedItemColor: AgroColors.stone,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: 'Dashboard'),
-          BottomNavigationBarItem(icon: Icon(Icons.map_outlined), label: 'Sections'),
+          BottomNavigationBarItem(icon: Icon(Icons.map_outlined), label: 'Blocks'),
           BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: 'Workers'),
         ],
       ),

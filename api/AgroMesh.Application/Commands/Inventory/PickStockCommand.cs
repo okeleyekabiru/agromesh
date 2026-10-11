@@ -30,13 +30,13 @@ public record PickStockCommand(string FarmId, string InventoryItemId, PickStockR
 public class PickStockCommandHandler : IRequestHandler<PickStockCommand, PickStockResponse>
 {
     private readonly IInventoryRepository _inventoryRepo;
-    private readonly ISectionRepository _sectionRepo;
+    private readonly IBlockRepository _blockRepo;
     private readonly ICurrentUserAccessor _currentUser;
 
-    public PickStockCommandHandler(IInventoryRepository inventoryRepo, ISectionRepository sectionRepo, ICurrentUserAccessor currentUser)
+    public PickStockCommandHandler(IInventoryRepository inventoryRepo, IBlockRepository blockRepo, ICurrentUserAccessor currentUser)
     {
         _inventoryRepo = inventoryRepo;
-        _sectionRepo = sectionRepo;
+        _blockRepo = blockRepo;
         _currentUser = currentUser;
     }
 
@@ -44,8 +44,8 @@ public class PickStockCommandHandler : IRequestHandler<PickStockCommand, PickSto
     {
         var req = command.Request;
 
-        if (string.IsNullOrWhiteSpace(req.SectionId))
-            throw new DomainException("A section must be selected for a stock pick.");
+        if (string.IsNullOrWhiteSpace(req.BlockId))
+            throw new DomainException("A block must be selected for a stock pick.");
         if (string.IsNullOrWhiteSpace(req.Purpose))
             throw new DomainException("A purpose is required for a stock pick.");
 
@@ -63,24 +63,11 @@ public class PickStockCommandHandler : IRequestHandler<PickStockCommand, PickSto
         if (item.FarmId != command.FarmId)
             throw new DomainException($"Inventory item '{command.InventoryItemId}' not found.");
 
-        var section = await _sectionRepo.GetByIdWithBlocksAsync(req.SectionId, ct)
-            ?? throw new DomainException($"Section '{req.SectionId}' not found.");
-        // Same IDOR guard, applied to the section id.
-        if (section.FarmId != command.FarmId)
-            throw new DomainException($"Section '{req.SectionId}' not found.");
-
-        if (string.IsNullOrWhiteSpace(req.BlockId))
-        {
-            // Server-side enforcement of "Block is required once the section has any" — the
-            // frontend's canSubmitPick guard enforces this too, but a client can't be trusted
-            // alone to enforce a data-integrity rule.
-            if (section.Blocks.Count > 0)
-                throw new DomainException($"Section '{req.SectionId}' has blocks — a block must be selected for a stock pick.");
-        }
-        else if (!section.Blocks.Any(b => b.Id == req.BlockId))
-        {
-            throw new DomainException($"Block '{req.BlockId}' does not belong to section '{req.SectionId}'.");
-        }
+        var block = await _blockRepo.GetByIdAsync(req.BlockId, ct)
+            ?? throw new DomainException($"Block '{req.BlockId}' not found.");
+        // Same IDOR guard, applied to the block id.
+        if (block.FarmId != command.FarmId)
+            throw new DomainException($"Block '{req.BlockId}' not found.");
 
         // No try/catch: insufficient stock or a non-positive quantity throws DomainException here
         // and propagates unhandled — this is the entire point of being a separate code path from
@@ -90,17 +77,18 @@ public class PickStockCommandHandler : IRequestHandler<PickStockCommand, PickSto
 
         var movement = StockMovement.CreateOut(
             item.FarmId, item.Id, req.Quantity, notes: req.Purpose,
-            performedByUserId: performedByUserId, sectionId: req.SectionId, blockId: req.BlockId);
+            performedByUserId: performedByUserId, blockId: req.BlockId);
         await _inventoryRepo.AddMovementAsync(movement, ct);
 
-        // A pick that lands the stock to/below the reorder threshold is a warning, not a block — the
+        // A pick that lands the stock to/below the reorder threshold is a warning, not a failure — the
         // deduction above already succeeded by the time we get here.
         string? lowStockWarning = item.IsLowStock
             ? $"{item.Name} is running low ({item.CurrentStock} {item.Unit} remaining — reorder threshold: {item.ReorderThreshold})"
             : null;
 
         var dto = new InventoryItemDto(item.Id, item.FarmId, item.Name, item.Unit, item.CategoryId, item.Category.Name,
-            item.CurrentStock, item.ReorderThreshold, item.IsLowStock, item.ChemicalProductId, null, movement.Date);
+            item.CurrentStock, item.ReorderThreshold, item.IsLowStock, item.ChemicalProductId, null, movement.Date,
+            item.PackSize, item.PackLabel, item.UnitCost);
 
         return new PickStockResponse(dto, lowStockWarning);
     }

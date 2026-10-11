@@ -62,7 +62,7 @@ async function submit() {
       lgaFreetext: lgaFreetext.value.trim() || undefined,
     })
     emit('close')
-    router.push({ name: 'sections-setup' })
+    router.push({ name: 'blocks-setup' })
   } catch (e) {
     error.value = extractErrorMessage(e, 'Could not create this farm. Please try again.')
   } finally {

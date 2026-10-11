@@ -39,7 +39,7 @@ flutter run
 
 | App    | User              | Purpose                                         |
 |--------|-------------------|-------------------------------------------------|
-| Web    | Farm owner        | View P&L, sections, workers, finance dashboard  |
+| Web    | Farm owner        | View P&L, blocks, workers, finance dashboard    |
 | Mobile | Field supervisor  | Log daily activities offline, sync when online  |
 
 ---

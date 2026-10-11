@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'package:http/http.dart' as http;
 import 'auth_service.dart';
 
@@ -20,19 +21,22 @@ class ApiClient {
   ApiClient._();
 
   /// Override at build/run time, e.g.:
-  ///   flutter run --dart-define=API_BASE_URL=http://10.0.2.2:5013
+  ///   flutter run --dart-define=API_BASE_URL=http://10.0.2.2:5000
   ///
-  /// Notes on the default (`http://localhost:5013`, matching the API's
+  /// Notes on the defaults (`http://10.0.2.2:5000` on Android, `http://localhost:5000` elsewhere; 5000 is the Docker API port;
   /// documented local dev port — see api/AgroMesh.API/Properties/launchSettings.json
   /// and web/.env.development):
   ///   - Android emulators can't reach the host machine via `localhost` — it
   ///     resolves to the emulator itself. Use `10.0.2.2` instead.
   ///   - iOS simulator can use `localhost` directly.
   ///   - Physical devices need the host machine's LAN IP.
-  static const String baseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://localhost:5013',
-  );
+  static const String _override = String.fromEnvironment('API_BASE_URL');
+
+  /// With no override, an Android build assumes the emulator and reaches the host PC at 10.0.2.2; other
+  /// platforms use localhost. A physical phone must pass --dart-define=API_BASE_URL=http://<PC LAN IP>:5000.
+  static final String baseUrl = _override.isNotEmpty
+      ? _override
+      : (Platform.isAndroid ? 'http://10.0.2.2:5000' : 'http://localhost:5000');
 
   static const _timeout = Duration(seconds: 15);
 
@@ -66,6 +70,14 @@ class ApiClient {
       if (res.body.isEmpty) return null;
       return jsonDecode(res.body);
     }
-    throw ApiException('Request failed (HTTP ${res.statusCode})', res.statusCode);
+    // The API replies with RFC 7807 problem JSON; its `detail` is the human-readable reason
+    // (e.g. "Not enough 'NPK Fertilizer'..."), which beats a bare status code in the UI.
+    String message = 'Request failed (HTTP ${res.statusCode})';
+    try {
+      final body = jsonDecode(res.body);
+      final detail = body is Map ? body['detail'] : null;
+      if (detail is String && detail.isNotEmpty) message = detail;
+    } catch (_) {/* not JSON — keep the generic message */}
+    throw ApiException(message, res.statusCode);
   }
 }

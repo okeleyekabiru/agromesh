@@ -9,7 +9,7 @@ public record GetOnboardingStatusQuery(string FarmId) : IRequest<OnboardingStatu
 public class GetOnboardingStatusQueryHandler : IRequestHandler<GetOnboardingStatusQuery, OnboardingStatusDto>
 {
     private readonly IFarmRepository _farmRepo;
-    private readonly ISectionRepository _sectionRepo;
+    private readonly IBlockRepository _blockRepo;
     private readonly IWorkerRoleRepository _roleRepo;
     private readonly IWorkerRepository _workerRepo;
     private readonly IInventoryRepository _inventoryRepo;
@@ -17,14 +17,14 @@ public class GetOnboardingStatusQueryHandler : IRequestHandler<GetOnboardingStat
 
     public GetOnboardingStatusQueryHandler(
         IFarmRepository farmRepo,
-        ISectionRepository sectionRepo,
+        IBlockRepository blockRepo,
         IWorkerRoleRepository roleRepo,
         IWorkerRepository workerRepo,
         IInventoryRepository inventoryRepo,
         ICropAllocationRuleRepository ruleRepo)
     {
         _farmRepo = farmRepo;
-        _sectionRepo = sectionRepo;
+        _blockRepo = blockRepo;
         _roleRepo = roleRepo;
         _workerRepo = workerRepo;
         _inventoryRepo = inventoryRepo;
@@ -37,7 +37,7 @@ public class GetOnboardingStatusQueryHandler : IRequestHandler<GetOnboardingStat
         if (farm == null)
             return new OnboardingStatusDto(false, false, false, false, false, false, false);
 
-        var sections = await _sectionRepo.GetByFarmIdAsync(query.FarmId, ct);
+        var blocks = await _blockRepo.GetByFarmIdAsync(query.FarmId, ct);
         var roles = await _roleRepo.GetByFarmIdAsync(query.FarmId, ct);
         var workers = await _workerRepo.GetByFarmIdAsync(query.FarmId, activeOnly: true, ct);
         var inventory = await _inventoryRepo.GetByFarmIdAsync(query.FarmId, ct);
@@ -46,11 +46,11 @@ public class GetOnboardingStatusQueryHandler : IRequestHandler<GetOnboardingStat
         var hasFarm = true;
         var hasRoles = roles.Any();
         var hasWorkers = workers.Any();
-        var hasSections = sections.Any();
+        var hasBlocks = blocks.Any();
         var hasInventory = inventory.Any();
         var hasRules = rules.Any();
-        var isComplete = hasFarm && hasRoles && hasWorkers && hasSections && hasInventory && hasRules;
+        var isComplete = hasFarm && hasRoles && hasWorkers && hasBlocks && hasInventory && hasRules;
 
-        return new OnboardingStatusDto(hasFarm, hasRoles, hasWorkers, hasSections, hasInventory, hasRules, isComplete);
+        return new OnboardingStatusDto(hasFarm, hasRoles, hasWorkers, hasBlocks, hasInventory, hasRules, isComplete);
     }
 }

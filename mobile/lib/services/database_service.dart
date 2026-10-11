@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/models.dart';
@@ -8,7 +9,12 @@ class DatabaseService {
   // v1 -> v2: added farm/session-aware section columns (crops_json,
   // boundary_geojson, centroid_lat/lng) and the boundary_submissions outbox
   // table for offline GPS corner capture.
-  static const _version = 2;
+  // v2 -> v3: Farm → Section → Block collapsed into Farm → Block. The old
+  // sub-section `blocks` table is dropped, `sections` becomes `blocks`, and
+  // every section_id/section_name column becomes block_id/block_name.
+  // v3 -> v4: activity_inputs.inventory_item_id (inputs are real stock items now) and a small
+  // kv_cache table for offline copies of the stock list and "out on the farm" list.
+  static const _version = 4;
   static const _name = 'agromesh.db';
 
   static Future<Database> get database async {
@@ -28,35 +34,80 @@ class DatabaseService {
     );
   }
 
-  static Future<void> _onCreate(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE sections (
-        id TEXT PRIMARY KEY,
-        farm_id TEXT NOT NULL,
-        name TEXT NOT NULL,
-        crop INTEGER NOT NULL,
-        hectares REAL NOT NULL,
-        status INTEGER NOT NULL DEFAULT 0,
-        last_activity_date TEXT,
-        block_count INTEGER NOT NULL DEFAULT 0,
-        crops_json TEXT,
-        boundary_geojson TEXT,
-        centroid_lat REAL,
-        centroid_lng REAL,
-        created_at TEXT NOT NULL DEFAULT (datetime('now'))
-      )
-    ''');
+  static Future<void> _createBlocksTable(Database db) => db.execute('''
+    CREATE TABLE blocks (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      crop INTEGER NOT NULL,
+      hectares REAL NOT NULL,
+      status INTEGER NOT NULL DEFAULT 0,
+      last_activity_date TEXT,
+      tree_count INTEGER,
+      crops_json TEXT,
+      boundary_geojson TEXT,
+      centroid_lat REAL,
+      centroid_lng REAL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  ''');
 
-    await db.execute('''
-      CREATE TABLE blocks (
-        id TEXT PRIMARY KEY,
-        section_id TEXT NOT NULL,
-        name TEXT NOT NULL,
-        hectares REAL NOT NULL,
-        tree_count INTEGER,
-        FOREIGN KEY (section_id) REFERENCES sections(id)
-      )
-    ''');
+  static Future<void> _createActivityLogsTable(Database db, [String table = 'activity_logs']) => db.execute('''
+    CREATE TABLE $table (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT NOT NULL,
+      block_id TEXT NOT NULL,
+      block_name TEXT NOT NULL,
+      activity_type INTEGER NOT NULL,
+      date TEXT NOT NULL,
+      notes TEXT DEFAULT '',
+      supervisor_id TEXT NOT NULL,
+      supervisor_name TEXT NOT NULL,
+      labour_cost REAL NOT NULL DEFAULT 0,
+      input_cost REAL NOT NULL DEFAULT 0,
+      sync_status INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL,
+      synced_at TEXT
+    )
+  ''');
+
+  // Offline outbox for GPS corner-capture sessions. `id` is the client
+  // operation id (uuid.v4, minted once) — mirrors activity_logs' pattern of
+  // local-write-first + best-effort POST-on-reconnect.
+  static Future<void> _createBoundarySubmissionsTable(Database db, [String table = 'boundary_submissions']) => db.execute('''
+    CREATE TABLE $table (
+      id TEXT PRIMARY KEY,
+      block_id TEXT NOT NULL,
+      farm_id TEXT NOT NULL,
+      points_json TEXT NOT NULL,
+      sync_status INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL,
+      synced_at TEXT
+    )
+  ''');
+
+  static Future<void> _createKvCacheTable(Database db) => db.execute('''
+    CREATE TABLE IF NOT EXISTS kv_cache (
+      key TEXT PRIMARY KEY,
+      json TEXT NOT NULL
+    )
+  ''');
+
+  static Future<void> _createActivityIndexes(Database db) async {
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_activities_farm ON activity_logs(farm_id)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_activities_block ON activity_logs(block_id)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_activities_sync ON activity_logs(sync_status)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_activities_date ON activity_logs(date)');
+  }
+
+  static Future<void> _createBoundaryIndexes(Database db) async {
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_boundary_farm ON boundary_submissions(farm_id)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_boundary_block ON boundary_submissions(block_id)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_boundary_sync ON boundary_submissions(sync_status)');
+  }
+
+  static Future<void> _onCreate(Database db, int version) async {
+    await _createBlocksTable(db);
 
     await db.execute('''
       CREATE TABLE workers (
@@ -71,26 +122,7 @@ class DatabaseService {
       )
     ''');
 
-    await db.execute('''
-      CREATE TABLE activity_logs (
-        id TEXT PRIMARY KEY,
-        farm_id TEXT NOT NULL,
-        section_id TEXT NOT NULL,
-        section_name TEXT NOT NULL,
-        block_id TEXT NOT NULL,
-        block_name TEXT NOT NULL,
-        activity_type INTEGER NOT NULL,
-        date TEXT NOT NULL,
-        notes TEXT DEFAULT '',
-        supervisor_id TEXT NOT NULL,
-        supervisor_name TEXT NOT NULL,
-        labour_cost REAL NOT NULL DEFAULT 0,
-        input_cost REAL NOT NULL DEFAULT 0,
-        sync_status INTEGER NOT NULL DEFAULT 1,
-        created_at TEXT NOT NULL,
-        synced_at TEXT
-      )
-    ''');
+    await _createActivityLogsTable(db);
 
     await db.execute('''
       CREATE TABLE activity_workers (
@@ -108,6 +140,7 @@ class DatabaseService {
       CREATE TABLE activity_inputs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         activity_id TEXT NOT NULL,
+        inventory_item_id TEXT,
         item TEXT NOT NULL,
         quantity REAL NOT NULL,
         unit TEXT NOT NULL,
@@ -115,31 +148,16 @@ class DatabaseService {
       )
     ''');
 
-    // Offline outbox for GPS corner-capture sessions. `id` is the client
-    // operation id (uuid.v4, minted once) — mirrors activity_logs' pattern of
-    // local-write-first + best-effort POST-on-reconnect.
-    await db.execute('''
-      CREATE TABLE boundary_submissions (
-        id TEXT PRIMARY KEY,
-        section_id TEXT NOT NULL,
-        farm_id TEXT NOT NULL,
-        points_json TEXT NOT NULL,
-        sync_status INTEGER NOT NULL DEFAULT 1,
-        created_at TEXT NOT NULL,
-        synced_at TEXT
-      )
-    ''');
+    await _createKvCacheTable(db);
+    await _createBoundarySubmissionsTable(db);
 
-    // Indexes for common queries
-    await db.execute('CREATE INDEX idx_activities_farm ON activity_logs(farm_id)');
-    await db.execute('CREATE INDEX idx_activities_section ON activity_logs(section_id)');
-    await db.execute('CREATE INDEX idx_activities_sync ON activity_logs(sync_status)');
-    await db.execute('CREATE INDEX idx_activities_date ON activity_logs(date)');
-    await db.execute('CREATE INDEX idx_boundary_farm ON boundary_submissions(farm_id)');
-    await db.execute('CREATE INDEX idx_boundary_section ON boundary_submissions(section_id)');
-    await db.execute('CREATE INDEX idx_boundary_sync ON boundary_submissions(sync_status)');
+    await _createActivityIndexes(db);
+    await _createBoundaryIndexes(db);
   }
 
+  // Upgrade steps run inside sqflite's upgrade transaction, so a failure part-way
+  // rolls the whole step back. Each step uses the table/column names as they
+  // were at that version — don't rename identifiers inside older steps.
   static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('ALTER TABLE sections ADD COLUMN crops_json TEXT');
@@ -162,70 +180,77 @@ class DatabaseService {
       await db.execute('CREATE INDEX IF NOT EXISTS idx_boundary_section ON boundary_submissions(section_id)');
       await db.execute('CREATE INDEX IF NOT EXISTS idx_boundary_sync ON boundary_submissions(sync_status)');
     }
-  }
 
-  // ── SECTIONS ──
+    if (oldVersion < 3) {
+      // Old sub-section blocks (incl. the synthesized "Whole Section" placeholders) go away.
+      await db.execute('DROP TABLE IF EXISTS blocks');
 
-  static Future<List<Section>> getSections(String farmId) async {
-    final db = await database;
-    final rows = await db.query('sections', where: 'farm_id = ?', whereArgs: [farmId]);
-    return rows.map(Section.fromMap).toList();
-  }
+      // sections → blocks. Rebuilt rather than renamed so block_count can be
+      // dropped and tree_count added without relying on ALTER TABLE DROP COLUMN.
+      await _createBlocksTable(db);
+      await db.execute('''
+        INSERT INTO blocks (id, farm_id, name, crop, hectares, status, last_activity_date,
+                            crops_json, boundary_geojson, centroid_lat, centroid_lng, created_at)
+        SELECT id, farm_id, name, crop, hectares, status, last_activity_date,
+               crops_json, boundary_geojson, centroid_lat, centroid_lng, created_at
+        FROM sections
+      ''');
+      await db.execute('DROP TABLE sections');
 
-  static Future<void> upsertSection(Section section) async {
-    final db = await database;
-    await db.insert('sections', section.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
-  }
+      // activity_logs: the section becomes the block; the old block columns are dropped.
+      // Pending (unsynced) rows are carried over so nothing in the outbox is lost.
+      await _createActivityLogsTable(db, 'activity_logs_v3');
+      await db.execute('''
+        INSERT INTO activity_logs_v3 (id, farm_id, block_id, block_name, activity_type, date, notes,
+                                      supervisor_id, supervisor_name, labour_cost, input_cost,
+                                      sync_status, created_at, synced_at)
+        SELECT id, farm_id, section_id, section_name, activity_type, date, notes,
+               supervisor_id, supervisor_name, labour_cost, input_cost,
+               sync_status, created_at, synced_at
+        FROM activity_logs
+      ''');
+      await db.execute('DROP TABLE activity_logs');
+      await db.execute('ALTER TABLE activity_logs_v3 RENAME TO activity_logs');
+      await _createActivityIndexes(db);
 
-  static Future<void> updateSectionStatus(String id, SectionStatus status, String lastActivity) async {
-    final db = await database;
-    await db.update(
-      'sections',
-      {'status': status.index, 'last_activity_date': lastActivity},
-      where: 'id = ?', whereArgs: [id],
-    );
+      // boundary_submissions: section_id → block_id.
+      await _createBoundarySubmissionsTable(db, 'boundary_submissions_v3');
+      await db.execute('''
+        INSERT INTO boundary_submissions_v3 (id, block_id, farm_id, points_json, sync_status, created_at, synced_at)
+        SELECT id, section_id, farm_id, points_json, sync_status, created_at, synced_at
+        FROM boundary_submissions
+      ''');
+      await db.execute('DROP TABLE boundary_submissions');
+      await db.execute('ALTER TABLE boundary_submissions_v3 RENAME TO boundary_submissions');
+      await _createBoundaryIndexes(db);
+    }
+
+    if (oldVersion < 4) {
+      await db.execute('ALTER TABLE activity_inputs ADD COLUMN inventory_item_id TEXT');
+      await _createKvCacheTable(db);
+    }
   }
 
   // ── BLOCKS ──
 
-  static Future<List<Block>> getBlocks(String sectionId) async {
+  static Future<List<Block>> getBlocks(String farmId) async {
     final db = await database;
-    final rows = await db.query('blocks', where: 'section_id = ?', whereArgs: [sectionId]);
-    return rows.map((m) => Block(
-      id: m['id'] as String,
-      sectionId: m['section_id'] as String,
-      name: m['name'] as String,
-      hectares: (m['hectares'] as num).toDouble(),
-      treeCount: m['tree_count'] as int?,
-    )).toList();
+    final rows = await db.query('blocks', where: 'farm_id = ?', whereArgs: [farmId]);
+    return rows.map(Block.fromMap).toList();
   }
 
-  /// Upserts a real block returned by the backend (`BlockDto`).
-  static Future<void> upsertBlockFromApi(Map<String, dynamic> json) async {
+  static Future<void> upsertBlock(Block block) async {
     final db = await database;
-    final block = Block.fromApiJson(json);
-    await db.insert('blocks', {
-      'id': block.id, 'section_id': block.sectionId,
-      'name': block.name, 'hectares': block.hectares,
-      'tree_count': block.treeCount,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert('blocks', block.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  /// The API has no concept of "no blocks yet" beyond an empty list, but the
-  /// existing Log Activity flow requires selecting a block. Since block
-  /// management isn't part of this phase's backend integration, synthesize a
-  /// single whole-section placeholder block so activity logging keeps working
-  /// for sections that don't have real blocks defined yet.
-  static Future<void> ensureDefaultBlock(String sectionId, double hectares) async {
-    final existing = await getBlocks(sectionId);
-    if (existing.isNotEmpty) return;
+  static Future<void> updateBlockStatus(String id, BlockStatus status, String lastActivity) async {
     final db = await database;
-    await db.insert('blocks', {
-      'id': '${sectionId}_default',
-      'section_id': sectionId,
-      'name': 'Whole Section',
-      'hectares': hectares,
-    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    await db.update(
+      'blocks',
+      {'status': status.index, 'last_activity_date': lastActivity},
+      where: 'id = ?', whereArgs: [id],
+    );
   }
 
   // ── WORKERS ──
@@ -267,12 +292,38 @@ class DatabaseService {
         });
       }
 
-      // Update section last activity
+      // Update block last activity
       await txn.update(
-        'sections',
-        {'last_activity_date': 'Today', 'status': SectionStatus.active.index},
-        where: 'id = ?', whereArgs: [log.sectionId],
+        'blocks',
+        {'last_activity_date': 'Today', 'status': BlockStatus.active.index},
+        where: 'id = ?', whereArgs: [log.blockId],
       );
+    });
+  }
+
+  /// Replaces this farm's already-synced activities with the server's list. Pending and failed
+  /// rows are kept: they are still waiting to reach the server (a synced local copy is replaced
+  /// because the server issues its own id when it saves the activity).
+  static Future<void> replaceSyncedActivities(String farmId, List<ActivityLog> logs) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      final old = await txn.query('activity_logs',
+          columns: ['id'], where: 'farm_id = ? AND sync_status = ?', whereArgs: [farmId, SyncStatus.synced.index]);
+      for (final r in old) {
+        final id = r['id'] as String;
+        await txn.delete('activity_workers', where: 'activity_id = ?', whereArgs: [id]);
+        await txn.delete('activity_inputs', where: 'activity_id = ?', whereArgs: [id]);
+        await txn.delete('activity_logs', where: 'id = ?', whereArgs: [id]);
+      }
+      for (final log in logs) {
+        await txn.insert('activity_logs', log.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+        for (final w in log.workers) {
+          await txn.insert('activity_workers', {'activity_id': log.id, ...w.toMap()});
+        }
+        for (final inp in log.inputs) {
+          await txn.insert('activity_inputs', {'activity_id': log.id, ...inp.toMap()});
+        }
+      }
     });
   }
 
@@ -294,8 +345,6 @@ class DatabaseService {
       activities.add(ActivityLog(
         id: id,
         farmId: row['farm_id'] as String,
-        sectionId: row['section_id'] as String,
-        sectionName: row['section_name'] as String,
         blockId: row['block_id'] as String,
         blockName: row['block_name'] as String,
         activityType: ActivityType.values[row['activity_type'] as int],
@@ -347,6 +396,65 @@ class DatabaseService {
   static Future<List<Map<String, dynamic>>> getPendingRows(String table, {required String farmId}) async {
     final db = await database;
     return db.query(table, where: 'farm_id = ? AND sync_status = ?', whereArgs: [farmId, SyncStatus.pending.index]);
+  }
+
+  /// The server rejected this row for good (e.g. not enough stock) — stop retrying it.
+  static Future<void> markRowFailed(String table, String id) async {
+    final db = await database;
+    await db.update(table, {'sync_status': SyncStatus.failed.index}, where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ── WORKERS (from the server; replaces the old local seed data) ──
+
+  /// Replaces this farm's cached workers with the server's list.
+  static Future<void> replaceWorkers(String farmId, List<Worker> workers) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('workers', where: 'farm_id = ?', whereArgs: [farmId]);
+      for (final w in workers) {
+        await txn.insert('workers', w.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    });
+  }
+
+  // ── OFFLINE CACHE (stock list, out-on-the-farm list) ──
+
+  static Future<void> saveCache(String key, Object json) async {
+    final db = await database;
+    await db.insert('kv_cache', {'key': key, 'json': jsonEncode(json)}, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  static Future<List<Map<String, dynamic>>> readCacheList(String key) async {
+    final db = await database;
+    final rows = await db.query('kv_cache', where: 'key = ?', whereArgs: [key]);
+    if (rows.isEmpty) return [];
+    try {
+      return (jsonDecode(rows.first['json'] as String) as List).cast<Map<String, dynamic>>();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  // ── SYNC PAYLOAD ──
+
+  /// Builds the `LogActivityRequest` body for a pending `activity_logs` row. The local row is
+  /// shaped for SQLite (snake_case, split tables); the API wants camelCase with workers and
+  /// inputs inlined, and enums as ordinals.
+  static Future<Map<String, dynamic>> buildActivityPayload(Map<String, dynamic> row) async {
+    final db = await database;
+    final id = row['id'];
+    final workers = await db.query('activity_workers', where: 'activity_id = ?', whereArgs: [id]);
+    final inputs = await db.query('activity_inputs', where: 'activity_id = ?', whereArgs: [id]);
+    return {
+      'date': row['date'],
+      'blockId': row['block_id'],
+      'activityType': row['activity_type'],
+      'notes': (row['notes'] as String?)?.isEmpty ?? true ? null : row['notes'],
+      'supervisorId': row['supervisor_id'],
+      'createdOffline': true,
+      'workers': workers.map((w) => {'workerId': w['worker_id'], 'hoursWorked': w['hours_worked']}).toList(),
+      'inputs': inputs.map((i) => {'inventoryItemId': i['inventory_item_id'], 'quantity': i['quantity']}).toList(),
+    };
   }
 
   static Future<void> markRowSynced(String table, String id) async {

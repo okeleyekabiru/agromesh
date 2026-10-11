@@ -24,6 +24,16 @@ public class User : BaseEntity
         Role = UserRole.Admin,
     };
 
+    /// <summary>A staff account added by an existing user to their own company.</summary>
+    public static User CreateStaff(string fullName, string email, string passwordHash, string companyId, UserRole role) => new()
+    {
+        FullName = fullName,
+        Email = email.Trim().ToLowerInvariant(),
+        PasswordHash = passwordHash,
+        CompanyId = companyId,
+        Role = role,
+    };
+
     public void AssignCompany(string companyId)
     {
         CompanyId = companyId;

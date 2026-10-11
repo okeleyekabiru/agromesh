@@ -1,19 +1,20 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type {
-  Farm, Section, Block, Worker, WorkerRole, ActivityLog, Transaction,
-  InventoryItem, InventoryCategory, ChemicalProduct, UpcomingTask, LowStockAlert, WeatherWidget, DashboardData,
+  Farm, Block, Worker, WorkerRole, ActivityLog, Transaction,
+  InventoryItem, OutstandingStock, InventoryCategory, ChemicalProduct, UpcomingTask, LowStockAlert, WeatherWidget, DashboardData,
   AuthUser, AuthResponse, FeatureFlag, FarmSummary, State,
   BoundarySubmissionResult, PickStockResponse, StockAdjustmentRequest,
-  Supplier, Order, CreateOrderLineItemRequest
+  Supplier, Order, CreateOrderLineItemRequest, Report
 } from '@/types'
 import {
-  farmApi, sectionApi, activityApi, transactionApi,
+  farmApi, blockApi, activityApi, transactionApi,
   workerApi, workerRoleApi, inventoryApi, inventoryCategoryApi, inventoryAdjustmentsApi, chemicalApi,
-  authApi, featuresApi, referenceApi, supplierApi, orderApi,
+  authApi, featuresApi, referenceApi, supplierApi, orderApi, reportApi,
   setFarmId
 } from '@/services/api'
 import { normalizeBlobError } from '@/utils/http'
+import { normalizeActivity, normalizeTask, normalizeBlock } from '@/utils/enums'
 
 const ACTIVE_FARM_KEY = 'agro_active_farm_id'
 
@@ -21,12 +22,13 @@ export const useAgroStore = defineStore('agro', () => {
 
   // ── STATE ──
   const farm = ref<Farm | null>(null)
-  const sections = ref<Section[]>([])
+  const blocks = ref<Block[]>([])
   const workers = ref<Worker[]>([])
   const workerRoles = ref<WorkerRole[]>([])
   const activities = ref<ActivityLog[]>([])
   const transactions = ref<Transaction[]>([])
   const inventoryItems = ref<InventoryItem[]>([])
+  const outstandingStock = ref<OutstandingStock[]>([])
   const inventoryCategories = ref<InventoryCategory[]>([])
   const pendingAdjustments = ref<StockAdjustmentRequest[]>([])
   const suppliers = ref<Supplier[]>([])
@@ -56,10 +58,10 @@ export const useAgroStore = defineStore('agro', () => {
   // ── REFERENCE DATA ──
   const states = ref<State[]>([])
 
-  // ── SETUP WIZARD (Sections Setup → Review & Confirm handoff) ──
-  // Real, server-confirmed sections added during this wizard session — used to drive the
+  // ── SETUP WIZARD (Blocks Setup → Review & Confirm handoff) ──
+  // Real, server-confirmed blocks added during this wizard session — used to drive the
   // Review & Confirm summary.
-  const wizardSections = ref<Section[]>([])
+  const wizardBlocks = ref<Block[]>([])
 
   // ── COMPUTED ──
   const isAuthenticated = computed(() => !!token.value)
@@ -120,7 +122,7 @@ export const useAgroStore = defineStore('agro', () => {
     setActiveFarm(farmId)
     farm.value = null
     dashboard.value = null
-    sections.value = []
+    blocks.value = []
     await fetchFarm()
     await fetchFeatures(farmId)
   }
@@ -162,39 +164,30 @@ export const useAgroStore = defineStore('agro', () => {
   }
 
   async function submitBoundaryPoints(
-    sectionId: string,
+    blockId: string,
     body: { operationId: string; points: { lat: number; lng: number }[]; confirmImplausibleGeometry?: boolean }
   ): Promise<BoundarySubmissionResult> {
-    const res = await sectionApi.submitBoundaryPoints(sectionId, body)
+    const res = await blockApi.submitBoundaryPoints(blockId, body)
     return res.data
   }
 
   async function uploadBoundaryFile(
-    sectionId: string,
+    blockId: string,
     body: { operationId: string; fileName: string; content: string; confirmImplausibleGeometry?: boolean }
   ): Promise<BoundarySubmissionResult> {
-    const res = await sectionApi.uploadBoundaryFile(sectionId, body)
+    const res = await blockApi.uploadBoundaryFile(blockId, body)
     return res.data
   }
 
-  async function updateSection(
-    sectionId: string,
-    body: { name: string; crops: { cropType: number; percentage: number }[]; areaValue: number }
-  ): Promise<Section> {
-    const res = await sectionApi.update(sectionId, body)
-    const idx = sections.value.findIndex(s => s.id === sectionId)
-    if (idx !== -1) sections.value[idx] = res.data
-    return res.data
-  }
-
-  async function createBlock(
-    sectionId: string,
-    body: { name: string; areaValue: number; treeCount: number | null }
+  async function updateBlock(
+    blockId: string,
+    body: { name: string; crops: { cropType: number; percentage: number }[]; areaValue: number; treeCount: number | null; plantingYear?: number | null }
   ): Promise<Block> {
-    const res = await sectionApi.createBlock(sectionId, body)
-    const idx = sections.value.findIndex(s => s.id === sectionId)
-    if (idx !== -1) sections.value[idx].blocks.push(res.data)
-    return res.data
+    const res = await blockApi.update(blockId, body)
+    const block = normalizeBlock(res.data)
+    const idx = blocks.value.findIndex(s => s.id === blockId)
+    if (idx !== -1) blocks.value[idx] = block
+    return block
   }
 
   // ── ACTIONS ──
@@ -207,12 +200,18 @@ export const useAgroStore = defineStore('agro', () => {
     }
   }
 
+  async function fetchReport(year: number, month: number): Promise<Report> {
+    const res = await reportApi.get(year, month)
+    return res.data as Report
+  }
+
   async function fetchDashboard() {
     try {
       loading.value = true
       const res = await farmApi.getDashboard()
       dashboard.value = res.data
-      upcomingTasks.value = res.data.upcomingTasks ?? []
+      upcomingTasks.value = (res.data.upcomingTasks ?? []).map(normalizeTask)
+      dashboard.value!.upcomingTasks = upcomingTasks.value
       lowStockAlerts.value = res.data.lowStockAlerts ?? []
     } catch (e) {
       console.error('Dashboard fetch failed', e)
@@ -228,22 +227,31 @@ export const useAgroStore = defineStore('agro', () => {
     } catch { /* non-critical */ }
   }
 
-  async function fetchSections() {
+  async function fetchBlocks() {
     try {
-      const res = await sectionApi.getAll()
-      sections.value = res.data
+      const res = await blockApi.getAll()
+      blocks.value = (res.data as Block[]).map(normalizeBlock)
     } catch (e) {
-      error.value = 'Failed to load sections'
+      error.value = 'Failed to load blocks'
     }
   }
 
   async function fetchActivities(page = 1) {
     try {
       const res = await activityApi.getAll(page)
-      activities.value = res.data.items
+      activities.value = (res.data.items as ActivityLog[]).map(normalizeActivity)
     } catch (e) {
       error.value = 'Failed to load activities'
     }
+  }
+
+  /** Fetches a single activity (normalised) and refreshes its copy in the cached list. */
+  async function fetchActivity(id: string): Promise<ActivityLog> {
+    const res = await activityApi.get(id)
+    const activity = normalizeActivity(res.data)
+    const idx = activities.value.findIndex(a => a.id === id)
+    if (idx !== -1) activities.value[idx] = activity
+    return activity
   }
 
   async function fetchTransactions(page = 1, pendingReview?: boolean) {
@@ -262,6 +270,23 @@ export const useAgroStore = defineStore('agro', () => {
     } catch (e) {
       error.value = 'Failed to load workers'
     }
+  }
+
+  async function addWorker(body: { name: string; initials: string; workerRoleId: string; type: number }) {
+    const res = await workerApi.add(body)
+    workers.value.push(res.data)
+    return res.data as Worker
+  }
+
+  async function createWorkerRole(body: { title: string; defaultType: number; payRate: number; payFrequency: number }) {
+    const res = await workerRoleApi.create(body)
+    workerRoles.value.push(res.data)
+    return res.data as WorkerRole
+  }
+
+  async function updateWorkerRoleRate(roleId: string, payRate: number, payFrequency: number) {
+    await workerRoleApi.updateRate(roleId, payRate, payFrequency)
+    await Promise.all([fetchWorkerRoles(), fetchWorkers()]) // workers carry their band's rate
   }
 
   async function fetchWorkerRoles() {
@@ -315,10 +340,16 @@ export const useAgroStore = defineStore('agro', () => {
 
   async function logActivity(body: unknown) {
     const res = await activityApi.log(body)
-    const { activity, lowStockWarnings } = res.data
+    const activity = normalizeActivity(res.data.activity)
     activities.value.unshift(activity)
-    if (lowStockWarnings?.length) {
-      await fetchInventory() // refresh stock levels
+    // Every input consumes stock (picked-out stock first, then the store) — refresh both views.
+    await Promise.all([fetchInventory(), fetchOutstandingStock()])
+    // A weeding or spraying changes when the next weeding / spraying is due: recalculate both views.
+    await Promise.all([fetchBlocks(), fetchDashboard()])
+    // The AI review runs in the background after a weeding / spraying is saved: pick it up shortly after.
+    const type = (res.data.activity as { activityType: unknown }).activityType
+    if (type === 'Weeding' || type === 'Spraying' || type === 0 || type === 1) {
+      setTimeout(() => { fetchBlocks(); fetchDashboard() }, 8000)
     }
     return res.data
   }
@@ -368,16 +399,38 @@ export const useAgroStore = defineStore('agro', () => {
    * round-trip.
    *
    * Who performed the pick is no longer client-supplied (see the removed `workerId` field) — the
-   * backend auto-attributes the authenticated caller (ICurrentUserAccessor). `sectionId`/`blockId`
-   * record which farm area the stock is going to instead.
+   * backend auto-attributes the authenticated caller (ICurrentUserAccessor). `blockId`
+   * records which farm area the stock is going to instead.
    */
   async function pickStock(
     itemId: string,
-    body: { quantity: number; sectionId: string; blockId?: string | null; purpose: string }
+    body: { quantity: number; blockId: string; purpose: string }
   ): Promise<PickStockResponse> {
     const res = await inventoryApi.pick(itemId, body)
-    await fetchInventory()
+    await Promise.all([fetchInventory(), fetchOutstandingStock()])
     return res.data as PickStockResponse
+  }
+
+  async function fetchOutstandingStock() {
+    try {
+      const res = await inventoryApi.getOutstanding()
+      outstandingStock.value = res.data
+    } catch {
+      /* non-fatal: the card just stays empty */
+    }
+  }
+
+  /** Hands leftover stock back to the store; throws on a rejected quantity so the caller can show why. */
+  /** Prices an item already on hand; optionally fills in past activities that had no input cost. */
+  async function setItemPricing(itemId: string, body: { packSize: number; packLabel: string; pricePerPack: number; backfillActivities: boolean }) {
+    const res = await inventoryApi.setPricing(itemId, body)
+    await fetchInventory()
+    return res.data as { item: InventoryItem; activitiesUpdated: number }
+  }
+
+  async function returnStock(itemId: string, body: { quantity: number; blockId: string; notes?: string | null }) {
+    await inventoryApi.returnStock(itemId, body)
+    await Promise.all([fetchInventory(), fetchOutstandingStock()])
   }
 
   /** Creates a brand-new item or restocks an existing one — see CreateInventoryItemRequest. */
@@ -389,6 +442,9 @@ export const useAgroStore = defineStore('agro', () => {
     reorderThreshold: number
     chemicalProductId?: string | null
     existingItemId?: string | null
+    packSize?: number | null
+    packLabel?: string | null
+    pricePerPack?: number | null
   }): Promise<InventoryItem> {
     const res = await inventoryApi.create(body)
     await fetchInventory()
@@ -596,27 +652,27 @@ export const useAgroStore = defineStore('agro', () => {
 
   return {
     // state
-    farm, sections, workers, workerRoles, activities, transactions,
+    farm, blocks, workers, workerRoles, activities, transactions,
     inventoryItems, inventoryCategories, pendingAdjustments, suppliers, orders, chemicals, upcomingTasks, lowStockAlerts, weather, dashboard,
     isOnline, lastSynced, loading, error, needsOnboarding,
     // auth state
     currentUser, token, enabledFeatures,
     // multi-farm state
-    companyId, farms, activeFarmId, states, wizardSections,
+    companyId, farms, activeFarmId, states, wizardBlocks,
     // computed
     isAuthenticated, pendingReviews, supervisors, lowStockCount, pendingAdjustmentsCount,
     activeFarmSummary, hasMultipleFarms,
     // actions
-    fetchFarm, fetchDashboard, fetchWeather, fetchSections, fetchActivities,
-    fetchTransactions, fetchWorkers, fetchWorkerRoles, fetchInventory, fetchInventoryCategories,
+    fetchFarm, fetchDashboard, fetchWeather, fetchBlocks, fetchActivities, fetchActivity,
+    fetchTransactions, fetchWorkers, addWorker, createWorkerRole, updateWorkerRoleRate, fetchWorkerRoles, fetchInventory, fetchInventoryCategories,
     createInventoryCategory, fetchChemicals,
-    logActivity, reviewTransaction, adjustStock, pickStock, addStockFromReceipt, addOrRestockInventoryItem,
+    fetchReport, logActivity, reviewTransaction, adjustStock, pickStock, setItemPricing, fetchOutstandingStock, returnStock, outstandingStock, addStockFromReceipt, addOrRestockInventoryItem,
     fetchPendingAdjustments, approveStockAdjustment, rejectStockAdjustment,
     fetchSuppliers, createSupplier, fetchOrders, createOrder, placeOrder, receiveOrder, downloadOrderInvoice,
     discoverFarm, updateFarmProfile, initDashboard,
     // multi-farm actions
     fetchFarms, switchFarm, addFarm, setActiveFarm, fetchStates, setFarmLocation,
-    completeFarmSetup, submitBoundaryPoints, uploadBoundaryFile, updateSection, createBlock,
+    completeFarmSetup, submitBoundaryPoints, uploadBoundaryFile, updateBlock,
     // auth actions
     login, register, logout, fetchFeatures, restoreSession,
   }

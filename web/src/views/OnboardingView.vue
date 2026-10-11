@@ -57,7 +57,7 @@
         <div v-if="statesError" class="gps-err-msg">{{ statesError }}</div>
         <div v-if="submitError" class="gps-err-msg">{{ submitError }}</div>
         <div class="hint-box">
-          Sections and farm boundaries are set up in the next step after this wizard.
+          Blocks and farm boundaries are set up in the next step after this wizard.
         </div>
       </div>
 
@@ -131,7 +131,7 @@
         <div style="display:flex;align-items:center;gap:12px;">
           <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--stone);">Step {{ step + 1 }} of {{ steps.length }}</span>
           <button class="btn btn-primary" @click="next" :disabled="!canProceed || saving">
-            {{ step === steps.length - 1 ? (saving ? 'Saving…' : 'Continue to Sections →') : 'Continue →' }}
+            {{ step === steps.length - 1 ? (saving ? 'Saving…' : 'Continue to Blocks →') : 'Continue →' }}
           </button>
         </div>
       </div>
@@ -178,7 +178,7 @@ async function loadStates() {
 // ── Worker roles ──
 // Backend enums serialize as raw integers (no JsonStringEnumConverter) — these string
 // labels are for the UI only; ordinal maps below convert at the API call boundary,
-// mirroring the CROP_ORDINAL pattern already used in SectionsSetupView.vue.
+// mirroring the CROP_ORDINAL pattern already used in BlocksSetupView.vue.
 type WorkerTypeLabel = 'Employee' | 'Contractor'
 type PayFrequencyLabel = 'Daily' | 'Weekly' | 'Monthly'
 
@@ -267,8 +267,8 @@ async function submit() {
       })
     }
 
-    // Go to sections setup wizard
-    router.push({ name: 'sections-setup' })
+    // Go to blocks setup wizard
+    router.push({ name: 'blocks-setup' })
   } catch (e: unknown) {
     console.error('Onboarding failed', e)
     submitError.value = extractErrorMessage(e, 'Could not save your farm setup. Please try again.')

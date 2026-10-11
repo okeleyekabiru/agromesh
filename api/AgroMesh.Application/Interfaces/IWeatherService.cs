@@ -7,7 +7,9 @@ public record DailyWeather(
     double PrecipitationMm,
     double TempMaxC,
     double TempMinC,
-    double WindspeedKmh);
+    double WindspeedKmh,
+    int WeatherCode = 0,
+    int RainChance = 0);
 
 public record WeatherForecast(
     double Latitude,
@@ -19,6 +21,14 @@ public record WeatherForecast(
     string CurrentSeason,
     DateTime? NextDryWindowStart,
     DateTime? NextDryWindowEnd);
+
+public record PlaceCoordinates(double Lat, double Lng);
+
+/// <summary>Finds coordinates for a place name (e.g. a local government area within a state).</summary>
+public interface IGeocodingService
+{
+    Task<PlaceCoordinates?> FindPlaceAsync(string? place, string? region, CancellationToken ct = default);
+}
 
 public interface IWeatherService
 {

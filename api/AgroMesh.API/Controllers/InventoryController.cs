@@ -32,6 +32,11 @@ public class InventoryController : ControllerBase
         return Created($"api/farms/{farmId}/inventory/{result.Id}", result);
     }
 
+    [HttpPut("{itemId}/pricing")]
+    [Authorize]
+    public async Task<IActionResult> SetPricing(string farmId, string itemId, [FromBody] SetItemPricingRequest request, CancellationToken ct) =>
+        Ok(await _mediator.Send(new SetItemPricingCommand(farmId, itemId, request), ct));
+
     [HttpGet("low-stock")]
     public async Task<IActionResult> GetLowStock(string farmId, CancellationToken ct)
     {
@@ -58,6 +63,18 @@ public class InventoryController : ControllerBase
         var result = await _mediator.Send(new AdjustInventoryStockCommand(farmId, itemId, request.NewQuantity, request.Notes), ct);
         return Created($"api/farms/{farmId}/inventory-adjustments/{result.Id}", result);
     }
+
+    // Stock picked out of the store that hasn't yet been used in an activity or returned.
+    [Authorize]
+    [HttpGet("outstanding")]
+    public async Task<IActionResult> GetOutstanding(string farmId, CancellationToken ct) =>
+        Ok(await _mediator.Send(new GetOutstandingStockQuery(farmId), ct));
+
+    // Leftover stock handed back to the store (e.g. carried 50 kg, used 38, returning 12).
+    [Authorize]
+    [HttpPost("{itemId}/return")]
+    public async Task<IActionResult> Return(string farmId, string itemId, [FromBody] ReturnStockRequest request, CancellationToken ct) =>
+        Ok(await _mediator.Send(new ReturnStockCommand(farmId, itemId, request), ct));
 
     // Requires [Authorize]: PickStockCommandHandler now auto-attributes the authenticated caller
     // (ICurrentUserAccessor.UserId) instead of trusting a client-chosen WorkerId — same reasoning

@@ -17,9 +17,7 @@ public class GetTransactionsQueryHandler : IRequestHandler<GetTransactionsQuery,
     {
         var (items, total) = await _transactionRepo.GetByFarmIdAsync(query.FarmId, query.Page, query.PageSize, query.PendingReview, ct);
 
-        var dtos = items.Select(t => new TransactionDto(
-            t.Id, t.FarmId, t.MonoId, t.Narration, t.Amount, t.Date, t.Category,
-            t.CropAllocation, t.Confidence, t.Source, t.ReviewedByUser, t.ReviewNotes)).ToList();
+        var dtos = items.Select(Mapping.TransactionMapping.ToDto).ToList();
 
         return new PagedResult<TransactionDto>(dtos, total, query.Page, query.PageSize);
     }

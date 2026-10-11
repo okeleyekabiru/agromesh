@@ -34,3 +34,6 @@ public record AuthResponse(
     AuthUserDto User,
     string? CompanyId,
     List<FarmSummaryDto> Farms);
+
+/// <summary><see cref="Role"/> is "FarmManager" or "Supervisor" (string, like <see cref="AuthUserDto.Role"/>).</summary>
+public record AddStaffUserRequest(string FullName, string Email, string Password, string Role);

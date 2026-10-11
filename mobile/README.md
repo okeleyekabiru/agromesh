@@ -47,7 +47,7 @@ lib/
     │   └── dashboard_screen.dart
     ├── activity/
     │   └── log_activity_screen.dart  # 3-step log flow
-    ├── sections_screen.dart
+    ├── blocks_screen.dart
     └── workers_screen.dart
 ```
 

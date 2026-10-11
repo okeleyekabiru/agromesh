@@ -10,7 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'package:agromesh_mobile/screens/auth/login_screen.dart';
-import 'package:agromesh_mobile/screens/sections/boundary_capture_screen.dart';
+import 'package:agromesh_mobile/screens/blocks/boundary_capture_screen.dart';
 import 'package:agromesh_mobile/stores/auth_store.dart';
 import 'package:agromesh_mobile/theme/app_theme.dart';
 import 'package:agromesh_mobile/widgets/widgets.dart';
@@ -35,8 +35,9 @@ void main() {
 
   testWidgets('BoundaryCaptureScreen starts with zero corners marked and Finish Boundary disabled', (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
-        home: BoundaryCaptureScreen(sectionId: 'sec_1', sectionName: 'Test Section'),
+      MaterialApp(
+        theme: AgroTheme.theme,
+        home: BoundaryCaptureScreen(blockId: 'sec_1', blockName: 'Test Section'),
       ),
     );
 

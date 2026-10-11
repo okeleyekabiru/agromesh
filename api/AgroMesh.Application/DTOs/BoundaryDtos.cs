@@ -9,7 +9,7 @@ public record SubmitBoundaryPointsRequest(string OperationId, List<GeoPointInput
 public record UploadBoundaryFileRequest(string OperationId, string FileName, string Content, bool ConfirmImplausibleGeometry = false);
 
 public record BoundarySubmissionResultDto(
-    string SectionId,
+    string BlockId,
     string OperationId,
     BoundarySubmissionType SubmissionType,
     string ComputedGeoJson,

@@ -1,3 +1,3 @@
 namespace AgroMesh.Domain.Enums;
 
-public enum StockMovementType { In, Out, Adjustment }
+public enum StockMovementType { In, Out, Adjustment, Return }

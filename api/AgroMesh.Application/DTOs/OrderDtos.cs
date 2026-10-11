@@ -22,7 +22,12 @@ public record OrderDto(
     List<OrderLineItemDto> LineItems,
     decimal Total,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    int Number = 0,
+    string Reference = "",
+    bool IsPaid = false,
+    DateTime? PaidAt = null,
+    string? PaymentTransactionId = null);
 
 public record CreateOrderLineItemRequest(string InventoryItemId, decimal Quantity, decimal UnitPrice);
 

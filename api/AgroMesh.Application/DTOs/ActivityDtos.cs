@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using AgroMesh.Domain.Enums;
 
 namespace AgroMesh.Application.DTOs;
@@ -9,7 +10,6 @@ public record InputUsedDto(string Item, double Quantity, string Unit);
 public record ActivityLogDto(
     string Id,
     string FarmId,
-    string SectionId,
     string BlockId,
     ActivityType ActivityType,
     DateTime Date,
@@ -30,12 +30,14 @@ public record LogActivityResponse(ActivityLogDto Activity, List<string> LowStock
 
 public record WorkerLogInput(string WorkerId, double HoursWorked);
 
-public record InputUsedRequest(string Item, double Quantity, string Unit);
+// Inputs must be real stock items: the item's name and unit are taken from stock, not typed in.
+public record InputUsedRequest(string InventoryItemId, double Quantity);
 
+// ActivityType accepts either its name ("Weeding") or its ordinal: the web form sends names, the
+// mobile app ordinals. Scoped to this property so every other DTO keeps the app-wide ordinal format.
 public record LogActivityRequest(
-    string SectionId,
     string BlockId,
-    ActivityType ActivityType,
+    [property: JsonConverter(typeof(JsonStringEnumConverter))] ActivityType ActivityType,
     DateTime Date,
     List<WorkerLogInput> Workers,
     List<InputUsedRequest> Inputs,

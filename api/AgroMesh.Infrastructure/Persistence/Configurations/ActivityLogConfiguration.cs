@@ -11,7 +11,6 @@ public class ActivityLogConfiguration : IEntityTypeConfiguration<ActivityLog>
     {
         builder.HasKey(a => a.Id);
         builder.Property(a => a.FarmId).IsRequired().HasMaxLength(50);
-        builder.Property(a => a.SectionId).IsRequired().HasMaxLength(50);
         builder.Property(a => a.BlockId).IsRequired().HasMaxLength(50);
         builder.Property(a => a.ActivityType).IsRequired();
         builder.Property(a => a.Date).IsRequired();
@@ -39,7 +38,6 @@ public class ActivityLogConfiguration : IEntityTypeConfiguration<ActivityLog>
                    v => System.Text.Json.JsonSerializer.Deserialize<List<InputUsed>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new());
 
         builder.HasIndex(a => new { a.FarmId, a.Date });
-        builder.HasIndex(a => a.SectionId);
         builder.HasIndex(a => a.BlockId);
     }
 }

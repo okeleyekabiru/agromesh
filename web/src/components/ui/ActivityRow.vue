@@ -1,5 +1,14 @@
 <template>
-  <div class="activity-row" :style="`--i: ${index ?? 0}`">
+  <div
+    class="activity-row"
+    :style="`--i: ${index ?? 0}`"
+    role="button"
+    tabindex="0"
+    :aria-label="`View ${activity.activityType} activity details`"
+    @click="showDetail = true"
+    @keydown.enter="showDetail = true"
+    @keydown.space.prevent="showDetail = true"
+  >
     <div class="act-icon" :style="{ background: iconBg }">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
@@ -9,7 +18,7 @@
     <div class="act-body">
       <div class="act-title">{{ activity.activityType }}</div>
       <div class="act-detail">
-        {{ sectionLabel }} · {{ activity.workers.length }} worker{{ activity.workers.length !== 1 ? 's' : '' }}
+        {{ blockLabel }} · {{ activity.workers.length }} worker{{ activity.workers.length !== 1 ? 's' : '' }}
         <span v-if="activity.inputs.length"> · {{ activity.inputs[0].quantity }}{{ activity.inputs[0].unit }} {{ activity.inputs[0].item }}</span>
         <span v-if="activity.chemicalProductName"> · {{ activity.chemicalProductName }}</span>
       </div>
@@ -18,16 +27,21 @@
       <div class="act-cost">₦{{ totalCost.toLocaleString() }}</div>
       <div class="act-time">{{ formatDate(activity.date) }}</div>
     </div>
+    <Teleport to="body">
+      <ActivityDetailModal v-if="showDetail" :activity="activity" @close="showDetail = false" />
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useAgroStore } from '@/stores/agro'
 import type { ActivityLog } from '@/types'
+import ActivityDetailModal from '@/components/modal/ActivityDetailModal.vue'
 
 const props = defineProps<{ activity: ActivityLog; index?: number }>()
 const store = useAgroStore()
+const showDetail = ref(false)
 
 const ICON_PATHS: Record<string, string> = {
   Weeding:               '<path d="M12 22V12M12 12C12 7 7 4 3 5c2 4 5 7 9 7z"/><path d="M12 12c0-5 5-8 9-7-2 4-5 7-9 7z"/>',
@@ -56,9 +70,9 @@ const iconBg     = computed(() => (ICON_STYLES[props.activity.activityType] ?? [
 const iconColor  = computed(() => (ICON_STYLES[props.activity.activityType] ?? ['', 'var(--stone)'])[1])
 const totalCost  = computed(() => (props.activity.labourCost ?? 0) + (props.activity.inputCost ?? 0))
 
-const sectionLabel = computed(() => {
-  const sec = store.sections.find(s => s.id === props.activity.sectionId)
-  return sec?.name ?? props.activity.sectionId
+const blockLabel = computed(() => {
+  const sec = store.blocks.find(s => s.id === props.activity.blockId)
+  return sec?.name ?? props.activity.blockId
 })
 
 function formatDate(iso: string) {
@@ -79,6 +93,8 @@ function formatDate(iso: string) {
 }
 .activity-row:last-child { border-bottom: none; }
 .activity-row:hover { background: var(--mist); }
+.activity-row { cursor: pointer; }
+.activity-row:focus-visible { outline: 2px solid var(--palm); outline-offset: -2px; }
 
 .act-icon {
   width: 30px;

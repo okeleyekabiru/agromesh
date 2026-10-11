@@ -1,7 +1,8 @@
 namespace AgroMesh.Domain.Enums;
 
 /// <summary>
-/// Minimal role gate — just enough to distinguish "can approve a stock adjustment" from "can't".
-/// Not a general permissions system: no invite flow, no multi-role hierarchy beyond these two.
+/// Admin: the company owner (created by registration). FarmManager: added by an Admin only.
+/// Supervisor: added by an Admin or a FarmManager. Member is the legacy/fail-closed default for a
+/// token whose role can't be determined — it can't be assigned to a new user.
 /// </summary>
-public enum UserRole { Admin, Member }
+public enum UserRole { Admin, Member, FarmManager, Supervisor }

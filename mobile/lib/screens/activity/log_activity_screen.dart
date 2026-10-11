@@ -18,7 +18,6 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
   final _formKey = GlobalKey<FormState>();
 
   // Form state
-  Section? _section;
   Block? _block;
   ActivityType? _activityType;
   final _notesCtrl = TextEditingController();
@@ -26,27 +25,38 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
   final List<InputUsed> _inputs = [];
   String? _supervisorId;
 
-  // Input builders
-  final _workerNameCtrl = TextEditingController();
-  WorkerType _workerType = WorkerType.employee;
-  final _inputItemCtrl = TextEditingController();
+  // Input builders — workers and inputs are picked from real data (the farm's workers and
+  // its stock), never typed in: the server only accepts known worker ids and stock items.
+  String? _workerPickId;
+  final _hoursCtrl = TextEditingController(text: '8');
+  String? _stockItemId;
   final _inputQtyCtrl = TextEditingController();
-  String _inputUnit = 'kg';
+  String? _inputError;
 
   bool _isSubmitting = false;
 
   @override
   void dispose() {
     _notesCtrl.dispose();
-    _workerNameCtrl.dispose();
-    _inputItemCtrl.dispose();
+    _hoursCtrl.dispose();
     _inputQtyCtrl.dispose();
     super.dispose();
   }
 
   bool get _canProceed {
-    if (_step == 0) return _section != null && _block != null;
+    if (_step == 0) return _block != null;
     if (_step == 1) return _activityType != null;
+    if (_supervisorId == null) return false;
+    // Who did the work and what it used are both required.
+    if (_workers.isEmpty || _inputs.isEmpty) return false;
+    // Spraying / pest control must use a chemical from stock.
+    if (_activityType == ActivityType.spraying || _activityType == ActivityType.pestControl) {
+      final store = context.read<AppStore>();
+      return _inputs.any((inp) {
+        final m = store.stockItems.where((s) => s.id == inp.inventoryItemId);
+        return m.isNotEmpty && m.first.categoryName.trim().toLowerCase() == 'chemical';
+      });
+    }
     return true;
   }
 
@@ -55,14 +65,9 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
     setState(() => _isSubmitting = true);
 
     final store = context.read<AppStore>();
-    final supervisor = store.workers.firstWhere(
-      (w) => w.id == _supervisorId,
-      orElse: () => store.workers.first,
-    );
+    final supervisor = store.workers.firstWhere((w) => w.id == _supervisorId);
 
     await store.logActivity(
-      sectionId: _section!.id,
-      sectionName: _section!.name,
       blockId: _block!.id,
       blockName: _block!.name,
       activityType: _activityType!,
@@ -77,12 +82,19 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${_activityType!.label} logged for ${_section!.name}'),
+          content: Text('${_activityType!.label} logged for ${_block!.name}'),
           backgroundColor: AgroColors.leaf,
           behavior: SnackBarBehavior.floating,
         ),
       );
     }
+  }
+
+  /// Usable stock for this block after what's already been added in this form.
+  double _availableFor(AppStore store, String itemId) {
+    final used = _inputs.where((i) => i.inventoryItemId == itemId).fold(0.0, (sum, i) => sum + i.quantity);
+    final left = store.availableFor(itemId, _block?.id ?? '') - used;
+    return left < 0 ? 0 : left;
   }
 
   @override
@@ -110,52 +122,82 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
                 padding: const EdgeInsets.all(16),
                 child: [
                   _StepLocation(
-                    sections: store.sections,
-                    blocks: _section != null ? store.blocksForSection(_section!.id) : [],
-                    selectedSection: _section,
+                    blocks: store.blocks,
                     selectedBlock: _block,
-                    onSectionChanged: (s) => setState(() { _section = s; _block = null; }),
-                    onBlockChanged:   (b) => setState(() => _block = b),
+                    onBlockChanged: (s) => setState(() => _block = s),
                   ),
                   _StepActivity(
                     selected: _activityType,
                     notes: _notesCtrl,
-                    onSelected: (t) => setState(() => _activityType = t),
+                    onSelected: (t) => setState(() {
+                      _activityType = t;
+                      // Drop picked inputs that don't fit the new activity.
+                      _inputs.removeWhere((inp) {
+                        final m = store.stockItems.where((s) => s.id == inp.inventoryItemId);
+                        return m.isNotEmpty && !m.first.usableIn(t);
+                      });
+                      final sel = store.stockItems.where((s) => s.id == _stockItemId);
+                      if (sel.isNotEmpty && !sel.first.usableIn(t)) _stockItemId = null;
+                    }),
                   ),
                   _StepWorkersInputs(
                     workers: _workers,
                     inputs: _inputs,
-                    supervisors: store.supervisors,
+                    availableWorkers: store.workers.where((w) => w.active).toList(),
+                    stockItems: store.stockItems.where((i) => _activityType == null || i.usableIn(_activityType!)).toList(),
+                    block: _block,
+                    // Falls back to everyone when no worker's role mentions "supervisor".
+                    supervisors: store.supervisors.isNotEmpty ? store.supervisors : store.workers,
                     selectedSupervisorId: _supervisorId,
-                    workerNameCtrl: _workerNameCtrl,
-                    workerType: _workerType,
-                    inputItemCtrl: _inputItemCtrl,
+                    workerPickId: _workerPickId,
+                    hoursCtrl: _hoursCtrl,
+                    stockItemId: _stockItemId,
                     inputQtyCtrl: _inputQtyCtrl,
-                    inputUnit: _inputUnit,
-                    onWorkerTypeChanged: (t) => setState(() => _workerType = t),
-                    onInputUnitChanged:  (u) => setState(() => _inputUnit = u),
+                    inputError: _inputError,
+                    availableFor: (itemId) => _availableFor(store, itemId),
+                    pickedFor: (itemId) => store.pickedFor(itemId, _block?.id ?? ''),
+                    onWorkerPicked: (id) => setState(() => _workerPickId = id),
+                    onStockItemPicked: (id) => setState(() { _stockItemId = id; _inputError = null; }),
                     onSupervisorChanged: (id) => setState(() => _supervisorId = id),
                     onAddWorker: () {
-                      if (_workerNameCtrl.text.trim().isEmpty) return;
+                      final picked = store.workers.where((w) => w.id == _workerPickId);
+                      final hours = double.tryParse(_hoursCtrl.text);
+                      if (picked.isEmpty || hours == null || hours <= 0) return;
+                      final w = picked.first;
+                      if (_workers.any((x) => x.workerId == w.id)) return;
                       setState(() {
                         _workers.add(WorkerLog(
-                          workerId: 'manual_${DateTime.now().millisecondsSinceEpoch}',
-                          workerName: _workerNameCtrl.text.trim(),
-                          workerType: _workerType,
-                          hoursWorked: 8,
+                          workerId: w.id,
+                          workerName: w.name,
+                          workerType: w.type,
+                          hoursWorked: hours,
                         ));
-                        _workerNameCtrl.clear();
+                        _workerPickId = null;
+                        _hoursCtrl.text = '8';
                       });
                     },
                     onRemoveWorker: (i) => setState(() => _workers.removeAt(i)),
                     onAddInput: () {
-                      final item = _inputItemCtrl.text.trim();
+                      final matches = store.stockItems.where((i) => i.id == _stockItemId);
                       final qty = double.tryParse(_inputQtyCtrl.text);
-                      if (item.isEmpty || qty == null) return;
+                      if (matches.isEmpty || qty == null || qty <= 0) return;
+                      final item = matches.first;
+                      final available = _availableFor(store, item.id);
+                      if (qty > available) {
+                        setState(() => _inputError =
+                            'Only ${formatQty(available)} ${item.unit} of ${item.name} available.');
+                        return;
+                      }
                       setState(() {
-                        _inputs.add(InputUsed(item: item, quantity: qty, unit: _inputUnit));
-                        _inputItemCtrl.clear();
+                        _inputs.add(InputUsed(
+                          inventoryItemId: item.id,
+                          item: item.name,
+                          quantity: qty,
+                          unit: item.unit,
+                        ));
+                        _stockItemId = null;
                         _inputQtyCtrl.clear();
+                        _inputError = null;
                       });
                     },
                     onRemoveInput: (i) => setState(() => _inputs.removeAt(i)),
@@ -241,17 +283,14 @@ class _Stepper extends StatelessWidget {
 
 // ── STEP 1: LOCATION ──
 class _StepLocation extends StatelessWidget {
-  final List<Section> sections;
   final List<Block> blocks;
-  final Section? selectedSection;
   final Block? selectedBlock;
-  final void Function(Section?) onSectionChanged;
   final void Function(Block?) onBlockChanged;
 
   const _StepLocation({
-    required this.sections, required this.blocks,
-    required this.selectedSection, required this.selectedBlock,
-    required this.onSectionChanged, required this.onBlockChanged,
+    required this.blocks,
+    required this.selectedBlock,
+    required this.onBlockChanged,
   });
 
   @override
@@ -259,36 +298,23 @@ class _StepLocation extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const MonoLabel('Section'),
-        const SizedBox(height: 6),
-        DropdownButtonFormField<Section>(
-          value: selectedSection,
-          hint: Text('Choose section...', style: GoogleFonts.inter(fontSize: 13, color: AgroColors.stone)),
-          decoration: const InputDecoration(),
-          items: sections.map((s) => DropdownMenuItem(
-            value: s,
-            child: Text('${s.name} — ${s.crop.label}', style: GoogleFonts.inter(fontSize: 13)),
-          )).toList(),
-          onChanged: onSectionChanged,
-        ),
-        if (selectedSection != null) ...[
-          const SizedBox(height: 4),
-          Text('${selectedSection!.hectares.toStringAsFixed(0)} ha · ${selectedSection!.blockCount} blocks · Last activity: ${selectedSection!.lastActivityDate ?? 'Never'}',
-            style: GoogleFonts.jetBrainsMono(fontSize: 9, color: AgroColors.stone)),
-        ],
-        const SizedBox(height: 16),
         const MonoLabel('Block'),
         const SizedBox(height: 6),
         DropdownButtonFormField<Block>(
           value: selectedBlock,
           hint: Text('Choose block...', style: GoogleFonts.inter(fontSize: 13, color: AgroColors.stone)),
           decoration: const InputDecoration(),
-          items: blocks.map((b) => DropdownMenuItem(
-            value: b,
-            child: Text('${b.name} (${b.hectares.toStringAsFixed(0)} ha)', style: GoogleFonts.inter(fontSize: 13)),
+          items: blocks.map((s) => DropdownMenuItem(
+            value: s,
+            child: Text('${s.name} — ${s.crop.label}', style: GoogleFonts.inter(fontSize: 13)),
           )).toList(),
-          onChanged: selectedSection != null ? onBlockChanged : null,
+          onChanged: onBlockChanged,
         ),
+        if (selectedBlock != null) ...[
+          const SizedBox(height: 4),
+          Text('${selectedBlock!.hectares.toStringAsFixed(0)} ha · Last activity: ${selectedBlock!.lastActivityDate ?? 'Never'}',
+            style: GoogleFonts.jetBrainsMono(fontSize: 9, color: AgroColors.stone)),
+        ],
       ],
     );
   }
@@ -372,15 +398,20 @@ class _StepActivity extends StatelessWidget {
 class _StepWorkersInputs extends StatelessWidget {
   final List<WorkerLog> workers;
   final List<InputUsed> inputs;
+  final List<Worker> availableWorkers;
+  final List<StockItem> stockItems;
+  final Block? block;
   final List<Worker> supervisors;
   final String? selectedSupervisorId;
-  final TextEditingController workerNameCtrl;
-  final WorkerType workerType;
-  final TextEditingController inputItemCtrl;
+  final String? workerPickId;
+  final TextEditingController hoursCtrl;
+  final String? stockItemId;
   final TextEditingController inputQtyCtrl;
-  final String inputUnit;
-  final void Function(WorkerType) onWorkerTypeChanged;
-  final void Function(String) onInputUnitChanged;
+  final String? inputError;
+  final double Function(String itemId) availableFor;
+  final double Function(String itemId) pickedFor;
+  final void Function(String?) onWorkerPicked;
+  final void Function(String?) onStockItemPicked;
   final void Function(String?) onSupervisorChanged;
   final VoidCallback onAddWorker;
   final void Function(int) onRemoveWorker;
@@ -388,17 +419,21 @@ class _StepWorkersInputs extends StatelessWidget {
   final void Function(int) onRemoveInput;
 
   const _StepWorkersInputs({
-    required this.workers, required this.inputs, required this.supervisors,
-    required this.selectedSupervisorId, required this.workerNameCtrl,
-    required this.workerType, required this.inputItemCtrl, required this.inputQtyCtrl,
-    required this.inputUnit, required this.onWorkerTypeChanged,
-    required this.onInputUnitChanged, required this.onSupervisorChanged,
-    required this.onAddWorker, required this.onRemoveWorker,
-    required this.onAddInput, required this.onRemoveInput,
+    required this.workers, required this.inputs, required this.availableWorkers,
+    required this.stockItems, required this.block, required this.supervisors,
+    required this.selectedSupervisorId, required this.workerPickId,
+    required this.hoursCtrl, required this.stockItemId, required this.inputQtyCtrl,
+    required this.inputError, required this.availableFor, required this.pickedFor,
+    required this.onWorkerPicked, required this.onStockItemPicked,
+    required this.onSupervisorChanged, required this.onAddWorker,
+    required this.onRemoveWorker, required this.onAddInput, required this.onRemoveInput,
   });
 
   @override
   Widget build(BuildContext context) {
+    final selectedStock = stockItems.where((i) => i.id == stockItemId);
+    final stock = selectedStock.isEmpty ? null : selectedStock.first;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -409,47 +444,61 @@ class _StepWorkersInputs extends StatelessWidget {
           Wrap(
             spacing: 6, runSpacing: 6,
             children: workers.asMap().entries.map((e) =>
-              WorkerChip(label: '${e.value.workerName} (${e.value.workerType.label})', onRemove: () => onRemoveWorker(e.key))
+              WorkerChip(
+                label: '${e.value.workerName} · ${formatQty(e.value.hoursWorked)}h',
+                onRemove: () => onRemoveWorker(e.key),
+              )
             ).toList(),
           ),
           const SizedBox(height: 10),
         ],
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: workerNameCtrl,
-                style: GoogleFonts.inter(fontSize: 13, color: AgroColors.forest),
-                decoration: InputDecoration(
-                  hintText: 'Worker name...',
-                  hintStyle: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone),
+        if (availableWorkers.isEmpty)
+          Text('No workers yet — they sync from the farm when you are online.',
+            style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone))
+        else
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: workerPickId,
+                  isExpanded: true,
+                  hint: Text('Choose worker...', style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
+                  decoration: const InputDecoration(),
+                  items: availableWorkers.map((w) => DropdownMenuItem(
+                    value: w.id,
+                    child: Text('${w.name} (${w.type.label})',
+                      style: GoogleFonts.inter(fontSize: 13), overflow: TextOverflow.ellipsis),
+                  )).toList(),
+                  onChanged: onWorkerPicked,
                 ),
-                onSubmitted: (_) => onAddWorker(),
               ),
-            ),
-            const SizedBox(width: 8),
-            DropdownButton<WorkerType>(
-              value: workerType,
-              underline: const SizedBox(),
-              style: GoogleFonts.inter(fontSize: 12, color: AgroColors.forest),
-              items: WorkerType.values.map((t) =>
-                DropdownMenuItem(value: t, child: Text(t.label))).toList(),
-              onChanged: (t) => t != null ? onWorkerTypeChanged(t) : null,
-            ),
-            const SizedBox(width: 8),
-            ElevatedButton(
-              onPressed: onAddWorker,
-              style: ElevatedButton.styleFrom(minimumSize: const Size(48, 42), padding: EdgeInsets.zero),
-              child: const Icon(Icons.add, size: 18),
-            ),
-          ],
-        ),
+              const SizedBox(width: 6),
+              SizedBox(
+                width: 56,
+                child: TextField(
+                  controller: hoursCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  style: GoogleFonts.inter(fontSize: 13, color: AgroColors.forest),
+                  decoration: InputDecoration(
+                    hintText: 'Hrs',
+                    hintStyle: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              ElevatedButton(
+                onPressed: onAddWorker,
+                style: ElevatedButton.styleFrom(minimumSize: const Size(48, 42), padding: EdgeInsets.zero),
+                child: const Icon(Icons.add, size: 18),
+              ),
+            ],
+          ),
 
         const SizedBox(height: 20),
         const Divider(color: AgroColors.fog),
         const SizedBox(height: 12),
 
-        // Inputs
+        // Inputs — chosen from stock; using them reduces stock
         MonoLabel('Inputs Used (${inputs.length} added)'),
         const SizedBox(height: 8),
         if (inputs.isNotEmpty) ...[
@@ -461,48 +510,65 @@ class _StepWorkersInputs extends StatelessWidget {
           ),
           const SizedBox(height: 10),
         ],
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: inputItemCtrl,
-                style: GoogleFonts.inter(fontSize: 13, color: AgroColors.forest),
-                decoration: InputDecoration(
-                  hintText: 'e.g. NPK Fertilizer',
-                  hintStyle: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone),
+        if (stockItems.isEmpty)
+          Text('No suitable stock for this activity — add stock on the web app, then sync.',
+            style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone))
+        else ...[
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: stockItemId,
+                  isExpanded: true,
+                  hint: Text('Choose from stock...', style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
+                  decoration: const InputDecoration(),
+                  items: stockItems.map((i) {
+                    final left = availableFor(i.id);
+                    return DropdownMenuItem(
+                      value: i.id,
+                      enabled: left > 0,
+                      child: Text('${i.name} — ${formatQty(left)} ${i.unit}',
+                        style: GoogleFonts.inter(fontSize: 13, color: left > 0 ? AgroColors.forest : AgroColors.stone),
+                        overflow: TextOverflow.ellipsis),
+                    );
+                  }).toList(),
+                  onChanged: onStockItemPicked,
                 ),
               ),
-            ),
-            const SizedBox(width: 6),
-            SizedBox(
-              width: 60,
-              child: TextField(
-                controller: inputQtyCtrl,
-                keyboardType: TextInputType.number,
-                style: GoogleFonts.inter(fontSize: 13, color: AgroColors.forest),
-                decoration: InputDecoration(
-                  hintText: 'Qty',
-                  hintStyle: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone),
+              const SizedBox(width: 6),
+              SizedBox(
+                width: 72,
+                child: TextField(
+                  controller: inputQtyCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  style: GoogleFonts.inter(fontSize: 13, color: AgroColors.forest),
+                  decoration: InputDecoration(
+                    hintText: stock == null ? 'Qty' : stock.unit,
+                    hintStyle: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 6),
-            DropdownButton<String>(
-              value: inputUnit,
-              underline: const SizedBox(),
-              style: GoogleFonts.inter(fontSize: 12, color: AgroColors.forest),
-              items: ['kg', 'L', 'bags', 'units', 'ha'].map((u) =>
-                DropdownMenuItem(value: u, child: Text(u))).toList(),
-              onChanged: (u) => u != null ? onInputUnitChanged(u) : null,
-            ),
-            const SizedBox(width: 6),
-            ElevatedButton(
-              onPressed: onAddInput,
-              style: ElevatedButton.styleFrom(minimumSize: const Size(48, 42), padding: EdgeInsets.zero),
-              child: const Icon(Icons.add, size: 18),
+              const SizedBox(width: 6),
+              ElevatedButton(
+                onPressed: onAddInput,
+                style: ElevatedButton.styleFrom(minimumSize: const Size(48, 42), padding: EdgeInsets.zero),
+                child: const Icon(Icons.add, size: 18),
+              ),
+            ],
+          ),
+          if (stock != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              '${formatQty(pickedFor(stock.id))} ${stock.unit} picked out for ${block?.name ?? 'this block'} · '
+              '${formatQty(stock.currentStock)} ${stock.unit} in the store. Picked stock is used first.',
+              style: GoogleFonts.jetBrainsMono(fontSize: 9, color: AgroColors.stone),
             ),
           ],
-        ),
+          if (inputError != null) ...[
+            const SizedBox(height: 6),
+            Text(inputError!, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.alert)),
+          ],
+        ],
 
         const SizedBox(height: 20),
         const Divider(color: AgroColors.fog),

@@ -11,7 +11,7 @@ public class CropAllocationRuleConfiguration : IEntityTypeConfiguration<CropAllo
         builder.HasKey(r => r.Id);
         builder.Property(r => r.FarmId).IsRequired().HasMaxLength(50);
         builder.Property(r => r.Category).IsRequired();
-        builder.Property(r => r.SectionId).HasMaxLength(50);
+        builder.Property(r => r.BlockId).HasMaxLength(50);
 
         builder.Property(r => r.Allocation)
                .HasColumnType("jsonb")

@@ -8,7 +8,6 @@ namespace AgroMesh.Domain.Entities;
 public class ActivityLog : BaseEntity
 {
     public string FarmId { get; private set; } = string.Empty;
-    public string SectionId { get; private set; } = string.Empty;
     public string BlockId { get; private set; } = string.Empty;
     public ActivityType ActivityType { get; private set; }
     public DateTime Date { get; private set; }
@@ -35,7 +34,6 @@ public class ActivityLog : BaseEntity
 
     public static ActivityLog Create(
         string farmId,
-        string sectionId,
         string blockId,
         ActivityType activityType,
         DateTime date,
@@ -55,10 +53,9 @@ public class ActivityLog : BaseEntity
         var log = new ActivityLog
         {
             FarmId = farmId,
-            SectionId = sectionId,
             BlockId = blockId,
             ActivityType = activityType,
-            Date = date,
+            Date = ToUtc(date),
             Workers = workers ?? [],
             Inputs = inputs ?? [],
             SupervisorId = supervisorId,
@@ -76,6 +73,15 @@ public class ActivityLog : BaseEntity
 
         return log;
     }
+
+    // Npgsql only writes UTC to 'timestamp with time zone'. A date-only value from the web form
+    // arrives as Kind=Unspecified, so treat it as a UTC calendar date rather than failing the save.
+    private static DateTime ToUtc(DateTime value) => value.Kind switch
+    {
+        DateTimeKind.Utc => value,
+        DateTimeKind.Local => value.ToUniversalTime(),
+        _ => DateTime.SpecifyKind(value, DateTimeKind.Utc),
+    };
 
     public void MarkSynced()
     {

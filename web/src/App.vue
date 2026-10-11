@@ -11,7 +11,7 @@
       </RouterView>
     </AppShell>
     <LogActivityModal v-if="showModal" @close="showModal = false" />
-    <SectionModal v-if="showAddSectionModal" mode="create" @close="showAddSectionModal = false" @saved="onSectionSaved" />
+    <BlockModal v-if="showAddBlockModal" mode="create" @close="showAddBlockModal = false" @saved="onBlockSaved" />
   </template>
 </template>
 
@@ -21,17 +21,17 @@ import { useRoute } from 'vue-router'
 import { useAgroStore } from '@/stores/agro'
 import AppShell from '@/components/layout/AppShell.vue'
 import LogActivityModal from '@/components/modal/LogActivityModal.vue'
-import SectionModal from '@/components/modal/SectionModal.vue'
+import BlockModal from '@/components/modal/BlockModal.vue'
 
 const route = useRoute()
 const store = useAgroStore()
 const showModal = ref(false)
 provide('showModal', showModal)
 
-const showAddSectionModal = ref(false)
-provide('showAddSectionModal', showAddSectionModal)
+const showAddBlockModal = ref(false)
+provide('showAddBlockModal', showAddBlockModal)
 
-function onSectionSaved() {
-  store.fetchSections()
+function onBlockSaved() {
+  store.fetchBlocks()
 }
 </script>

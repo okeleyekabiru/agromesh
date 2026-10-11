@@ -6,7 +6,7 @@
       action="Complete setup"
       @action="router.push({ name: 'onboarding' })"
     >
-      <strong>Your farm setup isn't finished.</strong> Add your location, sections and boundaries to unlock scheduling and reporting.
+      <strong>Your farm setup isn't finished.</strong> Add your location, blocks and boundaries to unlock scheduling and reporting.
     </AlertBanner>
     <AlertBanner
       v-if="store.pendingReviews > 0"
@@ -70,7 +70,7 @@
         <div class="kpi-sub-inv">
           Labour ₦{{ store.dashboard ? Math.round(store.dashboard.labourCostMtd / 1000).toLocaleString() : '—' }}K
           <span style="opacity:0.3;margin:0 4px;">·</span>
-          Inputs ₦{{ inputCostK }}K
+          Maintenance ₦{{ maintenanceCostK }}K
         </div>
       </div>
 
@@ -86,10 +86,10 @@
         </div>
       </div>
 
-      <!-- Sections -->
+      <!-- Blocks -->
       <div class="kpi-card-sm">
-        <div class="kpi-lbl">SECTIONS</div>
-        <div class="kpi-val">{{ store.sections.length || '—' }}</div>
+        <div class="kpi-lbl">BLOCKS</div>
+        <div class="kpi-val">{{ store.blocks.length || '—' }}</div>
         <div class="kpi-sub-mute">active farm areas</div>
       </div>
 
@@ -112,26 +112,13 @@
           <div class="card-label">6 MONTHS · ₦ THOUSANDS</div>
         </div>
         <div class="chart-area">
-          <svg viewBox="0 0 420 96" class="bar-svg" preserveAspectRatio="none">
-            <g v-for="(b, i) in spendBars" :key="i">
-              <rect
-                :x="i * 70 + 10"
-                :y="96 - b.h"
-                :width="50"
-                :height="b.h"
-                rx="5"
-                :fill="b.current ? 'var(--leaf)' : 'var(--fog)'"
-              />
-              <text
-                :x="i * 70 + 35"
-                :y="96 - b.h - 6"
-                text-anchor="middle"
-                font-family="'JetBrains Mono', monospace"
-                font-size="8"
-                :fill="b.current ? 'var(--leaf)' : 'var(--stone)'"
-              >{{ b.valLabel }}</text>
-            </g>
-          </svg>
+          <div class="bars">
+            <div v-for="b in spendBars" :key="b.label" class="bar-col">
+              <div class="bar-tip">{{ b.label }} · ₦{{ b.full }}</div>
+              <div class="bar-val" :class="{ cur: b.current }">{{ b.valLabel }}</div>
+              <div class="bar-fill" :class="{ cur: b.current }" :style="{ height: b.h + 'px' }" />
+            </div>
+          </div>
           <div class="bar-months">
             <span
               v-for="b in spendBars"
@@ -157,21 +144,21 @@
         </div>
         <div
           v-for="task in store.upcomingTasks.slice(0, 5)"
-          :key="`${task.sectionId}-${task.activityType}`"
+          :key="`${task.blockId}-${task.activityType}`"
           class="task-row"
         >
           <div class="task-bar" :class="urgencyClass(task.daysUntilDue)" />
           <div class="task-body">
             <div class="task-head">
-              <span class="task-sec">{{ task.sectionName }}</span>
+              <span class="task-sec">{{ task.blockName }}</span>
               <span class="task-arr">→</span>
-              <span class="task-type">{{ task.activityType }}</span>
+              <span class="task-type">{{ activityTypeLabel(task.activityType) }}</span>
               <span class="task-badge" :class="urgencyClass(task.daysUntilDue)">
                 {{ task.daysUntilDue < 0 ? 'OVERDUE' : `in ${task.daysUntilDue}d` }}
               </span>
               <span v-if="!task.weatherDataUsed" class="no-wx" title="Prediction made without live weather data">⚡</span>
             </div>
-            <div class="task-reason">{{ task.reasoning }}</div>
+            <div class="task-reason" :title="(task.factors ?? []).join(' | ')">{{ task.reasoning }}<template v-if="task.recommendedSprayDate"> · 💧 spray {{ formatDate(task.recommendedSprayDate) }}</template></div>
             <div v-if="task.recommendedChemical" class="task-chem">
               {{ task.recommendedChemical }}
               <span v-if="task.stockAvailable !== null" class="task-stock">
@@ -183,14 +170,14 @@
       </div>
     </div>
 
-    <!-- ── Weather + Section Costs + Crop P&L ── -->
+    <!-- ── Weather + Block Costs + Crop P&L ── -->
     <div class="grid-3">
       <!-- Weather widget -->
       <div class="card wx-card">
         <template v-if="store.weather">
           <div class="wx-head">
             <div>
-              <div class="card-label">WEATHER · FARM</div>
+              <div class="card-label">WEATHER · {{ (store.weather.location || 'FARM').toUpperCase() }}</div>
               <div class="season-chip">{{ store.weather.currentSeason }}</div>
             </div>
             <div class="wx-temp">{{ store.weather.todayTempMaxC }}<span class="wx-deg">°C</span></div>
@@ -227,18 +214,18 @@
         </div>
       </div>
 
-      <!-- Section Costs MTD -->
+      <!-- Block Costs MTD -->
       <div class="card">
         <div class="card-header">
-          <div class="card-title">Section Costs · MTD</div>
-          <div class="card-label">BY SECTION</div>
+          <div class="card-title">Block Costs · MTD</div>
+          <div class="card-label">BY BLOCK</div>
         </div>
-        <template v-if="sectionRows.length">
+        <template v-if="blockRows.length">
           <div
-            v-for="s in sectionRows"
+            v-for="s in blockRows"
             :key="s.id"
             class="sec-row"
-            @click="router.push('/sections')"
+            @click="router.push('/blocks')"
           >
             <div class="sec-name">{{ s.name }}</div>
             <div class="sec-track">
@@ -247,7 +234,7 @@
             <div class="sec-amt">₦{{ s.amount }}</div>
           </div>
         </template>
-        <div v-else class="empty-sm">No section data yet</div>
+        <div v-else class="empty-sm">No block data yet</div>
       </div>
 
       <!-- Crop P&L with SVG donut -->
@@ -316,6 +303,27 @@
       </div>
     </div>
 
+    <!-- ── 7-day forecast ── -->
+    <div v-if="store.weather?.forecast?.length" class="card forecast-card">
+      <div class="card-header">
+        <div class="card-title">7-Day Forecast</div>
+        <div class="card-label">{{ store.weather.location || 'YOUR FARM' }} · 💧 = GOOD SPRAY DAY</div>
+      </div>
+      <div class="forecast-row">
+        <div v-for="(d, i) in store.weather.forecast" :key="d.date" class="fc-day" :class="{ today: i === 0 }">
+          <div class="fc-name">{{ i === 0 ? 'Today' : dayName(d.date) }}</div>
+          <div class="fc-date">{{ shortDate(d.date) }}</div>
+          <div class="fc-icon" :title="weatherText(d.weatherCode)">{{ weatherIcon(d.weatherCode) }}</div>
+          <div class="fc-temp">{{ Math.round(d.tempMaxC) }}° <span>{{ Math.round(d.tempMinC) }}°</span></div>
+          <div class="fc-rain">
+            {{ d.precipitationMm.toFixed(1) }} mm<template v-if="d.rainChance"> · {{ d.rainChance }}%</template>
+          </div>
+          <div class="fc-wind">{{ Math.round(d.windKmh) }} km/h</div>
+          <div class="fc-spray" :class="{ ok: d.goodSprayDay }">{{ d.goodSprayDay ? '💧 Spray' : '—' }}</div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Recent Activities + Transactions ── -->
     <div class="grid-2">
       <div class="card">
@@ -342,6 +350,7 @@
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAgroStore } from '@/stores/agro'
+import { activityTypeLabel } from '@/utils/enums'
 import AlertBanner from '@/components/ui/AlertBanner.vue'
 import ActivityRow from '@/components/ui/ActivityRow.vue'
 import TransactionRow from '@/components/ui/TransactionRow.vue'
@@ -354,9 +363,9 @@ const todayLabel = new Date().toLocaleDateString('en-NG', {
 })
 
 // ── Spend breakdown ───────────────────────────────────────────────────────
-const inputCostK = computed(() => {
+const maintenanceCostK = computed(() => {
   if (!store.dashboard) return '—'
-  return Math.round((store.dashboard.totalSpendMtd - store.dashboard.labourCostMtd) / 1000).toLocaleString()
+  return Math.round(store.dashboard.maintenanceCostMtd / 1000).toLocaleString()
 })
 
 // ── KPI sparkline (7-point simulated trend, normalized to 0–26 px height) ─
@@ -371,43 +380,65 @@ const sparkEnd = computed(() => ({
 
 // ── 6-month bar chart ─────────────────────────────────────────────────────
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-const BAR_MULTIPLIERS = [0.68, 0.72, 0.85, 0.91, 0.79, 1.0]
+const BAR_MAX_PX = 62
 
+// Real monthly spend from the API (bank spend + logged activity costs); hover a bar for the amount.
 const spendBars = computed(() => {
-  const curMonth = new Date().getMonth()
-  const mtd = store.dashboard?.totalSpendMtd ?? 0
-  return BAR_MULTIPLIERS.map((m, i) => {
-    const mIdx = (curMonth - 5 + i + 12) % 12
-    const raw = mtd * m
-    return {
-      label: MONTHS[mIdx],
-      valLabel: raw > 0 ? `${Math.round(raw / 1000)}K` : '—',
-      h: mtd > 0 ? Math.max(8, Math.round(m * 76)) : 12 + i * 8,
-      current: i === 5
-    }
-  })
+  const months = store.dashboard?.spendTrend ?? []
+  const max = Math.max(...months.map(m => m.amount), 0)
+  return months.map((m, i) => ({
+    label: MONTHS[m.month - 1],
+    full: Math.round(m.amount).toLocaleString('en-NG'),
+    valLabel: m.amount > 0 ? `${Math.round(m.amount / 1000)}K` : '—',
+    h: m.amount > 0 && max > 0 ? Math.max(4, Math.round((m.amount / max) * BAR_MAX_PX)) : 2,
+    current: i === months.length - 1
+  }))
 })
 
-// ── Section cost rows ─────────────────────────────────────────────────────
-const FB_AMOUNTS = ['612,400', '284,500', '340,000', '98,200', '168,000', '62,400']
-const FB_PCTS    = [100, 46, 56, 16, 28, 10]
+// ── Forecast helpers ──────────────────────────────────────────────────────
+function dayName(iso: string) {
+  return new Date(iso).toLocaleDateString('en-NG', { weekday: 'short' })
+}
+function shortDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })
+}
+// WMO weather codes as returned by Open-Meteo.
+function weatherIcon(code: number) {
+  if (code === 0) return '☀️'
+  if (code <= 2) return '🌤️'
+  if (code === 3) return '☁️'
+  if (code === 45 || code === 48) return '🌫️'
+  if (code >= 51 && code <= 57) return '🌦️'
+  if (code >= 61 && code <= 67) return '🌧️'
+  if (code >= 80 && code <= 82) return '🌦️'
+  if (code >= 95) return '⛈️'
+  return '🌥️'
+}
+function weatherText(code: number) {
+  if (code === 0) return 'Clear'
+  if (code <= 2) return 'Partly cloudy'
+  if (code === 3) return 'Overcast'
+  if (code === 45 || code === 48) return 'Fog'
+  if (code >= 51 && code <= 57) return 'Drizzle'
+  if (code >= 61 && code <= 67) return 'Rain'
+  if (code >= 80 && code <= 82) return 'Showers'
+  if (code >= 95) return 'Thunderstorm'
+  return 'Cloudy'
+}
 
-const sectionRows = computed(() => {
-  if (store.dashboard?.sectionsMtd?.length) {
-    const max = Math.max(...store.dashboard.sectionsMtd.map(s => s.cost), 1)
-    return store.dashboard.sectionsMtd.map(s => ({
-      id: s.sectionId,
-      name: s.sectionName,
+// ── Block cost rows ─────────────────────────────────────────────────────
+const blockRows = computed(() => {
+  if (store.dashboard?.blocksMtd?.length) {
+    const max = Math.max(...store.dashboard.blocksMtd.map(s => s.cost), 1)
+    return store.dashboard.blocksMtd.map(s => ({
+      id: s.blockId,
+      name: s.blockName,
       amount: s.cost.toLocaleString('en-NG'),
       pct: Math.round((s.cost / max) * 100)
     }))
   }
-  return store.sections.map((s, i) => ({
-    id: s.id,
-    name: s.name,
-    amount: FB_AMOUNTS[i] ?? '0',
-    pct: FB_PCTS[i] ?? 0
-  }))
+  // Dashboard not loaded yet: list the blocks with no cost rather than showing made-up figures.
+  return store.blocks.map(s => ({ id: s.id, name: s.name, amount: '0', pct: 0 }))
 })
 
 // ── Crop donut ────────────────────────────────────────────────────────────
@@ -415,18 +446,18 @@ const CIRC = 2 * Math.PI * 30   // r=30 → ≈188.5
 
 const palmArc = computed(() => {
   const pnl = store.dashboard?.cropPnl
-  if (!pnl?.length) return CIRC * 0.65
+  if (!pnl?.length) return 0
   const total = pnl.reduce((s, c) => s + c.cost, 0)
   const palm = pnl.find(c => /palm/i.test(c.cropType))
-  return total > 0 && palm ? (palm.cost / total) * CIRC : CIRC * 0.65
+  return total > 0 && palm ? (palm.cost / total) * CIRC : 0
 })
 
 const maizeArc = computed(() => {
   const pnl = store.dashboard?.cropPnl
-  if (!pnl?.length) return CIRC * 0.35
+  if (!pnl?.length) return 0
   const total = pnl.reduce((s, c) => s + c.cost, 0)
   const maize = pnl.find(c => /maize|corn/i.test(c.cropType))
-  return total > 0 && maize ? (maize.cost / total) * CIRC : CIRC * 0.35
+  return total > 0 && maize ? (maize.cost / total) * CIRC : 0
 })
 
 const CROP_PALETTE: Record<string, string> = {
@@ -451,7 +482,7 @@ function urgencyClass(days: number) {
 onMounted(async () => {
   await Promise.all([
     store.initDashboard(),
-    store.fetchSections(),
+    store.fetchBlocks(),
     store.fetchActivities(),
     store.fetchTransactions()
   ])
@@ -569,6 +600,21 @@ onMounted(async () => {
 .kpi-sub-mute { font-size: 11px; color: var(--stone); }
 .kpi-sub-warn { font-size: 11px; color: #B8780A; }
 
+/* ── Forecast ─────────────────────────────────────────────────────────── */
+.forecast-card { margin-bottom: 16px; }
+.forecast-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; padding: 12px 16px 16px; }
+.fc-day { text-align: center; padding: 10px 4px; border-radius: 10px; border: 1px solid var(--fog); }
+.fc-day.today { border-color: var(--palm); background: rgba(45,122,79,0.06); }
+.fc-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 12px; color: var(--forest); }
+.fc-date { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--stone); }
+.fc-icon { font-size: 26px; margin: 6px 0 2px; }
+.fc-temp { font-weight: 600; font-size: 13px; color: var(--forest); }
+.fc-temp span { color: var(--stone); font-weight: 400; }
+.fc-rain, .fc-wind { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--stone); margin-top: 2px; }
+.fc-spray { margin-top: 6px; font-size: 10px; color: var(--fog); }
+.fc-spray.ok { color: var(--leaf); font-weight: 600; }
+@media (max-width: 900px) { .forecast-row { grid-template-columns: repeat(4, 1fr); } }
+
 /* ── Spend Trend + Tasks ──────────────────────────────────────────────── */
 .grid-trend {
   display: grid;
@@ -579,7 +625,20 @@ onMounted(async () => {
 }
 
 .chart-area { padding: 8px 16px 14px; }
-.bar-svg { width: 100%; height: 96px; display: block; }
+.bars { display: flex; align-items: flex-end; justify-content: space-around; height: 96px; padding: 0 4px; }
+.bar-col { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+.bar-fill { width: 70%; border-radius: 5px; background: var(--fog); transition: filter .15s; }
+.bar-val { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--stone); margin-bottom: 4px; }
+.bar-val.cur { color: var(--leaf); }
+.bar-fill.cur { background: var(--leaf); }
+.bar-col:hover .bar-fill { filter: brightness(0.9); }
+.bar-tip {
+  position: absolute; bottom: calc(100% + 2px); left: 50%; transform: translateX(-50%);
+  background: var(--forest, #1a2e1a); color: #fff; padding: 3px 8px; border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; white-space: nowrap;
+  opacity: 0; pointer-events: none; transition: opacity .12s; z-index: 5;
+}
+.bar-col:hover .bar-tip { opacity: 1; }
 .bar-months {
   display: flex;
   justify-content: space-around;
@@ -587,6 +646,7 @@ onMounted(async () => {
   font-size: 9px; color: var(--stone);
   margin-top: 6px; padding: 0 4px;
 }
+.bar-months span { flex: 1; text-align: center; }
 .bar-month-cur { color: var(--leaf); font-weight: 600; }
 
 /* Tasks */
@@ -627,25 +687,27 @@ onMounted(async () => {
 .task-stock  { font-family: 'JetBrains Mono', monospace; font-size: 9px; }
 .no-wx       { font-size: 10px; cursor: help; opacity: 0.55; }
 
-/* ── 3-col: Weather + Sections + Crop P&L ────────────────────────────── */
+/* ── 3-col: Weather + Blocks + Crop P&L ────────────────────────────── */
 .grid-3 {
   display: grid;
-  grid-template-columns: 220px 1fr 260px;
+  grid-template-columns: 270px minmax(0, 1fr) 260px;
   gap: 16px;
   margin-bottom: 16px;
   align-items: start;
 }
 
 /* Weather */
-.wx-card { }
+.wx-card { min-width: 0; overflow: hidden; }
+.wx-card :deep(.card-label) { white-space: normal; overflow-wrap: anywhere; line-height: 1.4; }
 .wx-head {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  padding: 16px; border-bottom: 1px solid var(--fog);
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+  padding: 18px 18px 16px; border-bottom: 1px solid var(--fog);
 }
+.wx-head > div:first-child { min-width: 0; flex: 1; }
 .wx-temp {
   font-family: 'Syne', sans-serif;
   font-weight: 700; font-size: 36px;
-  color: var(--forest); line-height: 1;
+  color: var(--forest); line-height: 1; flex-shrink: 0;
 }
 .wx-deg { font-size: 16px; font-weight: 500; }
 .season-chip {
@@ -658,7 +720,7 @@ onMounted(async () => {
   border-radius: 20px; color: var(--leaf);
   margin-top: 5px;
 }
-.wx-stats { display: flex; gap: 16px; padding: 12px 16px; border-bottom: 1px solid var(--fog); }
+.wx-stats { display: flex; flex-wrap: wrap; gap: 12px 20px; padding: 14px 18px; border-bottom: 1px solid var(--fog); }
 .wx-stat-val {
   font-family: 'JetBrains Mono', monospace;
   font-size: 15px; font-weight: 600; color: var(--forest);
@@ -666,13 +728,13 @@ onMounted(async () => {
 }
 .wx-spray {
   display: flex; align-items: center; gap: 8px;
-  margin: 12px;
+  margin: 14px 18px 18px;
   background: rgba(45,122,79,0.05);
   border: 1px solid rgba(45,122,79,0.13);
-  border-radius: 8px; padding: 8px 10px;
+  border-radius: 8px; padding: 10px 12px;
 }
 .wx-spray-lbl { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--stone); }
-.wx-spray-dates { font-size: 11px; font-weight: 600; color: var(--forest); margin-top: 1px; }
+.wx-spray-dates { overflow-wrap: anywhere; font-size: 11px; font-weight: 600; color: var(--forest); margin-top: 1px; }
 .wx-empty {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
@@ -681,7 +743,7 @@ onMounted(async () => {
 }
 .wx-empty p { margin: 0; }
 
-/* Section cost rows */
+/* Block cost rows */
 .sec-row {
   display: flex; align-items: center; gap: 10px;
   padding: 9px 16px; border-bottom: 1px solid var(--fog);

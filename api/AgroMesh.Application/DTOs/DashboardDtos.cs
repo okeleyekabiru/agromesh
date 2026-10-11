@@ -2,15 +2,20 @@ namespace AgroMesh.Application.DTOs;
 
 public record CropPnlDto(string CropType, decimal Revenue, decimal Cost, decimal NetProfit);
 
-public record SectionMtdDto(string SectionId, string SectionName, decimal Cost, int ActivityCount);
+public record BlockMtdDto(string BlockId, string BlockName, decimal Cost, int ActivityCount, decimal LabourCost, decimal InputCost, decimal MaintenanceCost);
+
+public record MonthSpendDto(int Year, int Month, decimal Amount);
 
 public record DashboardDto(
     string FarmId,
     decimal TotalSpendMtd,
     decimal LabourCostMtd,
+    decimal InputCostMtd,
+    decimal MaintenanceCostMtd,
     int ActivitiesThisMonth,
     int PendingReviewCount,
-    List<SectionMtdDto> SectionsMtd,
+    List<MonthSpendDto> SpendTrend,
+    List<BlockMtdDto> BlocksMtd,
     List<CropPnlDto> CropPnl,
     List<ActivityLogDto> RecentActivities,
     List<UpcomingTaskDto> UpcomingTasks,
@@ -20,7 +25,7 @@ public record OnboardingStatusDto(
     bool HasFarmProfile,
     bool HasWorkerRoles,
     bool HasWorkers,
-    bool HasSections,
+    bool HasBlocks,
     bool HasInventory,
     bool HasAllocationRules,
     bool IsComplete);

@@ -17,7 +17,12 @@ public class Farm : BaseEntity
     public double? CentroidLat { get; private set; }
     public double? CentroidLng { get; private set; }
 
-    public List<Section> Sections { get; private set; } = [];
+    // The farm's linked bank account at Mono. The id is permanent until the account is unlinked.
+    public string? BankAccountId { get; private set; }
+    public DateTime? BankLinkedAt { get; private set; }
+    public DateTime? LastBankSyncAt { get; private set; }
+
+    public List<Block> Blocks { get; private set; } = [];
     public List<WorkerRole> WorkerRoles { get; private set; } = [];
     public List<Worker> Workers { get; private set; } = [];
     public List<CropAllocationRule> AllocationRules { get; private set; } = [];
@@ -38,6 +43,30 @@ public class Farm : BaseEntity
             LgaFreetext = lgaFreetext,
             CountryCode = countryCode,
         };
+    }
+
+    public void LinkBankAccount(string accountId)
+    {
+        if (string.IsNullOrWhiteSpace(accountId))
+            throw new Exceptions.DomainException("The bank did not return an account.");
+        BankAccountId = accountId;
+        BankLinkedAt = DateTime.UtcNow;
+        LastBankSyncAt = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UnlinkBankAccount()
+    {
+        BankAccountId = null;
+        BankLinkedAt = null;
+        LastBankSyncAt = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void MarkBankSynced()
+    {
+        LastBankSyncAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void SetCoordinates(double lat, double lng)

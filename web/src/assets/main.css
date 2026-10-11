@@ -346,8 +346,8 @@
     flex-shrink: 0;
   }
 
-  /* ── SECTION BAR ── */
-  .section-bar-wrap {
+  /* ── BLOCK BAR ── */
+  .block-bar-wrap {
     width: 80px;
     height: 4px;
     background: var(--fog);

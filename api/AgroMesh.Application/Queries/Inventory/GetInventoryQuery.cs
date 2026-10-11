@@ -19,6 +19,7 @@ public class GetInventoryQueryHandler : IRequestHandler<GetInventoryQuery, List<
         return items.Select(i => new InventoryItemDto(
             i.Id, i.FarmId, i.Name, i.Unit, i.CategoryId, i.Category.Name,
             i.CurrentStock, i.ReorderThreshold, i.IsLowStock,
-            i.ChemicalProductId, null, null)).ToList();
+            i.ChemicalProductId, null, null,
+            i.PackSize, i.PackLabel, i.UnitCost)).ToList();
     }
 }

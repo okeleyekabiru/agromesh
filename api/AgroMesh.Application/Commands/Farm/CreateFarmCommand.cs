@@ -6,7 +6,7 @@ using MediatR;
 
 namespace AgroMesh.Application.Commands.Farm;
 
-/// <summary>Flow A2 "Add New Farm" — for genuinely independent/distant land, not a Section under an existing Farm.</summary>
+/// <summary>Flow A2 "Add New Farm" — for genuinely independent/distant land, not a Block under an existing Farm.</summary>
 public record CreateFarmCommand(CreateFarmRequest Request) : IRequest<FarmDto>;
 
 public class CreateFarmCommandHandler : IRequestHandler<CreateFarmCommand, FarmDto>

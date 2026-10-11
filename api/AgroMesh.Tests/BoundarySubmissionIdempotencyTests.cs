@@ -1,4 +1,4 @@
-using AgroMesh.Application.Commands.Section;
+using AgroMesh.Application.Commands.Block;
 using AgroMesh.Application.DTOs;
 using AgroMesh.Application.Interfaces;
 using AgroMesh.Domain.Entities;
@@ -9,34 +9,34 @@ namespace AgroMesh.Tests;
 
 public class BoundarySubmissionIdempotencyTests
 {
-    private class FakeSectionRepository : ISectionRepository
+    private class FakeBlockRepository : IBlockRepository
     {
-        public Section? Section;
+        public Block? Block;
         public int UpdateCallCount;
 
-        public Task<Section?> GetByIdAsync(string id, CancellationToken ct = default) => Task.FromResult(Section);
-        public Task<Section?> GetByIdWithBlocksAsync(string id, CancellationToken ct = default) => Task.FromResult(Section);
-        public Task<List<Section>> GetByFarmIdAsync(string farmId, CancellationToken ct = default) => Task.FromResult(new List<Section>());
+        public Task<Block?> GetByIdAsync(string id, CancellationToken ct = default) => Task.FromResult(Block);
+        public Task<Block?> GetByIdWithBlocksAsync(string id, CancellationToken ct = default) => Task.FromResult(Block);
+        public Task<List<Block>> GetByFarmIdAsync(string farmId, CancellationToken ct = default) => Task.FromResult(new List<Block>());
 
-        public Task<Section> AddAsync(Section section, CancellationToken ct = default)
+        public Task<Block> AddAsync(Block block, CancellationToken ct = default)
         {
-            Section = section;
-            return Task.FromResult(section);
+            Block = block;
+            return Task.FromResult(block);
         }
 
-        public Task UpdateAsync(Section section, CancellationToken ct = default)
+        public Task UpdateAsync(Block block, CancellationToken ct = default)
         {
             UpdateCallCount++;
             return Task.CompletedTask;
         }
 
-        public Task<bool> ExistsAsync(string id, CancellationToken ct = default) => Task.FromResult(Section != null);
+        public Task<bool> ExistsAsync(string id, CancellationToken ct = default) => Task.FromResult(Block != null);
     }
 
     private class FakeFarmRepository : IFarmRepository
     {
         public Task<Farm?> GetByIdAsync(string id, CancellationToken ct = default) => Task.FromResult<Farm?>(null);
-        public Task<Farm?> GetByIdWithSectionsAsync(string id, CancellationToken ct = default) => Task.FromResult<Farm?>(null);
+        public Task<Farm?> GetByIdWithBlocksAsync(string id, CancellationToken ct = default) => Task.FromResult<Farm?>(null);
         public Task<List<Farm>> GetAllAsync(CancellationToken ct = default) => Task.FromResult(new List<Farm>());
         public Task<List<Farm>> GetByOwnerIdAsync(string ownerId, CancellationToken ct = default) => Task.FromResult(new List<Farm>());
         public Task<List<Farm>> GetByCompanyIdAsync(string companyId, CancellationToken ct = default) => Task.FromResult(new List<Farm>());
@@ -78,25 +78,25 @@ public class BoundarySubmissionIdempotencyTests
         new(7.3865, 3.9470),
     ];
 
-    private static SubmitBoundaryPointsCommandHandler CreateHandler(FakeSectionRepository sectionRepo, FakeBoundarySubmissionRepository submissionRepo) =>
-        new(sectionRepo, new FakeFarmRepository(), submissionRepo, new FakeCurrentUserAccessor());
+    private static SubmitBoundaryPointsCommandHandler CreateHandler(FakeBlockRepository blockRepo, FakeBoundarySubmissionRepository submissionRepo) =>
+        new(blockRepo, new FakeFarmRepository(), submissionRepo, new FakeCurrentUserAccessor());
 
     [Fact]
     public async Task Handle_SameOperationIdSubmittedTwice_DoesNotCreateDuplicateSubmission()
     {
-        var section = Section.Create("farm-1", "Section A", [new SectionCrop(CropType.Maize, 1.0, 100)], 1.0);
-        var sectionRepo = new FakeSectionRepository { Section = section };
+        var block = Block.Create("farm-1", "Block A", [new BlockCrop(CropType.Maize, 1.0, 100)], 1.0);
+        var blockRepo = new FakeBlockRepository { Block = block };
         var submissionRepo = new FakeBoundarySubmissionRepository();
-        var handler = CreateHandler(sectionRepo, submissionRepo);
+        var handler = CreateHandler(blockRepo, submissionRepo);
 
         var request = new SubmitBoundaryPointsRequest("op-123", SquareCorners());
-        var command = new SubmitBoundaryPointsCommand(section.Id, request);
+        var command = new SubmitBoundaryPointsCommand(block.Id, request);
 
         var first = await handler.Handle(command, CancellationToken.None);
         var second = await handler.Handle(command, CancellationToken.None);
 
         Assert.Equal(1, submissionRepo.AddCallCount);
-        Assert.Equal(1, sectionRepo.UpdateCallCount);
+        Assert.Equal(1, blockRepo.UpdateCallCount);
         Assert.Equal(first.ComputedHectares, second.ComputedHectares);
         Assert.Equal(first.ComputedGeoJson, second.ComputedGeoJson);
         Assert.Equal("op-123", second.OperationId);
@@ -105,15 +105,15 @@ public class BoundarySubmissionIdempotencyTests
     [Fact]
     public async Task Handle_DifferentOperationIds_CreatesSeparateSubmissions()
     {
-        var section = Section.Create("farm-1", "Section A", [new SectionCrop(CropType.Maize, 1.0, 100)], 1.0);
-        var sectionRepo = new FakeSectionRepository { Section = section };
+        var block = Block.Create("farm-1", "Block A", [new BlockCrop(CropType.Maize, 1.0, 100)], 1.0);
+        var blockRepo = new FakeBlockRepository { Block = block };
         var submissionRepo = new FakeBoundarySubmissionRepository();
-        var handler = CreateHandler(sectionRepo, submissionRepo);
+        var handler = CreateHandler(blockRepo, submissionRepo);
 
-        await handler.Handle(new SubmitBoundaryPointsCommand(section.Id, new SubmitBoundaryPointsRequest("op-1", SquareCorners())), CancellationToken.None);
-        await handler.Handle(new SubmitBoundaryPointsCommand(section.Id, new SubmitBoundaryPointsRequest("op-2", SquareCorners())), CancellationToken.None);
+        await handler.Handle(new SubmitBoundaryPointsCommand(block.Id, new SubmitBoundaryPointsRequest("op-1", SquareCorners())), CancellationToken.None);
+        await handler.Handle(new SubmitBoundaryPointsCommand(block.Id, new SubmitBoundaryPointsRequest("op-2", SquareCorners())), CancellationToken.None);
 
         Assert.Equal(2, submissionRepo.AddCallCount);
-        Assert.Equal(2, sectionRepo.UpdateCallCount);
+        Assert.Equal(2, blockRepo.UpdateCallCount);
     }
 }

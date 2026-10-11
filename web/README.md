@@ -33,7 +33,7 @@ src/
 │   │   ├── AlertBanner.vue
 │   │   ├── EmptyState.vue
 │   │   ├── FilterPill.vue
-│   │   ├── SectionRow.vue
+│   │   ├── BlockRow.vue
 │   │   ├── ActivityRow.vue
 │   │   ├── TransactionRow.vue
 │   │   └── WorkerRow.vue
@@ -54,7 +54,7 @@ src/
 ├── views/                # Page components
 │   ├── DashboardView.vue
 │   ├── ActivitiesView.vue
-│   ├── SectionsView.vue
+│   ├── BlocksView.vue
 │   ├── FinanceView.vue
 │   ├── WorkersView.vue
 │   └── ReportsView.vue

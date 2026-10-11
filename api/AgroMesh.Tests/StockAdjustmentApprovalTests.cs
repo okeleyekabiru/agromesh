@@ -55,6 +55,11 @@ public class StockAdjustmentApprovalTests
             return Task.CompletedTask;
         }
 
+        public Task UpdateMovementAsync(StockMovement movement, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task<List<StockMovement>> GetOutstandingPicksAsync(string farmId, string? inventoryItemId = null, string? blockId = null, CancellationToken ct = default) =>
+            Task.FromResult(new List<StockMovement>());
+
         public Task<List<StockMovement>> GetMovementsAsync(string inventoryItemId, int limit = 50, CancellationToken ct = default) =>
             Task.FromResult(Movements.Where(m => m.InventoryItemId == inventoryItemId).ToList());
     }

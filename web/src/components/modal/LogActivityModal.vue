@@ -21,6 +21,8 @@
         {{ lowStockWarnings.join(' · ') }}
       </div>
 
+      <div v-if="submitError" class="error-banner" role="alert">{{ submitError }}</div>
+
       <div class="modal-body">
         <!-- STEP 1: Location -->
         <template v-if="step === 1">
@@ -29,26 +31,17 @@
             <input type="date" class="form-input" v-model="form.date">
           </div>
           <div class="form-group">
-            <label class="form-label">Section</label>
-            <select class="form-select" v-model="form.sectionId" @change="form.blockId = ''">
-              <option value="">Choose section...</option>
-              <option v-for="s in store.sections" :key="s.id" :value="s.id">
+            <label class="form-label">Block</label>
+            <select class="form-select" v-model="form.blockId">
+              <option value="">Choose block...</option>
+              <option v-for="s in store.blocks" :key="s.id" :value="s.id">
                 {{ s.name }} — {{ s.crops.map(c => c.cropType).join(' / ') }}
               </option>
             </select>
-            <div v-if="selectedSection" class="form-hint">
-              {{ selectedSection.area.displayValue }} {{ selectedSection.area.displayUnit }} ·
-              Last activity: {{ selectedSection.lastActivityDate ?? 'never' }}
+            <div v-if="selectedBlock" class="form-hint">
+              {{ selectedBlock.area.displayValue }} {{ selectedBlock.area.displayUnit }} ·
+              Last activity: {{ selectedBlock.lastActivityDate ?? 'never' }}
             </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Block</label>
-            <select class="form-select" v-model="form.blockId" :disabled="!form.sectionId">
-              <option value="">Choose block...</option>
-              <option v-for="b in selectedSection?.blocks ?? []" :key="b.id" :value="b.id">
-                {{ b.name }} ({{ b.area.displayValue }} {{ b.area.displayUnit }})
-              </option>
-            </select>
           </div>
         </template>
 
@@ -77,7 +70,10 @@
             <input class="form-input" placeholder="Any details about this activity..." v-model="form.notes">
           </div>
           <!-- Chemical selection for Spraying / PestControl -->
-          <div v-if="isChemicalActivity" class="form-group">
+          <div v-if="isChemicalActivity && !store.chemicals.length" class="form-hint">
+            The chemical used is recorded from the Chemical stock items you add in the next step.
+          </div>
+          <div v-if="isChemicalActivity && store.chemicals.length" class="form-group">
             <label class="form-label">Chemical Product</label>
             <select class="form-select" v-model="form.chemicalProductId">
               <option value="">None / not tracked</option>
@@ -131,15 +127,34 @@
               <span v-if="!form.inputs.length" class="empty-chips">No inputs added yet</span>
             </div>
             <div class="add-row">
-              <input class="form-input" placeholder="e.g. NPK Fertilizer" v-model="inputItem" style="flex:1">
-              <input class="form-input" placeholder="Qty" v-model.number="inputQty" type="number" style="width:64px" @wheel.prevent>
-              <select class="form-select" v-model="inputUnit" style="width:72px">
-                <option>kg</option>
-                <option>L</option>
-                <option>bags</option>
-                <option>units</option>
+              <select class="form-select" v-model="inputItemId" style="flex:1">
+                <option value="" disabled>Choose from stock…</option>
+                <option v-for="i in usableItems" :key="i.id" :value="i.id" :disabled="availableFor(i.id) <= 0">
+                  {{ i.name }} — {{ fmt(availableFor(i.id)) }} {{ i.unit }} available
+                </option>
               </select>
-              <button class="btn btn-primary" @click="addInput">+ Add</button>
+              <input class="form-input" placeholder="Qty" v-model.number="inputQty" type="number" min="0" step="any" style="width:84px" @wheel.prevent>
+              <span v-if="selectedInputItem" class="unit-tag">{{ selectedInputItem.unit }}</span>
+              <button class="btn btn-primary" @click="addInput" :disabled="!canAddInput">+ Add</button>
+            </div>
+            <div v-if="selectedInputItem" class="form-hint">
+              {{ fmt(pickedFor(selectedInputItem.id)) }} {{ selectedInputItem.unit }} picked out for this block ·
+              {{ fmt(selectedInputItem.currentStock) }} {{ selectedInputItem.unit }} in the store.
+              Picked stock is used first, then the store.
+            </div>
+            <div v-if="inputOverLimit" class="error-msg">Only {{ fmt(availableFor(inputItemId)) }} {{ selectedInputItem?.unit }} available.</div>
+            <div v-if="!workerEntries.length || !form.inputs.length" class="form-hint warn">
+              Add at least one worker and one stock item — both are required.
+            </div>
+            <div v-if="isChemicalActivity && !hasChemicalInput" class="form-hint warn">
+              Add the chemical you are spraying with — it is required for this activity.
+            </div>
+            <div v-if="selectedInputItem && !selectedInputItem.unitCost" class="form-hint warn">
+              No price set for {{ selectedInputItem.name }} — this will cost ₦0. Set its price on the Inventory page.
+            </div>
+            <div v-if="!store.inventoryItems.length" class="form-hint">No stock items yet — add items on the Inventory page first.</div>
+            <div v-else-if="form.activityType && !usableItems.length" class="form-hint">
+              No {{ allowedLabel }} in stock for this activity.
             </div>
           </div>
         </template>
@@ -162,8 +177,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useAgroStore } from '@/stores/agro'
+import { extractErrorMessage } from '@/utils/http'
 import type { ActivityType } from '@/types'
 import { PAY_FREQUENCY_LABELS } from '@/types'
 
@@ -173,31 +189,53 @@ const store = useAgroStore()
 onMounted(() => {
   if (!store.workers.length) store.fetchWorkers()
   if (!store.chemicals.length) store.fetchChemicals()
-  if (!store.sections.length) store.fetchSections()
+  if (!store.blocks.length) store.fetchBlocks()
+  store.fetchInventory()
+  store.fetchOutstandingStock()
 })
 
 const step = ref(1)
 const steps = ['Location', 'Activity', 'Workers & Inputs']
 const submitting = ref(false)
 const lowStockWarnings = ref<string[]>([])
+const submitError = ref('')
 
 const workerPickId = ref('')
 const workerHours = ref<number>(8)
 const workerEntries = ref<{ workerId: string; workerName: string; workerType: string; hoursWorked: number; payRate: number; label: string }[]>([])
 
-const inputItem = ref('')
+const inputItemId = ref('')
 const inputQty = ref<number | ''>('')
-const inputUnit = ref('kg')
+
+// Inputs must be real stock items; usage reduces stock (picked-out stock first, then the store).
+const selectedInputItem = computed(() => store.inventoryItems.find(i => i.id === inputItemId.value))
+
+function pickedFor(itemId: string) {
+  return store.outstandingStock
+    .filter(o => o.inventoryItemId === itemId && o.blockId === form.value.blockId)
+    .reduce((sum, o) => sum + o.quantityOutstanding, 0)
+}
+// What's still usable for this item on this block, after what's already been added in this form.
+function availableFor(itemId: string) {
+  const item = store.inventoryItems.find(i => i.id === itemId)
+  if (!item) return 0
+  const alreadyAdded = form.value.inputs.filter(i => i.inventoryItemId === itemId).reduce((s, i) => s + i.quantity, 0)
+  return Math.max(0, pickedFor(itemId) + item.currentStock - alreadyAdded)
+}
+const inputOverLimit = computed(() => !!inputItemId.value && Number(inputQty.value) > availableFor(inputItemId.value))
+const canAddInput = computed(() => !!inputItemId.value && Number(inputQty.value) > 0 && !inputOverLimit.value)
+function fmt(n: number) {
+  return Number(n.toFixed(3)).toLocaleString()
+}
 
 const form = ref({
   date: new Date().toISOString().split('T')[0],
-  sectionId: '',
   blockId: '',
   activityType: '' as ActivityType | '',
   notes: '',
   supervisorId: '',
   chemicalProductId: '',
-  inputs: [] as { item: string; quantity: number; unit: string }[]
+  inputs: [] as { inventoryItemId: string; item: string; quantity: number; unit: string }[]
 })
 
 const activityTypes = [
@@ -212,15 +250,57 @@ const activityTypes = [
 ]
 
 const CHEMICAL_TYPES = new Set(['Spraying', 'PestControl'])
+
+// Same rule as the API: chemicals only for spraying / pest control, fertilizer only for fertilizer
+// application (weeding may use chemicals), and neither for the rest.
+function allowsCategory(type: string, categoryName: string): boolean {
+  const cat = (categoryName || '').trim().toLowerCase()
+  if (!cat) return true
+  const chemical = cat === 'chemical'
+  const fertilizer = cat === 'fertilizer'
+  if (type === 'Spraying' || type === 'PestControl') return chemical
+  if (type === 'FertilizerApplication') return fertilizer
+  if (type === 'Weeding') return !fertilizer
+  return !chemical && !fertilizer
+}
+
+const usableItems = computed(() =>
+  store.inventoryItems.filter(i => !form.value.activityType || allowsCategory(form.value.activityType, i.categoryName)))
+
+const allowedLabel = computed(() => {
+  const t = form.value.activityType
+  if (t === 'Spraying' || t === 'PestControl') return 'chemicals'
+  if (t === 'FertilizerApplication') return 'fertilizer'
+  return 'items'
+})
+
+// Switching activity type drops any picked inputs that no longer fit it.
+watch(() => form.value.activityType, (t) => {
+  if (!t) return
+  form.value.inputs = form.value.inputs.filter(inp => {
+    const item = store.inventoryItems.find(i => i.id === inp.inventoryItemId)
+    return !item || allowsCategory(t, item.categoryName)
+  })
+  const sel = store.inventoryItems.find(i => i.id === inputItemId.value)
+  if (sel && !allowsCategory(t, sel.categoryName)) inputItemId.value = ''
+})
 const isChemicalActivity = computed(() => CHEMICAL_TYPES.has(form.value.activityType as string))
 
-const selectedSection = computed(() => store.sections.find(s => s.id === form.value.sectionId))
+const selectedBlock = computed(() => store.blocks.find(s => s.id === form.value.blockId))
 
 const canProceed = computed(() => {
-  if (step.value === 1) return !!form.value.sectionId && !!form.value.blockId
+  if (step.value === 1) return !!form.value.blockId
   if (step.value === 2) return !!form.value.activityType
-  return !!form.value.supervisorId
+  // Who did the work and what it used are both required.
+  return !!form.value.supervisorId && workerEntries.value.length > 0 && form.value.inputs.length > 0 &&
+    (!isChemicalActivity.value || hasChemicalInput.value)
 })
+
+// Spraying / pest control must use a chemical from stock.
+const hasChemicalInput = computed(() => form.value.inputs.some(inp => {
+  const item = store.inventoryItems.find(i => i.id === inp.inventoryItemId)
+  return item?.categoryName?.trim().toLowerCase() === 'chemical'
+}))
 
 async function next() {
   if (step.value < steps.length) {
@@ -229,10 +309,10 @@ async function next() {
   }
   submitting.value = true
   lowStockWarnings.value = []
+  submitError.value = ''
   try {
     const payload = {
       date: form.value.date,
-      sectionId: form.value.sectionId,
       blockId: form.value.blockId,
       activityType: form.value.activityType,
       notes: form.value.notes || null,
@@ -245,7 +325,7 @@ async function next() {
         hoursWorked: we.hoursWorked,
         payRate: we.payRate
       })),
-      inputs: form.value.inputs
+      inputs: form.value.inputs.map(i => ({ inventoryItemId: i.inventoryItemId, quantity: i.quantity }))
     }
     const result = await store.logActivity(payload)
     if (result.lowStockWarnings?.length) {
@@ -256,6 +336,7 @@ async function next() {
     }
   } catch (e) {
     console.error('Failed to log activity', e)
+    submitError.value = extractErrorMessage(e, 'Could not submit this activity. Please try again.')
   } finally {
     submitting.value = false
   }
@@ -277,11 +358,11 @@ function addWorker() {
 }
 
 function addInput() {
-  if (inputItem.value.trim() && inputQty.value) {
-    form.value.inputs.push({ item: inputItem.value.trim(), quantity: Number(inputQty.value), unit: inputUnit.value })
-    inputItem.value = ''
-    inputQty.value = ''
-  }
+  const item = selectedInputItem.value
+  if (!item || !canAddInput.value) return
+  form.value.inputs.push({ inventoryItemId: item.id, item: item.name, quantity: Number(inputQty.value), unit: item.unit })
+  inputItemId.value = ''
+  inputQty.value = ''
 }
 </script>
 
@@ -307,6 +388,9 @@ function addInput() {
 .step.done .step-num { background: var(--palm); border-color: var(--palm); color: white; }
 .step-label { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--stone); margin-top: 4px; text-align: center; }
 .step.active .step-label { color: var(--leaf); }
+.unit-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--stone); align-self: center; }
+.error-msg { font-size: 11.5px; color: var(--alert); margin-top: 6px; }
+.error-banner { background: #FDECEC; border-bottom: 1px solid #F3B5B5; padding: 10px 24px; font-size: 11px; color: #A32020; font-weight: 600; }
 .warning-banner { background: #FFF8E7; border-bottom: 1px solid #F5D77B; padding: 10px 24px; font-size: 11px; color: #8A6000; font-weight: 600; }
 .modal-body { padding: 20px 24px; }
 .modal-footer { padding: 16px 24px; border-top: 1px solid var(--fog); display: flex; justify-content: space-between; align-items: center; }
@@ -352,4 +436,5 @@ function addInput() {
 .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; min-height: 28px; align-items: center; }
 .add-row { display: flex; gap: 8px; }
 .empty-chips { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--stone); }
+.form-hint.warn { color: #B8780A; }
 </style>

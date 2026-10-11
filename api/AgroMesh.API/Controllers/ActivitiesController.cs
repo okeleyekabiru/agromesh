@@ -2,6 +2,7 @@ using AgroMesh.Application.Commands.Activity;
 using AgroMesh.Application.DTOs;
 using AgroMesh.Application.Queries.Activity;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AgroMesh.API.Controllers;
@@ -17,6 +18,11 @@ public class ActivitiesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll(string farmId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default) =>
         Ok(await _mediator.Send(new GetActivitiesQuery(farmId, page, pageSize), ct));
+
+    [HttpGet("{activityId}")]
+    [Authorize]
+    public async Task<IActionResult> GetById(string farmId, string activityId, CancellationToken ct) =>
+        Ok(await _mediator.Send(new GetActivityQuery(farmId, activityId), ct));
 
     [HttpPost]
     public async Task<IActionResult> Log(string farmId, [FromBody] LogActivityRequest request, CancellationToken ct)

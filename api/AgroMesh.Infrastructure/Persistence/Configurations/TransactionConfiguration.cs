@@ -19,6 +19,10 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
         builder.Property(t => t.Source).IsRequired();
         builder.Property(t => t.ReviewedByUser).IsRequired();
         builder.Property(t => t.ReviewNotes).HasMaxLength(500);
+        builder.Property(t => t.Kind).IsRequired();
+        builder.Property(t => t.OrderId).HasMaxLength(50);
+        builder.Property(t => t.Reconciliation).IsRequired();
+        builder.Property(t => t.ReconciliationNote).HasMaxLength(500);
 
         builder.Property(t => t.CropAllocation)
                .HasColumnType("jsonb")
@@ -29,5 +33,6 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
         builder.HasIndex(t => t.MonoId).IsUnique();
         builder.HasIndex(t => new { t.FarmId, t.Date });
         builder.HasIndex(t => new { t.FarmId, t.ReviewedByUser });
+        builder.HasIndex(t => new { t.FarmId, t.Reconciliation });
     }
 }

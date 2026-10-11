@@ -116,7 +116,7 @@ class AgroTheme {
         letterSpacing: 1, fontWeight: FontWeight.w500,
       ),
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: AgroColors.white,
       elevation: 0,
       shape: RoundedRectangleBorder(
