@@ -19,7 +19,10 @@ public record DashboardDto(
     List<CropPnlDto> CropPnl,
     List<ActivityLogDto> RecentActivities,
     List<UpcomingTaskDto> UpcomingTasks,
-    List<LowStockAlertDto> LowStockAlerts);
+    List<LowStockAlertDto> LowStockAlerts,
+    // Money earned this month (income from the bank, not the owner's capital) and what is left after the month's costs.
+    decimal IncomeMtd = 0,
+    decimal ProfitMtd = 0);
 
 public record OnboardingStatusDto(
     bool HasFarmProfile,

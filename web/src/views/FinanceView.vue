@@ -29,20 +29,25 @@
 
     <div class="kpi-grid">
       <KpiCard label="Total · MTD"     :value="store.dashboard ? `₦${(store.dashboard.totalSpendMtd/1000).toFixed(0)}K` : '—'"  delta="auto-categorized" deltaType="down" :dark="true" />
-      <KpiCard label="Transactions"    :value="`${store.transactions.length}`"                                                    delta="synced from Mono" deltaType="mute" />
+      <KpiCard label="Transactions"    :value="`${store.transactionsTotal}`"                                                    delta="synced from Mono" deltaType="mute" />
       <KpiCard label="Reviewed"        :value="`${store.transactions.filter(t=>t.reviewedByUser).length}`"                        delta="manually confirmed" deltaType="up" />
       <KpiCard label="Pending Review"  :value="`${store.pendingReviews}`"                                                         delta="Need categorization" :deltaType="store.pendingReviews > 0 ? 'warn' : 'mute'" />
     </div>
 
     <div class="card">
       <div style="display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--fog);flex-wrap:wrap;">
-        <FilterPill v-for="f in filters" :key="f" :active="activeFilter === f" @click="activeFilter = f">
+        <FilterPill v-for="f in filters" :key="f" :active="activeFilter === f" @click="applyFilter(f)">
           {{ f }}
         </FilterPill>
       </div>
 
       <div v-if="store.loading" style="padding:24px;text-align:center;color:var(--stone);font-size:12px;">Loading transactions…</div>
       <TransactionRow v-for="t in filtered" :key="t.id" :txn="t" :showAlloc="true" :clickable="true" @open="selected = t" />
+      <div v-if="hasMore" class="more-row">
+        <button class="btn-secondary" :disabled="loadingMore" @click="loadMore">
+          {{ loadingMore ? 'Loading…' : `Load more (${store.transactions.length} of ${store.transactionsTotal})` }}
+        </button>
+      </div>
       <EmptyState
         v-if="!store.loading && filtered.length === 0"
         icon="🔍"
@@ -72,12 +77,42 @@ const route = useRoute()
 // Arriving from the dashboard's "Review now" / Pending Review card opens straight on the unreviewed ones.
 const activeFilter = ref(route.query.filter === 'pending' ? 'Pending Review' : 'All')
 const selected = ref<Transaction | null>(null)
-const filters = ['All', 'Fertilizer', 'Labour', 'Fuel', 'Equipment', 'Pending Review']
+const filters = ['All', 'Income', 'Capital', 'Expense', 'Pending Review', 'Reviewed', 'Fertilizer', 'Labour', 'Fuel', 'Equipment', 'Tax & Charges']
+const KINDS = ['Income', 'Capital', 'Expense'] as const
+type Kind = (typeof KINDS)[number]
+const serverKind = computed<Kind | undefined>(() => KINDS.find(k => k === activeFilter.value))
+// A category pill ("Tax & Charges" is stored as TaxAndCharges) is searched on the server across every transaction too.
+const CATEGORY_PILLS = ['Fertilizer', 'Labour', 'Fuel', 'Equipment', 'Tax & Charges']
+const serverCategory = computed<string | undefined>(() =>
+  CATEGORY_PILLS.includes(activeFilter.value) ? (activeFilter.value === 'Tax & Charges' ? 'TaxAndCharges' : activeFilter.value) : undefined)
+
+// All / Pending Review / Reviewed are searched on the server across every transaction; the category pills narrow what is loaded.
+const serverFilter = computed<boolean | undefined>(() =>
+  activeFilter.value === 'Pending Review' ? true : activeFilter.value === 'Reviewed' ? false : undefined)
+const page = ref(1)
+const loadingMore = ref(false)
+const hasMore = computed(() => store.transactions.length < store.transactionsTotal)
+
+async function loadMore() {
+  loadingMore.value = true
+  page.value++
+  await store.fetchTransactions(page.value, serverFilter.value, true, serverKind.value, serverCategory.value)
+  loadingMore.value = false
+}
+
+async function applyFilter(f: string) {
+  activeFilter.value = f
+  page.value = 1
+  await store.fetchTransactions(1, serverFilter.value, false, serverKind.value, serverCategory.value)
+}
 
 const filtered = computed(() => {
-  if (activeFilter.value === 'All') return store.transactions
+  if (activeFilter.value === 'All' || serverKind.value || serverCategory.value) return store.transactions
   if (activeFilter.value === 'Pending Review') return store.transactions.filter(t => !t.reviewedByUser)
-  return store.transactions.filter(t => t.category === activeFilter.value)
+  if (activeFilter.value === 'Reviewed') return store.transactions.filter(t => t.reviewedByUser)
+  // The pill reads "Tax & Charges"; the category is stored as TaxAndCharges.
+  const wanted = activeFilter.value === 'Tax & Charges' ? 'TaxAndCharges' : activeFilter.value
+  return store.transactions.filter(t => t.category === wanted)
 })
 
 const summary = ref<FinanceSummary | null>(null)
@@ -90,6 +125,7 @@ const money = (n: number | undefined) => (n === undefined ? '—' : `₦${n.toLo
 async function loadMoney() {
   try {
     summary.value = (await transactionApi.summary()).data
+    store.refreshPendingReviews()
     queue.value = (await transactionApi.needsReview()).data
   } catch {
     /* the cards stay empty; the transaction list below still works */
@@ -97,7 +133,9 @@ async function loadMoney() {
 }
 
 async function reload() {
-  await store.fetchTransactions()
+  store.fetchDashboard()   // keeps the pending-review count in step with what was just reviewed
+  page.value = 1
+  await store.fetchTransactions(1, serverFilter.value, false, serverKind.value, serverCategory.value)
   await loadMoney()
 }
 
@@ -120,6 +158,7 @@ onMounted(() => { reload(); store.fetchOrders?.() })
 
 <style scoped>
 .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
+.more-row { display: flex; justify-content: center; padding: 12px; }
 .review-card { margin-bottom: 16px; }
 .review-head { padding: 12px 16px; font-weight: 600; color: var(--forest); border-bottom: 1px solid var(--fog); }
 .review-row { display: flex; gap: 12px; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--fog); flex-wrap: wrap; }

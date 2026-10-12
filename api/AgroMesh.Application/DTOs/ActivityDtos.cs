@@ -46,6 +46,11 @@ public record LogActivityRequest(
     bool CreatedOffline,
     string? WorkedAreaGeoJson,
     double? WorkedAreaValue,
-    string? ChemicalProductId);
+    string? ChemicalProductId,
+    // The corners of the area that was worked, in walking order. Required (8 or more) for weeding, spraying,
+    // fertilizer application and harvest; the API cuts the area to the block's edge and measures it.
+    List<WorkedPointInput>? WorkedAreaPoints = null);
+
+public record WorkedPointInput(double Lat, double Lng);
 
 public record PagedResult<T>(List<T> Items, int Total, int Page, int PageSize);

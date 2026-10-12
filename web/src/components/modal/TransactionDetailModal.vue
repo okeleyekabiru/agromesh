@@ -20,7 +20,10 @@
             <dt>Narration</dt><dd class="narration">{{ current.narration }}</dd>
             <dt>Date</dt><dd>{{ formatDateTime(current.date) }}</dd>
             <dt>Bank reference</dt><dd class="mono">{{ current.monoId }}</dd>
-            <dt>Category</dt><dd>{{ current.category }}</dd>
+            <template v-if="blockName">
+              <dt>Block</dt><dd>{{ blockName }}</dd>
+            </template>
+            <dt>Category</dt><dd>{{ categoryLabel(current.category) }}</dd>
             <dt>Categorised by</dt>
             <dd>
               {{ current.source }} · {{ current.confidence }} confidence
@@ -52,7 +55,7 @@
             <div class="form-group">
               <label class="form-label">Category</label>
               <select class="form-select" v-model="draft.category">
-                <option v-for="c in TRANSACTION_CATEGORIES" :key="c" :value="c">{{ c }}</option>
+                <option v-for="c in TRANSACTION_CATEGORIES" :key="c" :value="c">{{ categoryLabel(c) }}</option>
               </select>
             </div>
 
@@ -85,7 +88,7 @@
 import { ref, computed } from 'vue'
 import { useAgroStore } from '@/stores/agro'
 import { transactionApi } from '@/services/api'
-import { TRANSACTION_CATEGORIES, categoryOrdinal, normalizeTransaction } from '@/utils/enums'
+import { TRANSACTION_CATEGORIES, categoryLabel, categoryOrdinal, normalizeTransaction } from '@/utils/enums'
 import { extractErrorMessage } from '@/utils/http'
 import StatBadge from '@/components/ui/StatBadge.vue'
 import type { Transaction } from '@/types'
@@ -103,6 +106,7 @@ const draft = ref({ category: props.txn.category as string, kind: 'Income', note
 const kindLabel = computed(() => String(current.value.kind ?? (current.value.amount < 0 ? 'Expense' : 'Income')))
 const kindVariant = computed(() => kindLabel.value === 'Capital' ? 'harvest' : kindLabel.value === 'Income' ? 'green' : 'stone')
 const reconciliation = computed(() => String(current.value.reconciliation ?? 'None'))
+const blockName = computed(() => (current.value.blockId ? store.blocks.find(b => b.id === current.value.blockId)?.name ?? '' : ''))
 const allocations = computed(() => Object.entries(current.value.cropAllocation ?? {}) as [string, number][])
 
 // The order's number (ORD-1042) is looked up from the orders list when we have it.

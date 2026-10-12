@@ -18,7 +18,8 @@ public record TransactionDto(
     TransactionKind Kind = TransactionKind.Expense,
     string? OrderId = null,
     ReconciliationStatus Reconciliation = ReconciliationStatus.None,
-    string? ReconciliationNote = null);
+    string? ReconciliationNote = null,
+    string? BlockId = null);
 
 public record ReviewTransactionRequest(TransactionCategory Category, Dictionary<string, double>? CropAllocation, string? Notes);
 
@@ -34,6 +35,7 @@ public record FinanceSummaryDto(
     decimal Income,
     decimal Capital,
     decimal Expenses,
-    int NeedsReview);
+    int NeedsReview,
+    // Every transaction nobody has reviewed yet, whatever its date: the number the "Pending Review" badges show.
+    int PendingReview = 0);
 
-public record RecordInventoryReceiptRequest(string InventoryItemId, decimal Quantity);

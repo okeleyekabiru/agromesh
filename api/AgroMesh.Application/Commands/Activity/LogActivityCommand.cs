@@ -18,6 +18,7 @@ public class LogActivityCommandHandler : IRequestHandler<LogActivityCommand, Log
     private readonly IWorkerRepository _workerRepo;
     private readonly IInventoryDeductionService _inventoryDeduction;
     private readonly IBackgroundJobQueue _jobQueue;
+    private readonly ICoverageCompletionRepository _completions;
 
     public LogActivityCommandHandler(
         IActivityRepository activityRepo,
@@ -25,8 +26,10 @@ public class LogActivityCommandHandler : IRequestHandler<LogActivityCommand, Log
         IFarmRepository farmRepo,
         IWorkerRepository workerRepo,
         IInventoryDeductionService inventoryDeduction,
-        IBackgroundJobQueue jobQueue)
+        IBackgroundJobQueue jobQueue,
+        ICoverageCompletionRepository completions)
     {
+        _completions = completions;
         _activityRepo = activityRepo;
         _blockRepo = blockRepo;
         _farmRepo = farmRepo;
@@ -70,6 +73,17 @@ public class LogActivityCommandHandler : IRequestHandler<LogActivityCommand, Log
         double? workedHectares = req.WorkedAreaValue.HasValue
             ? AreaConverter.ToHectares(req.WorkedAreaValue.Value, farm.PreferredAreaUnit)
             : null;
+        var workedAreaGeoJson = req.WorkedAreaGeoJson;
+
+        // Weeding, spraying, fertilizer and harvest cover part of a block at a time: the manager marks the area
+        // (8+ points). It is cut to the block's edge and measured, and that measured area replaces any typed one.
+        var points = req.WorkedAreaPoints?.Select(p => new GeoPoint(p.Lat, p.Lng)).ToList();
+        if (ActivityConstants.RequiresWorkedArea.Contains(req.ActivityType) || points is { Count: > 0 })
+        {
+            var area = Services.WorkCoverage.BuildWorkedArea(points ?? [], block.BoundaryGeoJson);
+            workedAreaGeoJson = area.GeoJson;
+            workedHectares = area.Hectares;
+        }
 
         // The chemical used is whatever Chemical stock the activity consumed, so it is tracked by name
         // (this is what spray-interval scheduling reads) without needing a separate catalogue entry.
@@ -90,7 +104,7 @@ public class LogActivityCommandHandler : IRequestHandler<LogActivityCommand, Log
         var activity = Domain.Entities.ActivityLog.Create(
             command.FarmId, req.BlockId, req.ActivityType, req.Date,
             workerLogs, inputs, req.SupervisorId, req.Notes, req.CreatedOffline,
-            req.WorkedAreaGeoJson, workedHectares, req.ChemicalProductId, chemicalProductName);
+            workedAreaGeoJson, workedHectares, req.ChemicalProductId, chemicalProductName);
 
         // Input cost = quantity used x the item's current average cost per unit, saved on the activity
         // so later price changes never rewrite what this work cost.
@@ -103,8 +117,18 @@ public class LogActivityCommandHandler : IRequestHandler<LogActivityCommand, Log
 
         var warnings = await _inventoryDeduction.ApplyAsync(command.FarmId, req.BlockId, activity.Id, stockInputs, ct);
 
+        // The AI reviews the next weeding / spraying once a cycle is finished, i.e. when this work brings the whole
+        // block to covered. Part-done work only adds to the covered area. A block with no boundary cannot be measured,
+        // so every weeding / spraying there still gets a review.
         if (req.ActivityType == Domain.Enums.ActivityType.Weeding || req.ActivityType == Domain.Enums.ActivityType.Spraying)
-            _jobQueue.EnqueueSchedulingRun(command.FarmId, req.BlockId);
+        {
+            var logged = await _activityRepo.GetRecentByBlockAsync(block.Id, req.ActivityType, 200, ct);
+            var forced = await _completions.GetByBlockAsync(block.Id, req.ActivityType, ct);
+            var coverage = Services.WorkCoverage.Compute(block.BoundaryGeoJson,
+                logged.Select(a => (a.Date, a.WorkedAreaGeoJson)).Concat(forced.Select(f => (f.CompletedOn, (string?)null))));
+            if (!coverage.HasBoundary || coverage.Status == Services.CoverageStatus.Complete)
+                _jobQueue.EnqueueSchedulingRun(command.FarmId, req.BlockId);
+        }
 
         var dto = new ActivityLogDto(
             activity.Id, activity.FarmId, activity.BlockId,

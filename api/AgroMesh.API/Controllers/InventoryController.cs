@@ -35,7 +35,8 @@ public class InventoryController : ControllerBase
     [HttpPut("{itemId}/pricing")]
     [Authorize]
     public async Task<IActionResult> SetPricing(string farmId, string itemId, [FromBody] SetItemPricingRequest request, CancellationToken ct) =>
-        Ok(await _mediator.Send(new SetItemPricingCommand(farmId, itemId, request), ct));
+        // A price decides the cost of every activity that uses the item, so it goes to an admin for approval instead of applying now.
+        Accepted(await _mediator.Send(new RequestItemPricingCommand(farmId, itemId, request), ct));
 
     [HttpGet("low-stock")]
     public async Task<IActionResult> GetLowStock(string farmId, CancellationToken ct)

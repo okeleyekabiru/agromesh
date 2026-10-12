@@ -52,7 +52,9 @@ public class ReceiveOrderCommandHandler : IRequestHandler<ReceiveOrderCommand, O
         foreach (var line in order.LineItems)
         {
             var item = itemsById[line.InventoryItemId];
-            item.AddStock(line.Quantity, $"Received from order {order.Id}");
+            // The order's unit price becomes the stock's cost (a weighted average with what is already on hand), so each
+            // activity that later uses this stock carries the cost of what was actually bought.
+            item.ReceiveStock(line.Quantity, line.UnitPrice);
             await _inventoryRepo.UpdateAsync(item, ct);
 
             var movement = StockMovement.CreateIn(item.FarmId, item.Id, line.Quantity, notes: $"Received from order {order.Id}", orderId: order.Id);

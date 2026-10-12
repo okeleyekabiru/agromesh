@@ -8,6 +8,7 @@ import WorkersView     from '@/views/WorkersView.vue'
 import ReportsView     from '@/views/ReportsView.vue'
 import InventoryView   from '@/views/InventoryView.vue'
 import InventoryApprovalsView from '@/views/InventoryApprovalsView.vue'
+import TeamView from '@/views/TeamView.vue'
 import OrdersView from '@/views/OrdersView.vue'
 import OnboardingView    from '@/views/OnboardingView.vue'
 import BlocksSetupView from '@/views/BlocksSetupView.vue'
@@ -28,6 +29,7 @@ const routes = [
   { path: '/workers',    name: 'workers',    component: WorkersView,    meta: { title: 'Workers',        sub: 'WORKFORCE',      feature: 'workers' } },
   { path: '/reports',    name: 'reports',    component: ReportsView,    meta: { title: 'Reports',        sub: 'OPERATIONAL',    feature: 'reports' } },
   { path: '/inventory',  name: 'inventory',  component: InventoryView,  meta: { title: 'Inventory',      sub: 'STOCK & SUPPLIES', feature: 'inventory' } },
+  { path: '/team', name: 'team', component: TeamView, meta: { title: 'Team', sub: 'PEOPLE & ACCESS' } },
   { path: '/inventory-approvals', name: 'inventory-approvals', component: InventoryApprovalsView, meta: { title: 'Stock Approvals', sub: 'PENDING ADJUSTMENTS', feature: 'inventory' } },
   // Phase 4 — reuses the 'inventory' feature flag rather than introducing a new 'orders' one:
   // there's no backend /api/farms/{farmId}/features endpoint at all (fetchFeatures()'s catch block

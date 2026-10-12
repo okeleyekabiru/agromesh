@@ -86,10 +86,11 @@ onMounted(async () => {
   }
   if (!store.blocks.length) store.fetchBlocks()
   if (!store.workers.length) store.fetchWorkers()
+  store.fetchManagers()
 })
 
 const blockName = computed(() => store.blocks.find(b => b.id === activity.value.blockId)?.name ?? 'Unknown block')
-const supervisorName = computed(() => store.workers.find(w => w.id === activity.value.supervisorId)?.name ?? '—')
+const supervisorName = computed(() => store.supervisorName(activity.value.supervisorId) || '—')
 
 // Mirrors the backend's PayRateConverter.ToDailyEquivalent (6-day week, 26-day month).
 function dailyEquivalent(rate: number, freq: number) {

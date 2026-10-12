@@ -22,8 +22,10 @@ public class TransactionsController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] bool? pendingReview = null,
+        [FromQuery] Domain.Enums.TransactionKind? kind = null,
+        [FromQuery] Domain.Enums.TransactionCategory? category = null,
         CancellationToken ct = default) =>
-        Ok(await _mediator.Send(new GetTransactionsQuery(farmId, page, pageSize, pendingReview), ct));
+        Ok(await _mediator.Send(new GetTransactionsQuery(farmId, page, pageSize, pendingReview, kind, category), ct));
 
     /// <summary>Income, capital and expenses for a period (defaults to this month so far).</summary>
     [HttpGet("summary")]
@@ -49,12 +51,5 @@ public class TransactionsController : ControllerBase
     {
         var result = await _mediator.Send(new ReviewTransactionCommand(transactionId, request), ct);
         return Ok(result);
-    }
-
-    [HttpPost("{transactionId}/inventory-receipt")]
-    public async Task<IActionResult> RecordReceipt(string transactionId, [FromBody] RecordInventoryReceiptRequest request, CancellationToken ct)
-    {
-        await _mediator.Send(new RecordInventoryReceiptCommand(transactionId, request.InventoryItemId, request.Quantity), ct);
-        return NoContent();
     }
 }

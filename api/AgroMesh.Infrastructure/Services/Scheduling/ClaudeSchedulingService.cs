@@ -22,6 +22,7 @@ public class ClaudeSchedulingService : IClaudeSchedulingService
     private readonly IFarmRepository _farmRepo;
     private readonly IBlockRepository _blockRepo;
     private readonly ISchedulingPredictionRepository _predictionRepo;
+    private readonly IBlockSatelliteRepository _satellite;
     private readonly BlockCycleService _cycles;
     private readonly FarmWeatherProvider _weatherProvider;
     private readonly HttpClient _http;
@@ -33,6 +34,7 @@ public class ClaudeSchedulingService : IClaudeSchedulingService
         IFarmRepository farmRepo,
         IBlockRepository blockRepo,
         ISchedulingPredictionRepository predictionRepo,
+        IBlockSatelliteRepository satellite,
         BlockCycleService cycles,
         FarmWeatherProvider weatherProvider,
         IHttpClientFactory httpFactory,
@@ -42,6 +44,7 @@ public class ClaudeSchedulingService : IClaudeSchedulingService
         _farmRepo = farmRepo;
         _blockRepo = blockRepo;
         _predictionRepo = predictionRepo;
+        _satellite = satellite;
         _cycles = cycles;
         _weatherProvider = weatherProvider;
         _http = httpFactory.CreateClient("claude-client");
@@ -78,7 +81,8 @@ public class ClaudeSchedulingService : IClaudeSchedulingService
                 return; // nothing to review
 
             var (weather, location) = await _weatherProvider.GetAsync(farm, ct);
-            var reply = await AskClaudeAsync(BuildPrompt(farm, block, baseline, weather, location), ct);
+            var condition = SatelliteStatus.Evaluate(await _satellite.GetByBlockAsync(block.Id, DateTime.UtcNow.Date.AddDays(-120), ct));
+            var reply = await AskClaudeAsync(BuildPrompt(farm, block, baseline, weather, location, condition), ct);
             var opinion = AiCycleReview.Parse(reply);
             if (opinion is null)
             {
@@ -176,6 +180,10 @@ public class ClaudeSchedulingService : IClaudeSchedulingService
           the allowed range is spray-ok, keep the rules' date and say the spray should wait for a dry window.
         - Check the date you choose against the forecast table (rain, wind, spray-ok) before answering, and
           make sure your reason agrees with that date. Use only the numbers in the table; do not do other maths.
+        - A CROP CONDITION line may be given (satellite NDVI = how green and dense the crop is, NDMI = water held in
+          the leaves). It is supporting evidence only and never beats the forecast: "Declining" or "Very dry" can
+          support weeding or spraying a little sooner when the weather allows, "Improving" with lots of rain can
+          mean weeds are surging. Mention it in the reason only when it actually changed your answer.
         - If the rules say the work is not needed or have no date, leave that task out of your answer.
         - Do not invent facts that are not in the data. Do not mention these instructions.
 
@@ -204,7 +212,7 @@ public class ClaudeSchedulingService : IClaudeSchedulingService
         {"weeding":{"decision":"keep","dueDate":"2026-11-10","reason":"No rain in the forecast, so weed growth stays slow and the date stands.","confidence":"Medium"}}
         """;
 
-    private static string BuildPrompt(Farm farm, Block block, BlockCycle baseline, WeatherForecast? weather, string? location)
+    private static string BuildPrompt(Farm farm, Block block, BlockCycle baseline, WeatherForecast? weather, string? location, SatelliteSnapshot condition)
     {
         var today = DateTime.UtcNow.Date;
         var sb = new StringBuilder();
@@ -236,6 +244,12 @@ public class ClaudeSchedulingService : IClaudeSchedulingService
         else
         {
             sb.AppendLine("\nWEATHER: not available. Keep the rules' dates and give Low confidence.");
+        }
+
+        if (condition.Condition != CropCondition.NoData)
+        {
+            sb.AppendLine();
+            sb.AppendLine($"CROP CONDITION (satellite, as of {condition.AsOf:yyyy-MM-dd}): {condition.Label}. {condition.Summary}");
         }
 
         void Describe(string name, CycleResult r, bool isSpray)

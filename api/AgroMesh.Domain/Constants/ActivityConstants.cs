@@ -35,6 +35,18 @@ public static class ActivityConstants
         };
     }
 
+    /// <summary>
+    /// Work that covers part of a block at a time: the manager marks the area that was worked (8+ points), so the
+    /// block can show what is done and what is left.
+    /// </summary>
+    public static readonly IReadOnlySet<ActivityType> RequiresWorkedArea = new HashSet<ActivityType>
+    {
+        ActivityType.Weeding,
+        ActivityType.Spraying,
+        ActivityType.FertilizerApplication,
+        ActivityType.Harvesting
+    };
+
     public static readonly IReadOnlySet<ActivityType> ChemicalActivityTypes = new HashSet<ActivityType>
     {
         ActivityType.Spraying,

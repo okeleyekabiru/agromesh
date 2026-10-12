@@ -23,6 +23,9 @@ public class AgroMeshDbContext : DbContext
     public DbSet<InventoryCategory> InventoryCategories => Set<InventoryCategory>();
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
     public DbSet<StockAdjustmentRequest> StockAdjustmentRequests => Set<StockAdjustmentRequest>();
+    public DbSet<PriceChangeRequest> PriceChangeRequests => Set<PriceChangeRequest>();
+    public DbSet<CoverageCompletion> CoverageCompletions => Set<CoverageCompletion>();
+    public DbSet<BlockSatelliteReading> BlockSatelliteReadings => Set<BlockSatelliteReading>();
     public DbSet<SchedulingPrediction> SchedulingPredictions => Set<SchedulingPrediction>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<Order> Orders => Set<Order>();

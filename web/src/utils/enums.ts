@@ -10,7 +10,13 @@ const WORKER_TYPES: WorkerType[] = ['Employee', 'Contractor']
 
 export const TRANSACTION_CATEGORIES = [
   'Labour', 'Fertilizer', 'Chemicals', 'Fuel', 'Equipment', 'Maintenance', 'Transportation', 'Seeds', 'Sales', 'Other',
+  'TaxAndCharges',
 ] as const
+
+/** How a category is written on screen. */
+export function categoryLabel(c: string): string {
+  return c === 'TaxAndCharges' ? 'Tax & Charges' : c
+}
 const CONFIDENCE = ['High', 'Medium', 'Low']
 const SOURCES = ['Dictionary', 'Pattern', 'Llm', 'Manual']
 

@@ -14,9 +14,9 @@
           </div>
 
           <div v-if="localOrder.reference && localOrder.status !== 'Draft' && !localOrder.isPaid" class="pay-ref">
-            To pay by bank transfer, put <b>{{ localOrder.reference }}</b> in the narration, for example
-            <b>{{ localOrder.reference }}/chemical</b>, and send exactly ₦{{ localOrder.total.toLocaleString() }}.
-            The order is marked paid automatically.
+            To pay by bank transfer, write the narration as <b>order / block / type</b>, for example
+            <b>{{ localOrder.reference }}/Alpha/Fertilizer</b>, and send exactly ₦{{ localOrder.total.toLocaleString() }}.
+            The order is marked paid automatically, and the spend is recorded against that block.
           </div>
 
           <div class="line-item-list">
@@ -28,7 +28,7 @@
             </div>
             <div class="line-item-detail-row" v-for="line in localOrder.lineItems" :key="line.inventoryItemId">
               <span>{{ line.inventoryItemName }} ({{ line.unit }})</span>
-              <span>{{ line.quantity.toLocaleString() }}</span>
+              <span>{{ line.quantity.toLocaleString() }}<small v-if="packText(line)" class="packs"> {{ packText(line) }}</small></span>
               <span>₦{{ line.unitPrice.toLocaleString() }}</span>
               <span>₦{{ line.lineTotal.toLocaleString() }}</span>
             </div>
@@ -77,6 +77,14 @@ import type { Order, OrderStatus } from '@/types'
 const props = defineProps<{ order: Order }>()
 defineEmits<{ close: [] }>()
 const store = useAgroStore()
+
+// "(10 bags)" next to a quantity in kg or litres, when the item is bought by the pack.
+function packText(line: { inventoryItemId: string; quantity: number }): string {
+  const item = store.inventoryItems.find(i => i.id === line.inventoryItemId)
+  if (!item || !(item.packSize > 1)) return ''
+  const packs = Math.round((line.quantity / item.packSize) * 100) / 100
+  return `(${packs.toLocaleString()} ${item.packLabel}${packs === 1 ? '' : 's'})`
+}
 
 // Local copy so a Place/Receive transition (or a re-downloaded invoice) reflects immediately in
 // this modal without needing the whole Orders list to re-render.
@@ -157,6 +165,7 @@ async function downloadInvoice() {
   display: grid; grid-template-columns: 2.2fr 0.8fr 1fr 1fr; gap: 8px; padding: 8px 12px; font-size: 11.5px;
 }
 .line-item-header { background: #f9fafb; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--stone); }
+.packs { color: var(--stone); font-size: 10px; }
 .line-item-detail-row { border-top: 1px solid var(--fog); color: var(--forest); }
 .line-item-detail-row span:not(:first-child) { font-family: 'JetBrains Mono', monospace; text-align: right; }
 .line-item-header span:not(:first-child) { text-align: right; }

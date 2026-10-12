@@ -364,6 +364,40 @@ public class SupplierAndOrderHandlerTests
     }
 
     [Fact]
+    public async Task ReceiveOrder_SetsTheStockCostFromTheOrdersUnitPrice_AsAWeightedAverage()
+    {
+        var item = CreateItem(stock: 100);
+        item.SetUnitCost(400m);                                  // 100 on hand at 400 each
+        var supplier = Domain.Entities.Supplier.Create("farm-1", "Saro Agro");
+        var order = Domain.Entities.Order.Create("farm-1", supplier.Id, [new AgroMesh.Domain.ValueObjects.OrderLineItem(item.Id, 100, 600)]);
+        order.Place();
+        var handler = new ReceiveOrderCommandHandler(
+            new FakeOrderRepository { Orders = [order] }, new FakeSupplierRepository { Suppliers = [supplier] },
+            new FakeInventoryRepository { Items = [item] });
+
+        await handler.Handle(new ReceiveOrderCommand("farm-1", order.Id), CancellationToken.None);
+
+        Assert.Equal(200m, item.CurrentStock);
+        Assert.Equal(500m, item.UnitCost);                       // (100 x 400 + 100 x 600) / 200
+    }
+
+    [Fact]
+    public async Task ReceiveOrder_PricesStockThatHadNoCost()
+    {
+        var item = CreateItem(stock: 0);
+        var supplier = Domain.Entities.Supplier.Create("farm-1", "Saro Agro");
+        var order = Domain.Entities.Order.Create("farm-1", supplier.Id, [new AgroMesh.Domain.ValueObjects.OrderLineItem(item.Id, 10, 560)]);
+        order.Place();
+        var handler = new ReceiveOrderCommandHandler(
+            new FakeOrderRepository { Orders = [order] }, new FakeSupplierRepository { Suppliers = [supplier] },
+            new FakeInventoryRepository { Items = [item] });
+
+        await handler.Handle(new ReceiveOrderCommand("farm-1", order.Id), CancellationToken.None);
+
+        Assert.Equal(560m, item.UnitCost);
+    }
+
+    [Fact]
     public async Task ReceiveOrder_FromDraft_ThrowsDomainException_NoStockOrMovementSideEffects()
     {
         var item = CreateItem(stock: 100);

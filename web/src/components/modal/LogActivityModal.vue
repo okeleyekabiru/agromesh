@@ -84,14 +84,25 @@
           </div>
         </template>
 
-        <!-- STEP 3: Workers & Inputs -->
-        <template v-if="step === 3">
+        <!-- STEP 3 (weeding, spraying, fertilizer, harvest): mark the area that was worked -->
+        <template v-if="stepName === 'Area'">
+          <div class="form-group">
+            <label class="form-label">Area worked <span class="label-hint">at least 8 points around the edge</span></label>
+            <WorkedAreaPicker :block="selectedBlock" :activity-type="form.activityType || undefined" v-model="form.areaPoints" />
+          </div>
+        </template>
+
+        <!-- STEP: Workers & Inputs -->
+        <template v-if="stepName === 'Workers & Inputs'">
           <div class="form-group">
             <label class="form-label">Supervisor</label>
             <select class="form-select" v-model="form.supervisorId">
               <option value="">Select supervisor...</option>
               <option v-for="w in store.supervisors" :key="w.id" :value="w.id">
                 {{ w.name }} — {{ w.roleTitle }}
+              </option>
+              <option v-for="m in store.managers" :key="m.id" :value="m.id">
+                {{ m.fullName }} — Farm manager
               </option>
             </select>
           </div>
@@ -180,6 +191,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useAgroStore } from '@/stores/agro'
 import { extractErrorMessage } from '@/utils/http'
+import WorkedAreaPicker from '@/components/block/WorkedAreaPicker.vue'
 import type { ActivityType } from '@/types'
 import { PAY_FREQUENCY_LABELS } from '@/types'
 
@@ -188,6 +200,7 @@ const store = useAgroStore()
 
 onMounted(() => {
   if (!store.workers.length) store.fetchWorkers()
+  store.fetchManagers()
   if (!store.chemicals.length) store.fetchChemicals()
   if (!store.blocks.length) store.fetchBlocks()
   store.fetchInventory()
@@ -195,7 +208,14 @@ onMounted(() => {
 })
 
 const step = ref(1)
-const steps = ['Location', 'Activity', 'Workers & Inputs']
+// Work that covers part of a block at a time needs the area marked on the map (8+ points); the rest skips that step.
+const AREA_TYPES = new Set(['Weeding', 'Spraying', 'FertilizerApplication', 'Harvesting'])
+const MIN_AREA_POINTS = 8
+const needsArea = computed(() => AREA_TYPES.has(form.value.activityType as string))
+const steps = computed(() => needsArea.value
+  ? ['Location', 'Activity', 'Area', 'Workers & Inputs']
+  : ['Location', 'Activity', 'Workers & Inputs'])
+const stepName = computed(() => steps.value[step.value - 1])
 const submitting = ref(false)
 const lowStockWarnings = ref<string[]>([])
 const submitError = ref('')
@@ -235,6 +255,7 @@ const form = ref({
   notes: '',
   supervisorId: '',
   chemicalProductId: '',
+  areaPoints: [] as { lat: number; lng: number }[],
   inputs: [] as { inventoryItemId: string; item: string; quantity: number; unit: string }[]
 })
 
@@ -291,6 +312,7 @@ const selectedBlock = computed(() => store.blocks.find(s => s.id === form.value.
 const canProceed = computed(() => {
   if (step.value === 1) return !!form.value.blockId
   if (step.value === 2) return !!form.value.activityType
+  if (stepName.value === 'Area') return form.value.areaPoints.length >= MIN_AREA_POINTS
   // Who did the work and what it used are both required.
   return !!form.value.supervisorId && workerEntries.value.length > 0 && form.value.inputs.length > 0 &&
     (!isChemicalActivity.value || hasChemicalInput.value)
@@ -303,7 +325,7 @@ const hasChemicalInput = computed(() => form.value.inputs.some(inp => {
 }))
 
 async function next() {
-  if (step.value < steps.length) {
+  if (step.value < steps.value.length) {
     step.value++
     return
   }
@@ -325,7 +347,8 @@ async function next() {
         hoursWorked: we.hoursWorked,
         payRate: we.payRate
       })),
-      inputs: form.value.inputs.map(i => ({ inventoryItemId: i.inventoryItemId, quantity: i.quantity }))
+      inputs: form.value.inputs.map(i => ({ inventoryItemId: i.inventoryItemId, quantity: i.quantity })),
+      workedAreaPoints: needsArea.value ? form.value.areaPoints.map(p => ({ lat: p.lat, lng: p.lng })) : undefined
     }
     const result = await store.logActivity(payload)
     if (result.lowStockWarnings?.length) {

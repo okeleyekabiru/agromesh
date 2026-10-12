@@ -1,4 +1,5 @@
 using AgroMesh.Application.Interfaces;
+using AgroMesh.Application.Services;
 using AgroMesh.Infrastructure.Persistence;
 using AgroMesh.Infrastructure.Persistence.Repositories;
 using AgroMesh.Infrastructure.Services;
@@ -32,6 +33,7 @@ public static class DependencyInjection
         services.AddHttpClient("weather-client");
         services.AddHttpClient("claude-client");
         services.AddHttpClient("mono-client");
+        services.AddHttpClient("copernicus-client");
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
@@ -51,6 +53,8 @@ public static class DependencyInjection
         services.AddScoped<IInventoryRepository, InventoryRepository>();
         services.AddScoped<IInventoryCategoryRepository, InventoryCategoryRepository>();
         services.AddScoped<IStockAdjustmentRequestRepository, StockAdjustmentRequestRepository>();
+        services.AddScoped<IPriceChangeRequestRepository, PriceChangeRequestRepository>();
+        services.AddScoped<ICoverageCompletionRepository, CoverageCompletionRepository>();
         services.AddScoped<ISupplierRepository, SupplierRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<ISchedulingPredictionRepository, SchedulingPredictionRepository>();
@@ -59,6 +63,9 @@ public static class DependencyInjection
         services.AddScoped<IWeatherService, WeatherService>();
         services.AddScoped<IGeocodingService, GeocodingService>();
         services.AddScoped<IClaudeSchedulingService, ClaudeSchedulingService>();
+        services.AddScoped<ISatelliteService, Services.Satellite.CopernicusSatelliteService>();
+        services.AddScoped<IBlockSatelliteRepository, BlockSatelliteRepository>();
+        services.AddScoped<SatelliteRefresher>();
         services.AddScoped<IInventoryDeductionService, InventoryDeductionService>();
         services.AddScoped<IOrderInvoiceService, OrderInvoiceService>();
         services.AddScoped<IFinancialCategorizationService, FinancialCategorizationService>();
@@ -69,6 +76,7 @@ public static class DependencyInjection
         services.AddSingleton<IBackgroundJobQueue>(sp => sp.GetRequiredService<BackgroundJobQueue>());
         services.AddHostedService<SchedulingBackgroundService>();
         services.AddHostedService<DailyBankSyncService>();
+        services.AddHostedService<Services.Satellite.DailySatelliteRefreshService>();
 
         return services;
     }

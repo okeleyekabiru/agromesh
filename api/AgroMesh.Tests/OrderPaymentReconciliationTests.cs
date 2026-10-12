@@ -175,7 +175,7 @@ public class PaymentReconcilerTests
         public List<Transaction> All = [];
         public Task<Transaction?> GetByIdAsync(string id, CancellationToken ct = default) => Task.FromResult(All.FirstOrDefault(t => t.Id == id));
         public Task<Transaction?> GetByMonoIdAsync(string monoId, CancellationToken ct = default) => Task.FromResult(All.FirstOrDefault(t => t.MonoId == monoId));
-        public Task<(List<Transaction> Items, int Total)> GetByFarmIdAsync(string farmId, int page, int pageSize, bool? pendingReview = null, CancellationToken ct = default) =>
+        public Task<(List<Transaction> Items, int Total)> GetByFarmIdAsync(string farmId, int page, int pageSize, bool? pendingReview = null, AgroMesh.Domain.Enums.TransactionKind? kind = null, AgroMesh.Domain.Enums.TransactionCategory? category = null, CancellationToken ct = default) =>
             Task.FromResult((All.Where(t => t.FarmId == farmId).ToList(), All.Count));
         public Task<List<Transaction>> GetUncategorizedAsync(string farmId, int limit = 100, CancellationToken ct = default) => Task.FromResult(new List<Transaction>());
         public Task<Transaction> AddAsync(Transaction transaction, CancellationToken ct = default) { All.Add(transaction); return Task.FromResult(transaction); }

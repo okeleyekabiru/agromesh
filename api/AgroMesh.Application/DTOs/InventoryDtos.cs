@@ -46,6 +46,31 @@ public record SetItemPricingRequest(decimal PackSize, string PackLabel, decimal 
 
 public record SetItemPricingResponse(InventoryItemDto Item, int ActivitiesUpdated);
 
+/// <summary>A price waiting for an admin (or already decided). Shows the price now next to the one asked for.</summary>
+public record PriceChangeRequestDto(
+    string Id,
+    string FarmId,
+    string InventoryItemId,
+    string InventoryItemName,
+    string Unit,
+    decimal CurrentUnitCost,
+    string CurrentPackLabel,
+    decimal CurrentPackSize,
+    string RequestedPackLabel,
+    decimal RequestedPackSize,
+    decimal RequestedPricePerPack,
+    decimal RequestedPricePerUnit,
+    bool BackfillActivities,
+    string? Notes,
+    string Status,
+    string RequestedByUserId,
+    string? ReviewedByUserId,
+    DateTime? ReviewedAt,
+    string? ReviewNotes,
+    DateTime CreatedAt);
+
+public record ReviewPriceChangeRequest(string? ReviewNotes);
+
 public record InventoryCategoryDto(string Id, string FarmId, string Name, bool IsDefault);
 
 public record CreateInventoryCategoryRequest(string Name);

@@ -83,12 +83,12 @@ export const activityApi = {
 
 // ── Transactions ──
 export const transactionApi = {
-  getAll: (page = 1, pageSize = 20, pendingReview?: boolean) => {
-    const q = pendingReview !== undefined ? `&pendingReview=${pendingReview}` : ''
+  getAll: (page = 1, pageSize = 20, pendingReview?: boolean, kind?: 'Income' | 'Capital' | 'Expense', category?: string) => {
+    const q = (pendingReview !== undefined ? `&pendingReview=${pendingReview}` : '') + (kind ? `&kind=${kind}` : '') +
+      (category ? `&category=${category}` : '')
     return api.get(`/api/farms/${FARM_ID}/transactions?page=${page}&pageSize=${pageSize}${q}`)
   },
   review: (id: string, body: unknown) => api.patch(`/api/farms/${FARM_ID}/transactions/${id}/review`, body),
-  recordReceipt: (id: string, body: unknown) => api.post(`/api/farms/${FARM_ID}/transactions/${id}/inventory-receipt`, body),
   summary: (from?: string, to?: string) => {
     const q = [from ? `from=${from}` : '', to ? `to=${to}` : ''].filter(Boolean).join('&')
     return api.get(`/api/farms/${FARM_ID}/transactions/summary${q ? '?' + q : ''}`)
@@ -149,6 +149,15 @@ export const inventoryAdjustmentsApi = {
     api.patch(`/api/farms/${FARM_ID}/inventory-adjustments/${requestId}/reject`, body ?? {})
 }
 
+// ── Price changes: a price asked for waits for an admin ──
+export const inventoryPriceChangesApi = {
+  getAll: (status?: string) => api.get(`/api/farms/${FARM_ID}/inventory-price-changes${status ? `?status=${status}` : ''}`),
+  approve: (requestId: string, body?: { reviewNotes?: string | null }) =>
+    api.patch(`/api/farms/${FARM_ID}/inventory-price-changes/${requestId}/approve`, body ?? {}),
+  reject: (requestId: string, body?: { reviewNotes?: string | null }) =>
+    api.patch(`/api/farms/${FARM_ID}/inventory-price-changes/${requestId}/reject`, body ?? {})
+}
+
 // ── Suppliers (Phase 4) ──
 export const supplierApi = {
   getAll: () => api.get(`/api/farms/${FARM_ID}/suppliers`),
@@ -185,6 +194,17 @@ export const authApi = {
   register: (body: { fullName: string; email: string; password: string; farmName: string }) =>
     api.post('/api/auth/register', body),
   me: () => api.get('/api/auth/me'),
+}
+
+// ── Satellite crop condition per block ──
+export const satelliteApi = {
+  get: () => api.get(`/api/farms/${FARM_ID}/blocks/satellite`),
+  refresh: () => api.post(`/api/farms/${FARM_ID}/blocks/satellite/refresh`, {})
+}
+
+// ── Farm managers by name (a choice for an activity's supervisor) ──
+export const managersApi = {
+  getAll: () => api.get('/api/users/managers')
 }
 
 // ── Feature Flags ──

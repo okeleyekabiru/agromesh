@@ -54,6 +54,7 @@ class AppStore extends ChangeNotifier {
 
     try {
       await refreshWorkers();
+      await refreshManagers();
       await refreshFarmDetails();
       await refreshBlocks();
       await refreshStock();
@@ -220,8 +221,10 @@ class AppStore extends ChangeNotifier {
     required String supervisorName,
     String notes = '',
     DateTime? date,
+    List<GeoPoint> areaPoints = const [],
   }) async {
     final activity = ActivityLog(
+      areaPoints: areaPoints,
       id: _uuid.v4(),
       farmId: farmId,
       blockId: blockId,
@@ -275,6 +278,39 @@ class AppStore extends ChangeNotifier {
   }
 
   // ── HELPERS ──
+  /// Farm managers (accounts, not workers) can supervise an activity too. Cached so the choice works offline.
+  List<Worker> managers = [];
+
+  /// Who can be picked as supervisor: supervisor workers (or every worker when none is a supervisor) plus farm managers.
+  List<Worker> get supervisorOptions => [...(supervisors.isNotEmpty ? supervisors : workers), ...managers];
+
+  Future<void> refreshManagers() async {
+    try {
+      final json = await ApiClient.get('/api/users/managers');
+      final list = (json as List).cast<Map<String, dynamic>>();
+      managers = [
+        for (final j in list)
+          Worker(
+            id: j['id'] as String, farmId: farmId, name: j['fullName'] as String, initials: '',
+            role: 'Farm manager', type: WorkerType.values.first, active: true, dailyRate: 0,
+          ),
+      ];
+      await DatabaseService.saveCache('managers:$farmId', [for (final j in list) j]);
+    } catch (_) {
+      final cached = await DatabaseService.readCacheList('managers:$farmId');
+      if (managers.isEmpty && cached.isNotEmpty) {
+        managers = [
+          for (final j in cached)
+            Worker(
+              id: j['id'] as String, farmId: farmId, name: j['fullName'] as String, initials: '',
+              role: 'Farm manager', type: WorkerType.values.first, active: true, dailyRate: 0,
+            ),
+        ];
+      }
+    }
+    notifyListeners();
+  }
+
   List<Worker> get supervisors => workers.where((w) => w.role.toLowerCase().contains('supervisor')).toList();
 
   Block? blockById(String id) {
@@ -315,7 +351,7 @@ class AppStore extends ChangeNotifier {
       final json = await ApiClient.get('/api/farms/$farmId/activities?page=1&pageSize=50');
       final items = ((json as Map<String, dynamic>)['items'] as List).cast<Map<String, dynamic>>();
       final blockNames = {for (final b in await DatabaseService.getBlocks(farmId)) b.id: b.name};
-      final workerNames = {for (final w in await DatabaseService.getWorkers(farmId)) w.id: w.name};
+      final workerNames = {for (final w in await DatabaseService.getWorkers(farmId)) w.id: w.name, for (final m in managers) m.id: m.name};
       final logs = items.map((j) => ActivityLog.fromApiJson(
             j,
             blockName: blockNames[j['blockId']] ?? 'Unknown block',

@@ -68,6 +68,20 @@ public static class KeywordDictionary
         ["seedling"] = TransactionCategory.Seeds,
         ["nursery"] = TransactionCategory.Seeds,
 
+        // Tax and bank charges (VAT, stamp duty, transfer fees, commission...)
+        ["vat"] = TransactionCategory.TaxAndCharges,
+        ["tax"] = TransactionCategory.TaxAndCharges,
+        ["taxes"] = TransactionCategory.TaxAndCharges,
+        ["wht"] = TransactionCategory.TaxAndCharges,
+        ["stamp"] = TransactionCategory.TaxAndCharges,
+        ["duty"] = TransactionCategory.TaxAndCharges,
+        ["levy"] = TransactionCategory.TaxAndCharges,
+        ["emtl"] = TransactionCategory.TaxAndCharges,
+        ["charge"] = TransactionCategory.TaxAndCharges,
+        ["charges"] = TransactionCategory.TaxAndCharges,
+        ["commission"] = TransactionCategory.TaxAndCharges,
+        ["cot"] = TransactionCategory.TaxAndCharges,
+
         // Sales
         ["proceeds"] = TransactionCategory.Sales,
         ["harvest"] = TransactionCategory.Sales,

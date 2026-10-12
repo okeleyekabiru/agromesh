@@ -29,9 +29,9 @@
     <div v-if="error" class="error-msg">{{ error }}</div>
 
     <div v-if="status?.linked" class="bank-rules">
-      Orders are marked paid when a transfer's narration carries the order number, for example
-      <b>ORD-1042/chemical</b>, and the amount matches. Money in is income, unless the narration says
-      <b>capital</b> or <b>investment</b>.
+      Write the narration as <b>order / block / type</b>, for example <b>ORD-1042/Alpha/Fertilizer</b>. The order is
+      marked paid when the number and amount match, and the spend goes to that block and type. Money in is income,
+      unless the narration says <b>capital</b> or <b>investment</b>.
     </div>
   </div>
 </template>

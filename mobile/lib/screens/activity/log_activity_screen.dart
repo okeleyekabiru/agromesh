@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart' show Geolocator, LocationAccuracy, LocationPermission;
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/models.dart';
+import '../../services/api_client.dart';
 import '../../stores/app_store.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/geo_sketch.dart';
 import '../../widgets/widgets.dart';
 
 class LogActivityScreen extends StatefulWidget {
@@ -14,8 +17,23 @@ class LogActivityScreen extends StatefulWidget {
 }
 
 class _LogActivityScreenState extends State<LogActivityScreen> {
-  int _step = 0; // 0=Location, 1=Activity, 2=Workers & Inputs
+  int _step = 0; // index into _steps
   final _formKey = GlobalKey<FormState>();
+
+  // Weeding, spraying, fertilizer and harvest cover part of a block at a time: the supervisor walks the edge
+  // of what was worked and taps a point at each corner (8 or more), so the block can show done vs left.
+  static const _areaTypes = {
+    ActivityType.weeding, ActivityType.spraying, ActivityType.fertilizerApplication, ActivityType.harvesting,
+  };
+  static const _minAreaPoints = 8;
+  final List<GeoPoint> _areaPoints = [];
+  bool _capturing = false;
+  String? _areaError;
+
+  bool get _needsArea => _activityType != null && _areaTypes.contains(_activityType);
+  List<String> get _steps =>
+      _needsArea ? ['Location', 'Activity', 'Area', 'Workers & Inputs'] : ['Location', 'Activity', 'Workers & Inputs'];
+  String get _stepName => _steps[_step];
 
   // Form state
   Block? _block;
@@ -24,6 +42,9 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
   final List<WorkerLog> _workers = [];
   final List<InputUsed> _inputs = [];
   String? _supervisorId;
+
+  // Work already done this cycle on the picked block, drawn under the area picker so a new area does not overlap it.
+  BlockCoverage? _existing;
 
   // Input builders — workers and inputs are picked from real data (the farm's workers and
   // its stock), never typed in: the server only accepts known worker ids and stock items.
@@ -43,9 +64,23 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
     super.dispose();
   }
 
+  Future<void> _loadExisting() async {
+    final block = _block, type = _activityType;
+    setState(() => _existing = null);
+    if (block == null || type == null || !_areaTypes.contains(type)) return;
+    try {
+      final json = await ApiClient.get('/api/farms/${block.farmId}/blocks/${block.id}/coverage?activityType=${type.index}');
+      if (!mounted || block != _block || type != _activityType) return;
+      setState(() => _existing = BlockCoverage.fromApiJson(json as Map<String, dynamic>));
+    } catch (_) {
+      // Offline: the picker works without the overlay.
+    }
+  }
+
   bool get _canProceed {
     if (_step == 0) return _block != null;
     if (_step == 1) return _activityType != null;
+    if (_stepName == 'Area') return _areaPoints.length >= _minAreaPoints;
     if (_supervisorId == null) return false;
     // Who did the work and what it used are both required.
     if (_workers.isEmpty || _inputs.isEmpty) return false;
@@ -65,7 +100,7 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
     setState(() => _isSubmitting = true);
 
     final store = context.read<AppStore>();
-    final supervisor = store.workers.firstWhere((w) => w.id == _supervisorId);
+    final supervisor = store.supervisorOptions.firstWhere((w) => w.id == _supervisorId);
 
     await store.logActivity(
       blockId: _block!.id,
@@ -76,6 +111,7 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
       supervisorId: supervisor.id,
       supervisorName: supervisor.name,
       notes: _notesCtrl.text,
+      areaPoints: _needsArea ? List<GeoPoint>.from(_areaPoints) : const [],
     );
 
     if (mounted) {
@@ -87,6 +123,31 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
           behavior: SnackBarBehavior.floating,
         ),
       );
+    }
+  }
+
+  Future<void> _capturePoint() async {
+    setState(() { _capturing = true; _areaError = null; });
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        setState(() => _areaError = 'Turn on device location/GPS to mark a point.');
+        return;
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) permission = await Geolocator.requestPermission();
+      if (permission != LocationPermission.always && permission != LocationPermission.whileInUse) {
+        setState(() => _areaError = 'Location permission is needed to mark points.');
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 20),
+      );
+      setState(() => _areaPoints.add(GeoPoint(lat: position.latitude, lng: position.longitude)));
+    } catch (_) {
+      setState(() => _areaError = 'Could not read your location. Try again in the open.');
+    } finally {
+      if (mounted) setState(() => _capturing = false);
     }
   }
 
@@ -113,7 +174,7 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
       body: Column(
         children: [
           // Stepper
-          _Stepper(currentStep: _step),
+          _Stepper(currentStep: _step, steps: _steps),
 
           Expanded(
             child: Form(
@@ -124,12 +185,12 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
                   _StepLocation(
                     blocks: store.blocks,
                     selectedBlock: _block,
-                    onBlockChanged: (s) => setState(() => _block = s),
+                    onBlockChanged: (s) { setState(() => _block = s); _loadExisting(); },
                   ),
                   _StepActivity(
                     selected: _activityType,
                     notes: _notesCtrl,
-                    onSelected: (t) => setState(() {
+                    onSelected: (t) { setState(() {
                       _activityType = t;
                       // Drop picked inputs that don't fit the new activity.
                       _inputs.removeWhere((inp) {
@@ -138,16 +199,28 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
                       });
                       final sel = store.stockItems.where((s) => s.id == _stockItemId);
                       if (sel.isNotEmpty && !sel.first.usableIn(t)) _stockItemId = null;
-                    }),
+                    }); _loadExisting(); },
                   ),
+                  if (_needsArea)
+                    _StepArea(
+                      block: _block,
+                      existing: _existing,
+                      points: _areaPoints,
+                      capturing: _capturing,
+                      error: _areaError,
+                      minPoints: _minAreaPoints,
+                      onAdd: _capturePoint,
+                      onUndo: () => setState(() { if (_areaPoints.isNotEmpty) _areaPoints.removeLast(); }),
+                      onClear: () => setState(_areaPoints.clear),
+                    ),
                   _StepWorkersInputs(
                     workers: _workers,
                     inputs: _inputs,
                     availableWorkers: store.workers.where((w) => w.active).toList(),
                     stockItems: store.stockItems.where((i) => _activityType == null || i.usableIn(_activityType!)).toList(),
                     block: _block,
-                    // Falls back to everyone when no worker's role mentions "supervisor".
-                    supervisors: store.supervisors.isNotEmpty ? store.supervisors : store.workers,
+                    // Supervisor workers (everyone when none is one) plus the farm managers.
+                    supervisors: store.supervisorOptions,
                     selectedSupervisorId: _supervisorId,
                     workerPickId: _workerPickId,
                     hoursCtrl: _hoursCtrl,
@@ -210,6 +283,7 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
           // Footer navigation
           _Footer(
             step: _step,
+            isLast: _step == _steps.length - 1,
             canProceed: _canProceed,
             isSubmitting: _isSubmitting,
             onBack: () {
@@ -220,7 +294,7 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
               }
             },
             onNext: () {
-              if (_step < 2) {
+              if (_step < _steps.length - 1) {
                 setState(() => _step++);
               } else {
                 _submit();
@@ -236,11 +310,11 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
 // ── STEPPER ──
 class _Stepper extends StatelessWidget {
   final int currentStep;
-  const _Stepper({required this.currentStep});
+  final List<String> steps;
+  const _Stepper({required this.currentStep, required this.steps});
 
   @override
   Widget build(BuildContext context) {
-    final steps = ['Location', 'Activity', 'Workers & Inputs'];
     return Container(
       color: AgroColors.white,
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
@@ -594,16 +668,97 @@ class _StepWorkersInputs extends StatelessWidget {
   }
 }
 
+// ── AREA (mark what was worked) ──
+class _StepArea extends StatelessWidget {
+  final Block? block;
+  final BlockCoverage? existing;
+  final List<GeoPoint> points;
+  final bool capturing;
+  final String? error;
+  final int minPoints;
+  final VoidCallback onAdd;
+  final VoidCallback onUndo;
+  final VoidCallback onClear;
+
+  const _StepArea({
+    required this.block, required this.existing, required this.points, required this.capturing, required this.error,
+    required this.minPoints, required this.onAdd, required this.onUndo, required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final enough = points.length >= minPoints;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        MonoLabel('Area worked — ${points.length} / $minPoints points${enough ? ' ✓' : ''}'),
+        const SizedBox(height: 8),
+        Text(
+          'Walk around the edge of the area that was worked and tap Add point at each corner, in order. At least $minPoints points.',
+          style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone),
+        ),
+        const SizedBox(height: 12),
+        GeoSketch(
+          block: geoJsonRings(block?.boundaryGeoJson),
+          covered: geoJsonRings(existing?.coveredGeoJson),
+          remaining: geoJsonRings(existing?.remainingGeoJson),
+          marking: points,
+        ),
+        if (existing != null && existing!.status != 'NotStarted')
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              existing!.status == 'Complete'
+                  ? 'The whole block is already covered this cycle: this will start a new cycle.'
+                  : 'Green is already done this cycle (${existing!.coveredHectares.toStringAsFixed(2)} ha). Mark only the amber part so the work does not overlap.',
+              style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.forest),
+            ),
+          ),
+        if (block != null && !block!.hasBoundary)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text('This block has no boundary yet, so the area cannot be checked against its edge.',
+              style: GoogleFonts.inter(fontSize: 11, color: AgroColors.harvest)),
+          ),
+        if (error != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(error!, style: const TextStyle(color: AgroColors.alert, fontSize: 12)),
+          ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: capturing ? null : onAdd,
+                icon: capturing
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.my_location, size: 18),
+                label: Text(capturing ? 'Reading GPS…' : 'Add point here'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton(onPressed: points.isEmpty ? null : onUndo, child: const Text('Undo')),
+            const SizedBox(width: 8),
+            OutlinedButton(onPressed: points.isEmpty ? null : onClear, child: const Text('Clear')),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 // ── FOOTER ──
 class _Footer extends StatelessWidget {
   final int step;
+  final bool isLast;
   final bool canProceed;
   final bool isSubmitting;
   final VoidCallback onBack;
   final VoidCallback onNext;
 
   const _Footer({
-    required this.step, required this.canProceed,
+    required this.step, required this.isLast, required this.canProceed,
     required this.isSubmitting, required this.onBack, required this.onNext,
   });
 
@@ -628,7 +783,7 @@ class _Footer extends StatelessWidget {
               onPressed: canProceed && !isSubmitting ? onNext : null,
               child: isSubmitting
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                : Text(step == 2 ? '✓ Submit Activity' : 'Continue →',
+                : Text(isLast ? '✓ Submit Activity' : 'Continue →',
                     style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
             ),
           ),

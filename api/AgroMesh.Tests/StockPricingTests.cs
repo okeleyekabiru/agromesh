@@ -132,4 +132,113 @@ public class StockPricingTests
             new SetItemPricingCommandHandler(new FakeInventoryRepo(npk), new FakeActivityRepo())
                 .Handle(new SetItemPricingCommand("other-farm", npk.Id, new SetItemPricingRequest(50, "bag", 1, false)), default));
     }
+
+    // ── price changes need an admin ──
+
+    private class FakePriceRepo : IPriceChangeRequestRepository
+    {
+        public List<PriceChangeRequest> All = [];
+        public Task<PriceChangeRequest?> GetByIdAsync(string id, CancellationToken ct = default) => Task.FromResult(All.FirstOrDefault(r => r.Id == id));
+        public Task<List<PriceChangeRequest>> GetByFarmIdAsync(string farmId, PriceChangeStatus? status = null, CancellationToken ct = default) =>
+            Task.FromResult(All.Where(r => r.FarmId == farmId && (status is null || r.Status == status)).ToList());
+        public Task<PriceChangeRequest> AddAsync(PriceChangeRequest request, CancellationToken ct = default) { All.Add(request); return Task.FromResult(request); }
+        public Task UpdateAsync(PriceChangeRequest request, CancellationToken ct = default) => Task.CompletedTask;
+    }
+
+    private class FakeUser(bool admin) : ICurrentUserAccessor
+    {
+        public string? UserId => admin ? "admin-1" : "member-1";
+        public string? CompanyId => "co-1";
+        public UserRole Role => admin ? UserRole.Admin : UserRole.Member;
+    }
+
+    [Fact]
+    public async Task Asking_for_a_price_does_not_change_the_item_until_an_admin_approves()
+    {
+        var npk = Npk(100);
+        var repo = new FakePriceRepo();
+
+        var dto = await new RequestItemPricingCommandHandler(new FakeInventoryRepo(npk), repo, new FakeUser(false))
+            .Handle(new RequestItemPricingCommand("farm-1", npk.Id, new SetItemPricingRequest(50, "bag", 28000, true)), default);
+
+        Assert.Equal("Pending", dto.Status);
+        Assert.Equal(560m, dto.RequestedPricePerUnit);
+        Assert.Equal(0m, npk.UnitCost);                         // nothing applied yet
+        Assert.Single(repo.All);
+    }
+
+    [Fact]
+    public async Task An_admin_approving_applies_the_price_and_the_backfill()
+    {
+        var npk = Npk(100);
+        var past = Activity(npk.Id, 38);
+        var repo = new FakePriceRepo();
+        var req = PriceChangeRequest.Create("farm-1", npk.Id, "bag", 50, 28000, true, null, "member-1");
+        repo.All.Add(req);
+
+        var dto = await new ApprovePriceChangeCommandHandler(repo, new FakeInventoryRepo(npk), new FakeActivityRepo(past), new FakeUser(true))
+            .Handle(new ApprovePriceChangeCommand("farm-1", req.Id, "ok"), default);
+
+        Assert.Equal("Approved", dto.Status);
+        Assert.Equal(560m, npk.UnitCost);
+        Assert.Equal(38 * 560m, past.InputCost);
+    }
+
+    [Fact]
+    public async Task A_member_cannot_approve_a_price()
+    {
+        var npk = Npk(100);
+        var repo = new FakePriceRepo();
+        var req = PriceChangeRequest.Create("farm-1", npk.Id, "bag", 50, 28000, false, null, "member-1");
+        repo.All.Add(req);
+
+        await Assert.ThrowsAsync<ForbiddenException>(() =>
+            new ApprovePriceChangeCommandHandler(repo, new FakeInventoryRepo(npk), new FakeActivityRepo(), new FakeUser(false))
+                .Handle(new ApprovePriceChangeCommand("farm-1", req.Id, null), default));
+
+        Assert.Equal(0m, npk.UnitCost);
+        Assert.Equal(PriceChangeStatus.Pending, req.Status);
+    }
+
+    [Fact]
+    public async Task A_price_cannot_be_approved_twice()
+    {
+        var npk = Npk(100);
+        var repo = new FakePriceRepo();
+        var req = PriceChangeRequest.Create("farm-1", npk.Id, "bag", 50, 28000, false, null, "member-1");
+        repo.All.Add(req);
+        var handler = new ApprovePriceChangeCommandHandler(repo, new FakeInventoryRepo(npk), new FakeActivityRepo(), new FakeUser(true));
+
+        await handler.Handle(new ApprovePriceChangeCommand("farm-1", req.Id, null), default);
+        await Assert.ThrowsAsync<DomainException>(() => handler.Handle(new ApprovePriceChangeCommand("farm-1", req.Id, null), default));
+    }
+
+    [Fact]
+    public async Task Rejecting_leaves_the_price_alone()
+    {
+        var npk = Npk(100);
+        var repo = new FakePriceRepo();
+        var req = PriceChangeRequest.Create("farm-1", npk.Id, "bag", 50, 28000, false, null, "member-1");
+        repo.All.Add(req);
+
+        var dto = await new RejectPriceChangeCommandHandler(repo, new FakeInventoryRepo(npk), new FakeUser(true))
+            .Handle(new RejectPriceChangeCommand("farm-1", req.Id, "too high"), default);
+
+        Assert.Equal("Rejected", dto.Status);
+        Assert.Equal(0m, npk.UnitCost);
+    }
+
+    [Fact]
+    public async Task A_newer_request_replaces_the_one_still_waiting()
+    {
+        var npk = Npk(100);
+        var repo = new FakePriceRepo();
+        var handler = new RequestItemPricingCommandHandler(new FakeInventoryRepo(npk), repo, new FakeUser(false));
+
+        await handler.Handle(new RequestItemPricingCommand("farm-1", npk.Id, new SetItemPricingRequest(50, "bag", 28000, false)), default);
+        await handler.Handle(new RequestItemPricingCommand("farm-1", npk.Id, new SetItemPricingRequest(50, "bag", 30000, false)), default);
+
+        Assert.Single(repo.All, r => r.Status == PriceChangeStatus.Pending);
+        Assert.Single(repo.All, r => r.Status == PriceChangeStatus.Rejected);
+    }
 }

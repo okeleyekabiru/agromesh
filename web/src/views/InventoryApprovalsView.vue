@@ -3,25 +3,57 @@
     <!-- KPI -->
     <div class="kpi-grid">
       <KpiCard
-        label="Pending Adjustments"
-        :value="`${store.pendingAdjustments.length}`"
-        :delta="store.pendingAdjustments.length > 0 ? 'Awaiting review' : 'All clear'"
-        :deltaType="store.pendingAdjustments.length > 0 ? 'warn' : 'up'"
+        label="Awaiting Approval"
+        :value="`${store.pendingAdjustmentsCount}`"
+        :delta="store.pendingAdjustmentsCount > 0 ? 'Adjustments and prices' : 'All clear'"
+        :deltaType="store.pendingAdjustmentsCount > 0 ? 'warn' : 'up'"
       />
     </div>
 
     <AlertBanner v-if="!isAdmin">
-      You can view pending stock adjustments, but only an admin can approve or reject them.
+      You can view what is waiting, but only an admin can approve or reject stock adjustments and price changes.
     </AlertBanner>
+
+    <!-- Price changes: a price decides the cost of every activity that uses the item -->
+    <div v-if="store.pendingPriceChanges.length" class="card" style="margin-bottom:16px;">
+      <div class="inv-header">
+        <div class="card-title">Pending Price Changes</div>
+        <div class="card-label">{{ store.pendingPriceChanges.length }} awaiting review</div>
+      </div>
+      <div class="approval-row" v-for="req in store.pendingPriceChanges" :key="req.id">
+        <div class="approval-info">
+          <div class="approval-item-name">{{ req.inventoryItemName }}</div>
+          <div class="approval-meta">
+            <span class="approval-qty">
+              {{ req.currentUnitCost ? `₦${fmt(req.currentUnitCost * req.currentPackSize)} / ${req.currentPackLabel}` : 'no price' }}
+              → ₦{{ fmt(req.requestedPricePerPack) }} / {{ req.requestedPackLabel }}
+            </span>
+          </div>
+          <div class="approval-notes">
+            ₦{{ fmt(req.requestedPricePerUnit) }} per {{ req.unit }} · {{ req.requestedPackSize }} {{ req.unit }} per {{ req.requestedPackLabel }}
+            <template v-if="req.backfillActivities"> · will also cost past activities that used it</template>
+          </div>
+        </div>
+        <div v-if="actionError[req.id]" class="error-msg">{{ actionError[req.id] }}</div>
+        <div v-if="isAdmin" class="approval-actions">
+          <button class="btn btn-ghost btn-sm" @click="rejectPrice(req.id)" :disabled="!!busy[req.id]">
+            {{ busy[req.id] === 'reject' ? 'Rejecting…' : 'Reject' }}
+          </button>
+          <button class="btn btn-primary btn-sm" @click="approvePrice(req.id)" :disabled="!!busy[req.id]">
+            {{ busy[req.id] === 'approve' ? 'Approving…' : 'Approve' }}
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- Queue -->
     <div v-if="loading" class="loading-state">Loading pending adjustments…</div>
-    <div v-else-if="!store.pendingAdjustments.length" class="card" style="padding:40px;text-align:center;">
+    <div v-else-if="!store.pendingAdjustments.length && !store.pendingPriceChanges.length" class="card" style="padding:40px;text-align:center;">
       <div style="font-size:32px;margin-bottom:12px;">✅</div>
       <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:var(--forest);margin-bottom:4px;">No pending adjustments</div>
       <div style="font-size:12px;color:var(--stone);">Stock adjustment requests will show up here for review.</div>
     </div>
-    <div v-else class="card">
+    <div v-else-if="store.pendingAdjustments.length" class="card">
       <div class="inv-header">
         <div class="card-title">Pending Stock Adjustments</div>
         <div class="card-label">{{ store.pendingAdjustments.length }} awaiting review</div>
@@ -77,6 +109,32 @@ async function approve(requestId: string) {
   }
 }
 
+const fmt = (n: number) => n.toLocaleString('en-NG', { maximumFractionDigits: 2 })
+
+async function approvePrice(requestId: string) {
+  busy[requestId] = 'approve'
+  actionError[requestId] = ''
+  try {
+    await store.approvePriceChange(requestId)
+  } catch (e) {
+    actionError[requestId] = extractErrorMessage(e, 'Could not approve this price. Please try again.')
+  } finally {
+    busy[requestId] = undefined
+  }
+}
+
+async function rejectPrice(requestId: string) {
+  busy[requestId] = 'reject'
+  actionError[requestId] = ''
+  try {
+    await store.rejectPriceChange(requestId)
+  } catch (e) {
+    actionError[requestId] = extractErrorMessage(e, 'Could not reject this price. Please try again.')
+  } finally {
+    busy[requestId] = undefined
+  }
+}
+
 async function reject(requestId: string) {
   busy[requestId] = 'reject'
   actionError[requestId] = ''
@@ -92,7 +150,7 @@ async function reject(requestId: string) {
 onMounted(async () => {
   loading.value = true
   try {
-    await store.fetchPendingAdjustments()
+    await Promise.all([store.fetchPendingAdjustments(), store.fetchPendingPriceChanges()])
   } finally {
     loading.value = false
   }

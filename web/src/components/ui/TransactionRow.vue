@@ -17,7 +17,7 @@
         <span v-for="(pct, crop) in txn.cropAllocation" :key="crop">{{ crop }} {{ pct }}% </span>
       </div>
       <div class="txn-badges">
-        <StatBadge variant="stone">{{ txn.category }}</StatBadge>
+        <StatBadge variant="stone">{{ categoryLabel(txn.category) }}</StatBadge>
         <StatBadge :variant="txn.confidence === 'High' ? 'green' : txn.confidence === 'Medium' ? 'harvest' : 'red'">
           {{ txn.confidence }}
         </StatBadge>
@@ -32,6 +32,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import StatBadge from './StatBadge.vue'
+import { categoryLabel } from '@/utils/enums'
 import type { Transaction } from '@/types'
 
 const props = defineProps<{ txn: Transaction; showAlloc?: boolean; index?: number; clickable?: boolean }>()
@@ -47,6 +48,7 @@ const CAT_ICONS: Record<string, string> = {
   Transportation: '<rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>',
   Seeds:          '<path d="M3 17l4-8 4 4 4-8 4 8M3 21h18M12 3v4"/>',
   Sales:          '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>',
+  TaxAndCharges:  '<path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5M16 16l-8-8"/>',
   Other:          '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
 }
 
@@ -60,6 +62,7 @@ const CAT_COLORS: Record<string, [string, string]> = {
   Transportation: ['rgba(99,102,241,0.12)',  '#6366F1'],
   Seeds:          ['rgba(232,168,56,0.10)',  '#B8780A'],
   Sales:          ['rgba(0,200,150,0.12)',   'var(--data)'],
+  TaxAndCharges:  ['rgba(192,57,43,0.10)',   '#C0392B'],
   Other:          ['rgba(0,0,0,0.06)',       'var(--stone)'],
 }
 

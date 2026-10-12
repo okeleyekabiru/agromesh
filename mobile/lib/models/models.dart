@@ -593,7 +593,11 @@ class ActivityLog {
   final DateTime createdAt;
   final DateTime? syncedAt;
 
+  /// Corners of the area that was worked, in walking order (weeding, spraying, fertilizer, harvest).
+  final List<GeoPoint> areaPoints;
+
   const ActivityLog({
+    this.areaPoints = const [],
     required this.id,
     required this.farmId,
     required this.blockId,
@@ -673,7 +677,76 @@ class ActivityLog {
     'sync_status': syncStatus.index,
     'created_at': createdAt.toIso8601String(),
     'synced_at': syncedAt?.toIso8601String(),
+    'area_points_json': areaPoints.isEmpty ? null : jsonEncode(areaPoints.map((p) => p.toJson()).toList()),
   };
+}
+
+/// `GET /api/farms/{farmId}/blocks/{blockId}/coverage`: what is done and what is left of one kind of work
+/// on a block, in its current cycle.
+class BlockCoverage {
+  final String status; // NotStarted | InProgress | Complete
+  final bool hasBoundary;
+  final double blockHectares;
+  final double coveredHectares;
+  final double? remainingHectares;
+  final double percent;
+  final DateTime? cycleStartedOn;
+  final DateTime? lastWorkedOn;
+  final int activityCount;
+  final String? blockGeoJson;
+  final String? coveredGeoJson;
+  final String? remainingGeoJson;
+  final List<CoverageSection> sections;
+
+  const BlockCoverage({
+    required this.status,
+    required this.hasBoundary,
+    required this.blockHectares,
+    required this.coveredHectares,
+    this.remainingHectares,
+    required this.percent,
+    this.cycleStartedOn,
+    this.lastWorkedOn,
+    this.activityCount = 0,
+    this.blockGeoJson,
+    this.coveredGeoJson,
+    this.remainingGeoJson,
+    this.sections = const [],
+  });
+
+  factory BlockCoverage.fromApiJson(Map<String, dynamic> j) => BlockCoverage(
+    status: j['status'] as String? ?? 'NotStarted',
+    hasBoundary: j['hasBoundary'] as bool? ?? false,
+    blockHectares: (j['blockHectares'] as num?)?.toDouble() ?? 0,
+    coveredHectares: (j['coveredHectares'] as num?)?.toDouble() ?? 0,
+    remainingHectares: (j['remainingHectares'] as num?)?.toDouble(),
+    percent: (j['percent'] as num?)?.toDouble() ?? 0,
+    cycleStartedOn: DateTime.tryParse(j['cycleStartedOn'] as String? ?? '')?.toLocal(),
+    lastWorkedOn: DateTime.tryParse(j['lastWorkedOn'] as String? ?? '')?.toLocal(),
+    activityCount: (j['activityCount'] as num?)?.toInt() ?? 0,
+    blockGeoJson: j['blockGeoJson'] as String?,
+    coveredGeoJson: j['coveredGeoJson'] as String?,
+    remainingGeoJson: j['remainingGeoJson'] as String?,
+    sections: ((j['sections'] as List?) ?? const [])
+        .map((s) => CoverageSection.fromApiJson(s as Map<String, dynamic>))
+        .toList(),
+  );
+}
+
+/// One job's marked area in the current cycle.
+class CoverageSection {
+  final int number;
+  final DateTime? date;
+  final double hectares;
+  final String geoJson;
+  const CoverageSection({required this.number, this.date, required this.hectares, required this.geoJson});
+
+  factory CoverageSection.fromApiJson(Map<String, dynamic> j) => CoverageSection(
+    number: (j['number'] as num?)?.toInt() ?? 0,
+    date: DateTime.tryParse(j['date'] as String? ?? '')?.toLocal(),
+    hectares: (j['hectares'] as num?)?.toDouble() ?? 0,
+    geoJson: j['geoJson'] as String? ?? '',
+  );
 }
 
 // ── BOUNDARY CAPTURE ──

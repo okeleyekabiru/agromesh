@@ -7,10 +7,9 @@ using MediatR;
 namespace AgroMesh.Application.Commands.Inventory;
 
 /// <summary>
-/// The unified, non-transaction-linked "stock in" command — reachable from the Add Item form. It
-/// either restocks an existing item (via an explicit id, or a case-insensitive name match on the
-/// farm) or creates a brand-new one, and always records a StockMovement for the quantity added.
-/// CurrentStock only ever changes through InventoryItem.AddStock — no arithmetic is duplicated here.
+/// Adds an item to the farm's catalogue (or updates how an existing one is bought), with NO stock. Stock only comes in through a
+/// purchase order that is received: that is what ties the money paid (the order's bank transfer) to the stock and so to the cost
+/// of each activity that uses it. A quantity here is refused. The item is found by explicit id or a case-insensitive name match.
 /// </summary>
 public record CreateInventoryItemCommand(string FarmId, CreateInventoryItemRequest Request) : IRequest<InventoryItemDto>;
 
@@ -29,6 +28,11 @@ public class CreateInventoryItemCommandHandler : IRequestHandler<CreateInventory
     {
         var req = command.Request;
 
+        if (req.Quantity > 0)
+            throw new DomainException(
+                "Stock comes in through a purchase order. Add the item here without a quantity, then create an order for it " +
+                "on the Orders page and receive it when it arrives.");
+
         var item = await ResolveTargetItemAsync(command.FarmId, req, ct);
         string categoryName;
 
@@ -40,7 +44,6 @@ public class CreateInventoryItemCommandHandler : IRequestHandler<CreateInventory
 
             if (req.PackSize.HasValue)
                 item.SetPack(req.PackLabel ?? item.PackLabel, req.PackSize.Value);
-            item.ReceiveStock(req.Quantity, UnitPrice(req, item.PackSize));
             await _inventoryRepo.UpdateAsync(item, ct);
             categoryName = item.Category.Name;
         }
@@ -55,22 +58,14 @@ public class CreateInventoryItemCommandHandler : IRequestHandler<CreateInventory
                 command.FarmId, req.Name, req.Unit, category.Id, 0, req.ReorderThreshold, req.ChemicalProductId);
             if (req.PackSize.HasValue)
                 item.SetPack(req.PackLabel ?? "unit", req.PackSize.Value);
-            item.ReceiveStock(req.Quantity, UnitPrice(req, item.PackSize));
             await _inventoryRepo.AddAsync(item, ct);
             categoryName = category.Name;
         }
-
-        var movement = StockMovement.CreateIn(item.FarmId, item.Id, req.Quantity);
-        await _inventoryRepo.AddMovementAsync(movement, ct);
 
         return new InventoryItemDto(item.Id, item.FarmId, item.Name, item.Unit, item.CategoryId, categoryName,
             item.CurrentStock, item.ReorderThreshold, item.IsLowStock, item.ChemicalProductId, null, null,
             item.PackSize, item.PackLabel, item.UnitCost);
     }
-
-    // Price per pack -> price per unit (e.g. 28,000 per 50 kg bag = 560 per kg).
-    private static decimal? UnitPrice(CreateInventoryItemRequest req, decimal packSize) =>
-        req.PricePerPack.HasValue ? Math.Round(req.PricePerPack.Value / packSize, 4) : null;
 
     private async Task<Domain.Entities.InventoryItem?> ResolveTargetItemAsync(
         string farmId, CreateInventoryItemRequest req, CancellationToken ct)

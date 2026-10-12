@@ -32,6 +32,9 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponse>
         if (!_passwordHasher.Verify(req.Password, user.PasswordHash))
             throw new DomainException("Invalid email or password.");
 
+        if (!user.IsActive)
+            throw new ForbiddenException("This account has been disabled. Contact your admin.");
+
         var farms = string.IsNullOrEmpty(user.CompanyId)
             ? []
             : await _farmRepo.GetByCompanyIdAsync(user.CompanyId, ct);

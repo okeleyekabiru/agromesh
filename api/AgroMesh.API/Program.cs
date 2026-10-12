@@ -69,6 +69,16 @@ try
                 ValidateAudience        = false,
                 ClockSkew               = TimeSpan.Zero,
             };
+            opts.Events = new JwtBearerEvents
+            {
+                OnTokenValidated = async ctx =>
+                {
+                    var id = ctx.Principal?.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+                    var users = ctx.HttpContext.RequestServices.GetRequiredService<AgroMesh.Application.Interfaces.IUserRepository>();
+                    var user = id is null ? null : await users.GetByIdAsync(id, ctx.HttpContext.RequestAborted);
+                    if (user is null || !user.IsActive) ctx.Fail("This account is disabled.");
+                },
+            };
         });
 
     builder.Services.AddApplication();

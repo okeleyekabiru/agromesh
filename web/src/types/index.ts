@@ -32,6 +32,7 @@ export type TransactionCategory =
   | 'Seeds'
   | 'Sales'
   | 'Other'
+  | 'TaxAndCharges'
 
 export type CategorizationSource = 'Dictionary' | 'Pattern' | 'Llm' | 'Manual'
 
@@ -215,6 +216,46 @@ export interface Transaction {
   orderId?: string | null
   reconciliation?: number | string
   reconciliationNote?: string | null
+  blockId?: string | null
+}
+
+export interface PriceChangeRequest {
+  id: string
+  farmId: string
+  inventoryItemId: string
+  inventoryItemName: string
+  unit: string
+  currentUnitCost: number
+  currentPackLabel: string
+  currentPackSize: number
+  requestedPackLabel: string
+  requestedPackSize: number
+  requestedPricePerPack: number
+  requestedPricePerUnit: number
+  backfillActivities: boolean
+  notes: string | null
+  status: string
+  requestedByUserId: string
+  createdAt: string
+}
+
+export interface BlockSatellite {
+  blockId: string
+  blockName: string
+  hasBoundary: boolean
+  condition: 'NoData' | 'Building' | 'Improving' | 'Stable' | 'Declining' | 'DryOrBare'
+  label: string
+  summary: string
+  asOf: string | null
+  ndvi: number | null
+  ndmi: number | null
+  points: { date: string; ndvi: number; ndmi: number }[]
+}
+
+export interface SatelliteOverview {
+  configured: boolean
+  lastSyncAt: string | null
+  blocks: BlockSatellite[]
 }
 
 export interface FinanceSummary {
@@ -224,6 +265,7 @@ export interface FinanceSummary {
   capital: number
   expenses: number
   needsReview: number
+  pendingReview: number
 }
 
 export interface BankStatus {
@@ -449,6 +491,8 @@ export interface DashboardData {
   recentActivities: ActivityLog[]
   upcomingTasks: UpcomingTask[]
   lowStockAlerts: LowStockAlert[]
+  incomeMtd?: number
+  profitMtd?: number
 }
 
 export interface BlockMtdDto {

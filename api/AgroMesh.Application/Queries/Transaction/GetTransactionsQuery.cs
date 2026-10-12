@@ -4,7 +4,7 @@ using MediatR;
 
 namespace AgroMesh.Application.Queries.Transaction;
 
-public record GetTransactionsQuery(string FarmId, int Page = 1, int PageSize = 20, bool? PendingReview = null)
+public record GetTransactionsQuery(string FarmId, int Page = 1, int PageSize = 20, bool? PendingReview = null, Domain.Enums.TransactionKind? Kind = null, Domain.Enums.TransactionCategory? Category = null)
     : IRequest<PagedResult<TransactionDto>>;
 
 public class GetTransactionsQueryHandler : IRequestHandler<GetTransactionsQuery, PagedResult<TransactionDto>>
@@ -15,7 +15,7 @@ public class GetTransactionsQueryHandler : IRequestHandler<GetTransactionsQuery,
 
     public async Task<PagedResult<TransactionDto>> Handle(GetTransactionsQuery query, CancellationToken ct)
     {
-        var (items, total) = await _transactionRepo.GetByFarmIdAsync(query.FarmId, query.Page, query.PageSize, query.PendingReview, ct);
+        var (items, total) = await _transactionRepo.GetByFarmIdAsync(query.FarmId, query.Page, query.PageSize, query.PendingReview, query.Kind, query.Category, ct);
 
         var dtos = items.Select(Mapping.TransactionMapping.ToDto).ToList();
 

@@ -15,6 +15,8 @@ dependencies:
 
   # Local database (offline-first)
   sqflite: ^2.3.2
+  # sqflite has no web support of its own; this runs the same database in the browser (Chrome/Edge).
+  sqflite_common_ffi_web: ^0.4.5
   path: ^1.9.0
 
   # Connectivity & sync

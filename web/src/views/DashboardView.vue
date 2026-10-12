@@ -74,6 +74,15 @@
         </div>
       </div>
 
+      <!-- Profit MTD: income - cost -->
+      <div class="kpi-card-sm" :class="{ 'kpi-warn': (store.dashboard?.profitMtd ?? 0) < 0 }">
+        <div class="kpi-lbl">PROFIT · MTD</div>
+        <div class="kpi-val">{{ store.dashboard ? money(store.dashboard.profitMtd ?? 0) : '—' }}</div>
+        <div :class="(store.dashboard?.profitMtd ?? 0) < 0 ? 'kpi-sub-warn' : 'kpi-sub-up'">
+          Income {{ store.dashboard ? money(store.dashboard.incomeMtd ?? 0) : '—' }}
+        </div>
+      </div>
+
       <!-- Activities MTD -->
       <div class="kpi-card-sm">
         <div class="kpi-lbl">ACTIVITIES · MTD</div>
@@ -366,6 +375,13 @@ const todayLabel = new Date().toLocaleDateString('en-NG', {
 })
 
 // ── Spend breakdown ───────────────────────────────────────────────────────
+// Compact naira with a sign: 1,250,000 -> ₦1.3M, -45,000 -> -₦45K.
+function money(n: number): string {
+  const abs = Math.abs(n)
+  const body = abs >= 1_000_000 ? `₦${(abs / 1_000_000).toFixed(1)}M` : abs >= 1000 ? `₦${Math.round(abs / 1000).toLocaleString()}K` : `₦${Math.round(abs).toLocaleString()}`
+  return n < 0 ? `-${body}` : body
+}
+
 const maintenanceCostK = computed(() => {
   if (!store.dashboard) return '—'
   return Math.round(store.dashboard.maintenanceCostMtd / 1000).toLocaleString()
@@ -547,7 +563,7 @@ onMounted(async () => {
 /* ── KPI row ──────────────────────────────────────────────────────────── */
 .kpi-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
   gap: 12px;
   margin-bottom: 16px;
 }

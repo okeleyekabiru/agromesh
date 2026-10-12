@@ -235,11 +235,21 @@ const ALL_NAV = [
     feature: 'inventory',
     badgeFn: () => store.pendingAdjustmentsCount > 0 ? store.pendingAdjustmentsCount : null
   },
+  {
+    id: 'team',
+    path: '/team',
+    label: 'Team',
+    icon: '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>',
+    feature: null as string | null,
+    adminOnly: true,
+    badgeFn: () => null as number | null
+  },
 ]
 
 const navItems = computed(() =>
   ALL_NAV
     .filter(item => !item.feature || hasFeature(item.feature))
+    .filter(item => !('adminOnly' in item) || ['Admin', 'FarmManager'].includes(store.currentUser?.role ?? ''))
     .map((item, i) => ({ ...item, badge: item.badgeFn(), _i: i }))
 )
 </script>

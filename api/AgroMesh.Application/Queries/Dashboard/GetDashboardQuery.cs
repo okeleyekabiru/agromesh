@@ -111,33 +111,68 @@ public class GetDashboardQueryHandler : IRequestHandler<GetDashboardQuery, Dashb
         var inputCost = blocksMtd.Sum(b => b.InputCost);
         var maintenanceCost = blocksMtd.Sum(b => b.MaintenanceCost);
 
+        // Profit = income - cost. Income is money that came in from the bank and is not the owner's capital; cost is bank
+        // spend that is not a stock purchase plus the labour and stock used in the month's activities.
+        var totalCost = spend + labour + inputCost;
+        var income = monthTxns.Where(t => t.Kind == Domain.Enums.TransactionKind.Income).Sum(t => t.Amount);
+
         return new DashboardDto(
             query.FarmId,
-            spend + labour + inputCost, labour, inputCost, maintenanceCost, actCount, pending,
-            spendTrend, blocksMtd, BuildCropPnl(monthTxns), recentActivities, upcomingTasks, lowStockAlerts);
+            totalCost, labour, inputCost, maintenanceCost, actCount, pending,
+            spendTrend, blocksMtd, BuildCropPnl(monthTxns, blocks, blockCosts), recentActivities, upcomingTasks, lowStockAlerts,
+            income, income - totalCost);
     }
 
-    // Crop P&L from this month's bank transactions: each one is split across crops by its
-    // CropAllocation percentages. Money in is revenue, money out is cost. Transactions that have
-    // not been allocated to a crop yet are left out rather than guessed.
-    public static List<CropPnlDto> BuildCropPnl(IEnumerable<Domain.Entities.Transaction> transactions)
+    // Crop P&L for the month. Bank transactions are split across crops by their CropAllocation. One that has none
+    // follows the block it names, and otherwise is shared across the farm's crops by planted area. The cost of logged
+    // activities (labour and inputs) goes to the crops of the block they were done on. Money in is revenue, money out is
+    // cost, and the owner's own capital is neither. A payment matched to a purchase order is the purchase of stock, so it is
+    // left out: the cost comes from the daily activities that use that stock (quantity x the stock's unit cost). Without the blocks (older callers) only allocated transactions count.
+    public static List<CropPnlDto> BuildCropPnl(
+        IEnumerable<Domain.Entities.Transaction> transactions,
+        IReadOnlyList<Domain.Entities.Block>? blocks = null,
+        IEnumerable<BlockCostRow>? blockCosts = null)
     {
         var revenue = new Dictionary<string, decimal>();
         var cost = new Dictionary<string, decimal>();
+
+        static void Spread(Dictionary<string, decimal> bucket, decimal amount, IReadOnlyDictionary<string, double> shares)
+        {
+            var total = shares.Values.Sum();
+            if (total <= 0 || amount == 0) return;
+            foreach (var (crop, pct) in shares)
+                bucket[crop] = bucket.GetValueOrDefault(crop) + amount * (decimal)(pct / total);
+        }
+
+        static Dictionary<string, double> MixOf(Domain.Entities.Block b) =>
+            b.Crops.GroupBy(c => c.CropType.ToString()).ToDictionary(g => g.Key, g => (double)g.Sum(c => c.Percentage));
+
+        var blockById = (blocks ?? []).ToDictionary(b => b.Id);
+
+        // The farm's crops weighted by planted hectares (by percentage where no area is recorded).
+        var farmMix = new Dictionary<string, double>();
+        foreach (var b in blocks ?? [])
+            foreach (var c in b.Crops)
+                farmMix[c.CropType.ToString()] = farmMix.GetValueOrDefault(c.CropType.ToString()) + (c.Hectares > 0 ? c.Hectares : c.Percentage / 100.0);
 
         foreach (var t in transactions)
         {
             // The owner's own capital is not something the crops earned.
             if (t.Kind == Domain.Enums.TransactionKind.Capital) continue;
-            var total = t.CropAllocation.Values.Sum();
-            if (total <= 0) continue;
-            foreach (var (crop, pct) in t.CropAllocation)
-            {
-                var share = Math.Abs(t.Amount) * (decimal)(pct / total);
-                var bucket = t.Amount >= 0 ? revenue : cost;
-                bucket[crop] = bucket.GetValueOrDefault(crop) + share;
-            }
+            // A payment for stock is not a cost yet: it is counted when activities use that stock (below).
+            if (t.IsStockPurchase) continue;
+
+            IReadOnlyDictionary<string, double>? shares = t.CropAllocation.Values.Sum() > 0 ? t.CropAllocation : null;
+            if (shares is null && blocks is not null)
+                shares = t.BlockId is not null && blockById.TryGetValue(t.BlockId, out var named) ? MixOf(named) : farmMix;
+            if (shares is null) continue;
+
+            Spread(t.Amount >= 0 ? revenue : cost, Math.Abs(t.Amount), shares);
         }
+
+        foreach (var row in blockCosts ?? [])
+            if (blockById.TryGetValue(row.BlockId, out var block))
+                Spread(cost, row.LabourCost + row.InputCost, MixOf(block));
 
         return revenue.Keys.Union(cost.Keys)
             .Select(crop =>

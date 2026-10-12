@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import '../models/models.dart';
+import 'block_coverage_sheet.dart';
 
 // ── AGRO BADGE ──
 class AgroBadge extends StatelessWidget {
@@ -467,6 +468,11 @@ void showBlockWorkSheet(BuildContext context, Block block, BlockWork work) {
               section('Weeding', work.weeding),
               section('Spraying', work.spraying),
               section('Fertilizer', work.fertilizing),
+              OutlinedButton.icon(
+                onPressed: () => showBlockCoverageSheet(context, block),
+                icon: const Icon(Icons.map_outlined, size: 18),
+                label: const Text('Work progress: done and left'),
+              ),
             ],
           ),
         ),

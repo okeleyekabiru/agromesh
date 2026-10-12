@@ -17,6 +17,18 @@
     <!-- Picked out of the store but not yet used or returned -->
     <OutstandingStockCard />
 
+    <!-- A new item has no stock: it comes in on a purchase order -->
+    <div v-if="addedItem" class="card added-card">
+      <div>
+        <b>{{ addedItem.name }}</b> is added, with no stock yet. Create an order for it; when the order is received the stock
+        appears here and can be picked for work.
+      </div>
+      <div class="added-actions">
+        <button class="btn btn-primary btn-sm" @click="orderItem(addedItem.id)">Create order</button>
+        <button class="btn btn-ghost btn-sm" @click="addedItem = null">Not now</button>
+      </div>
+    </div>
+
     <!-- Filter pills + Add Item -->
     <div class="toolbar-row">
       <div class="filter-row">
@@ -71,11 +83,16 @@
           <div class="inv-threshold">threshold: {{ item.reorderThreshold }} {{ item.unit }}</div>
         </div>
         <div class="inv-badges">
-          <span v-if="item.isLowStock" class="badge badge-warn">LOW STOCK</span>
+          <span v-if="priceWaiting(item)" class="badge badge-warn" :title="`₦${priceWaiting(item)!.requestedPricePerPack.toLocaleString()} per ${priceWaiting(item)!.requestedPackLabel} is waiting for an admin`">PRICE PENDING</span>
+          <span v-if="onOrderRef(item)" class="badge badge-warn">ON ORDER {{ onOrderRef(item) }}</span>
+          <span v-else-if="item.currentStock <= 0" class="badge badge-warn">NO STOCK</span>
+          <span v-else-if="item.isLowStock" class="badge badge-warn">LOW STOCK</span>
         </div>
         <div class="inv-actions">
+          <button v-if="item.currentStock <= 0 && !onOrderRef(item)" class="btn btn-primary btn-sm" @click="orderItem(item.id)">Order</button>
           <button class="btn btn-ghost btn-sm" @click="openPricing(item)">{{ item.unitCost ? 'Price' : 'Set price' }}</button>
-          <button class="btn btn-ghost btn-sm" @click="openPick(item)">Pick Stock</button>
+          <button class="btn btn-ghost btn-sm" :disabled="item.currentStock <= 0"
+                  :title="item.currentStock <= 0 ? 'No stock yet: receive a purchase order first' : ''" @click="openPick(item)">Pick Stock</button>
           <button class="btn btn-ghost btn-sm" @click="openAdjust(item)">Adjust</button>
         </div>
       </div>
@@ -215,7 +232,7 @@
           <template v-if="!pricingSuccess">
             <button class="btn btn-ghost" @click="closePricing" :disabled="pricingSaving">Cancel</button>
             <button class="btn btn-primary" @click="submitPricing" :disabled="pricingSaving || !canSavePricing">
-              {{ pricingSaving ? 'Saving…' : 'Save price' }}
+              {{ pricingSaving ? 'Sending…' : 'Send for approval' }}
             </button>
           </template>
           <button v-else class="btn btn-primary" style="margin-left:auto;" @click="closePricing">Done</button>
@@ -227,18 +244,13 @@
     <div v-if="showAddItem" class="modal-overlay" @click.self="closeAddItem">
       <div class="modal">
         <div class="modal-header">
-          <div class="modal-title">Add Item / Stock</div>
+          <div class="modal-title">Add Item</div>
           <button class="modal-close" @click="closeAddItem">×</button>
         </div>
         <div class="modal-body">
-          <div class="form-group">
-            <label class="form-label">Item</label>
-            <select class="form-select" v-model="selectedExistingItemId" @change="onExistingItemChange">
-              <option value="">+ Create new item</option>
-              <option v-for="it in store.inventoryItems" :key="it.id" :value="it.id">
-                {{ it.name }} ({{ it.unit }}) — {{ it.currentStock }} in stock
-              </option>
-            </select>
+          <div class="form-hint" style="margin-bottom:12px;">
+            Stock comes in through a purchase order, not from here: add the item, then order it on the Orders page and receive it
+            when it arrives. That is what links the payment, the stock and the cost of each activity that uses it.
           </div>
 
           <div class="form-group" v-if="!isExistingItemMode">
@@ -246,7 +258,7 @@
             <input class="form-input" v-model="itemName" placeholder="e.g. Glyphosate 360" />
             <div v-if="matchedExistingItem" class="form-hint">
               An item named "{{ matchedExistingItem.name }}" already exists in {{ matchedExistingItem.categoryName }} —
-              this will add stock to it instead of creating a duplicate.
+              this will update it instead of creating a duplicate.
             </div>
           </div>
 
@@ -283,21 +295,6 @@
             </div>
           </div>
 
-          <div class="form-row-2">
-            <div class="form-group">
-              <label class="form-label">Number of {{ packLabel || 'pack' }}s {{ isExistingItemMode ? 'to add' : '(opening stock)' }}</label>
-              <input type="number" class="form-input" v-model.number="packCount" min="0" step="1" placeholder="e.g. 10" @wheel.prevent />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Price per {{ packLabel || 'pack' }} (₦) <span class="opt">optional</span></label>
-              <input type="number" class="form-input" v-model.number="pricePerPack" min="0" step="0.01" placeholder="e.g. 28000" @wheel.prevent />
-            </div>
-          </div>
-          <div v-if="quantityTotal > 0" class="form-hint">
-            = {{ quantityTotal.toLocaleString() }} {{ itemUnit || 'units' }}
-            <template v-if="pricePerPack && Number(packSize) > 0"> · ₦{{ fmtMoney(Number(pricePerPack) / Number(packSize)) }} per {{ itemUnit || 'unit' }}</template>
-          </div>
-
           <div class="form-group" v-if="!isExistingItemMode">
             <label class="form-label">Reorder Threshold</label>
             <input type="number" class="form-input" v-model.number="reorderThreshold" min="0" step="0.01" placeholder="e.g. 10" @wheel.prevent />
@@ -308,7 +305,7 @@
         <div class="modal-footer">
           <button class="btn btn-ghost" @click="closeAddItem" :disabled="submitting">Cancel</button>
           <button class="btn btn-primary" @click="submitAddItem" :disabled="!canSubmitAddItem || submitting">
-            {{ submitting ? 'Saving…' : (isExistingItemMode ? 'Add Stock' : 'Add Item') }}
+            {{ submitting ? 'Saving…' : 'Add Item' }}
           </button>
         </div>
       </div>
@@ -318,6 +315,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAgroStore } from '@/stores/agro'
 import type { InventoryItem } from '@/types'
 import KpiCard from '@/components/ui/KpiCard.vue'
@@ -326,6 +324,26 @@ import OutstandingStockCard from '@/components/ui/OutstandingStockCard.vue'
 import { extractErrorMessage } from '@/utils/http'
 
 const store = useAgroStore()
+const router = useRouter()
+
+// ── Stock comes in on an order ──
+const addedItem = ref<InventoryItem | null>(null)
+
+/** A price asked for on this item that an admin has not decided yet. */
+function priceWaiting(item: InventoryItem) {
+  return store.pendingPriceChanges.find(r => r.inventoryItemId === item.id)
+}
+
+/** The number of a placed order that is waiting to bring this item in ("ORD-1042"), or ''. */
+function onOrderRef(item: InventoryItem): string {
+  const o = store.orders.find(x => x.status === 'Placed' && x.lineItems.some(l => l.inventoryItemId === item.id))
+  return o?.reference ?? (o ? 'placed' : '')
+}
+
+/** Opens the Orders page with the create-order form already holding this item. */
+function orderItem(itemId: string) {
+  router.push({ path: '/orders', query: { item: itemId } })
+}
 
 const filters = computed(() => ['All', ...store.inventoryCategories.map(c => c.name)])
 const activeFilter = ref('All')
@@ -486,12 +504,6 @@ const matchedExistingItem = computed(() => {
   return store.inventoryItems.find(i => i.name.toLowerCase() === name) ?? null
 })
 
-// Stock is kept in the item's unit (kg, L…): packs bought x size of one pack.
-const quantityTotal = computed(() => {
-  const total = Number(packCount.value || 0) * Number(packSize.value || 0)
-  return Number.isFinite(total) ? Math.round(total * 1000) / 1000 : 0
-})
-
 function fmtMoney(n: number) {
   return n.toLocaleString('en-NG', { maximumFractionDigits: 2 })
 }
@@ -509,7 +521,7 @@ function onUnitInput() {
 }
 
 const canSubmitAddItem = computed(() => {
-  if (quantityTotal.value <= 0 || !(Number(packSize.value) > 0)) return false
+  if (!(Number(packSize.value) > 0)) return false
   if (isExistingItemMode.value) {
     // Defensive: only allow submit if the picked id still resolves to a real item (it always
     // should in normal use, but guards against sending a stale/empty categoryId if it doesn't).
@@ -546,26 +558,6 @@ function closeAddItem() {
   showAddItem.value = false
 }
 
-function onExistingItemChange() {
-  if (!selectedExistingItemId.value) {
-    // Switched back to "+ Create new item" — clear fields copied from the previously-picked
-    // item instead of leaving them stale (and misleadingly still filled in) behind.
-    itemName.value = ''
-    itemUnit.value = ''
-    selectedCategoryId.value = ''
-    applyPackDefaults('')
-    return
-  }
-  const item = store.inventoryItems.find(i => i.id === selectedExistingItemId.value)
-  if (item) {
-    itemName.value = item.name
-    itemUnit.value = item.unit
-    selectedCategoryId.value = item.categoryId
-    packLabel.value = item.packLabel
-    packSize.value = item.packSize
-    showNewCategoryInput.value = false
-  }
-}
 
 function onCategorySelectChange() {
   showNewCategoryInput.value = selectedCategoryId.value === '__new__'
@@ -596,19 +588,19 @@ async function submitAddItem() {
       ? store.inventoryItems.find(i => i.id === selectedExistingItemId.value)
       : null
 
-    await store.addOrRestockInventoryItem({
+    const created = await store.addOrRestockInventoryItem({
       name: existing ? existing.name : itemName.value.trim(),
       unit: existing ? existing.unit : itemUnit.value.trim(),
       categoryId: existing ? existing.categoryId : selectedCategoryId.value,
-      quantity: quantityTotal.value,
+      quantity: 0,
       packSize: Number(packSize.value),
       packLabel: packLabel.value.trim() || 'unit',
-      pricePerPack: pricePerPack.value === '' ? null : Number(pricePerPack.value),
       reorderThreshold: existing ? existing.reorderThreshold : Number(reorderThreshold.value || 0),
       chemicalProductId: null,
       existingItemId: existing ? existing.id : null
     })
     showAddItem.value = false
+    addedItem.value = created
   } catch (e) {
     submitError.value = extractErrorMessage(e, 'Could not save this item. Please try again.')
   } finally {
@@ -660,9 +652,8 @@ async function submitPricing() {
       pricePerPack: Number(pricingPrice.value),
       backfillActivities: pricingBackfill.value
     })
-    pricingSuccess.value = res.activitiesUpdated > 0
-      ? `Price saved. ${res.activitiesUpdated} past ${res.activitiesUpdated === 1 ? 'activity was' : 'activities were'} costed.`
-      : 'Price saved.'
+    pricingSuccess.value = `Sent for approval: ₦${res.requestedPricePerPack.toLocaleString()} per ${res.requestedPackLabel}. ` +
+      'The price applies once an admin approves it.'
   } catch (e) {
     pricingError.value = extractErrorMessage(e, 'Could not save this price. Please try again.')
   } finally {
@@ -671,6 +662,8 @@ async function submitPricing() {
 }
 
 onMounted(() => {
+  store.fetchPendingPriceChanges()
+  store.fetchOrders()
   store.fetchInventory()
   store.fetchInventoryCategories()
   store.fetchChemicals()
@@ -724,4 +717,6 @@ onMounted(() => {
 .error-msg { font-size: 11.5px; color: var(--alert); line-height: 1.5; }
 .warn-msg { font-size: 11.5px; color: #8A6000; line-height: 1.5; }
 .success-msg { font-size: 11.5px; color: var(--palm); line-height: 1.5; }
+.added-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 16px; margin-bottom: 14px; font-size: 12.5px; color: var(--forest); background: rgba(45,122,79,0.08); }
+.added-actions { display: flex; gap: 8px; }
 </style>

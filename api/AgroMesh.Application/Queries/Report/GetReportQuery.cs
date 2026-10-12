@@ -95,9 +95,10 @@ public class GetReportQueryHandler : IRequestHandler<GetReportQuery, ReportDto>
         var byCategory = Order.ToDictionary(c => c, _ => 0m);
         var itemById = items.ToDictionary(i => i.Id);
 
-        // Money out of the bank, by its category.
+        // Money out of the bank, by its category. A payment for stock (matched to an order) is left out: the stock's cost
+        // is counted below, when the activities use it.
         var bankSpend = 0m;
-        foreach (var t in transactions.Where(t => t.Amount < 0))
+        foreach (var t in transactions.Where(t => t.Amount < 0 && !t.IsStockPurchase))
         {
             var amount = -t.Amount;
             bankSpend += amount;

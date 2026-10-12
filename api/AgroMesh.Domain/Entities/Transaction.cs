@@ -21,6 +21,8 @@ public class Transaction : BaseEntity
 
     // Set when the narration names a placed order ("ORD-1042/chemical").
     public string? OrderId { get; private set; }
+    // The block the spend is for, when the narration names one ("ORD-1042/Alpha/Fertilizer").
+    public string? BlockId { get; private set; }
     public ReconciliationStatus Reconciliation { get; private set; }
     public string? ReconciliationNote { get; private set; }
 
@@ -53,6 +55,35 @@ public class Transaction : BaseEntity
                 : Utilities.BankNarration.IsCapital(narration) ? TransactionKind.Capital : TransactionKind.Income
         };
     }
+
+    /// <summary>
+    /// Applies what the payer wrote in the narration: the block the spend is for and its category. The category is
+    /// trusted (High confidence), the crop split follows the block's crops, and a problem (an unknown block or type)
+    /// is kept as a note for a person.
+    /// </summary>
+    public void ApplyNarration(string? blockId, TransactionCategory? category, Dictionary<string, double>? cropAllocation, string? problem)
+    {
+        if (blockId is not null) BlockId = blockId;
+        if (category is { } c)
+        {
+            Category = c;
+            Confidence = ConfidenceLevel.High;
+            Source = CategorizationSource.Pattern;
+        }
+        if (cropAllocation is { Count: > 0 } && CropAllocation.Count == 0) CropAllocation = cropAllocation;
+        if (problem is not null && Reconciliation == ReconciliationStatus.None)
+        {
+            Reconciliation = ReconciliationStatus.NeedsReview;
+            ReconciliationNote = problem.Length > 500 ? problem[..500] : problem;
+        }
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// A payment confirmed against a purchase order is the purchase of stock, not a cost yet: the cost is recognised when that
+    /// stock is used on a block, through the daily activities. Counting the payment as well would count it twice.
+    /// </summary>
+    public bool IsStockPurchase => Reconciliation == ReconciliationStatus.Matched && OrderId is not null;
 
     public void MatchOrder(string orderId)
     {

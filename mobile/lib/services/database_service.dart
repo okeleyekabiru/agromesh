@@ -14,7 +14,7 @@ class DatabaseService {
   // every section_id/section_name column becomes block_id/block_name.
   // v3 -> v4: activity_inputs.inventory_item_id (inputs are real stock items now) and a small
   // kv_cache table for offline copies of the stock list and "out on the farm" list.
-  static const _version = 4;
+  static const _version = 5;
   static const _name = 'agromesh.db';
 
   static Future<Database> get database async {
@@ -67,7 +67,8 @@ class DatabaseService {
       input_cost REAL NOT NULL DEFAULT 0,
       sync_status INTEGER NOT NULL DEFAULT 1,
       created_at TEXT NOT NULL,
-      synced_at TEXT
+      synced_at TEXT,
+      area_points_json TEXT
     )
   ''');
 
@@ -228,6 +229,15 @@ class DatabaseService {
     if (oldVersion < 4) {
       await db.execute('ALTER TABLE activity_inputs ADD COLUMN inventory_item_id TEXT');
       await _createKvCacheTable(db);
+    }
+
+    if (oldVersion < 5) {
+      // The area that was worked (8+ GPS points). A database upgraded from before v3 already has the column,
+      // because its activity_logs table was rebuilt from the current definition above.
+      final cols = await db.rawQuery('PRAGMA table_info(activity_logs)');
+      if (!cols.any((c) => c['name'] == 'area_points_json')) {
+        await db.execute('ALTER TABLE activity_logs ADD COLUMN area_points_json TEXT');
+      }
     }
   }
 
@@ -445,7 +455,9 @@ class DatabaseService {
     final id = row['id'];
     final workers = await db.query('activity_workers', where: 'activity_id = ?', whereArgs: [id]);
     final inputs = await db.query('activity_inputs', where: 'activity_id = ?', whereArgs: [id]);
+    final pointsJson = row['area_points_json'] as String?;
     return {
+      if (pointsJson != null && pointsJson.isNotEmpty) 'workedAreaPoints': jsonDecode(pointsJson),
       'date': row['date'],
       'blockId': row['block_id'],
       'activityType': row['activity_type'],

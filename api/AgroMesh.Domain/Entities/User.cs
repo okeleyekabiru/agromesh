@@ -14,6 +14,9 @@ public class User : BaseEntity
     // this codebase) — so every user bootstraps as Admin of everything they can see.
     public UserRole Role { get; private set; } = UserRole.Admin;
 
+    // A disabled account cannot sign in, and a token it already holds stops working. Only an admin changes this.
+    public bool IsActive { get; private set; } = true;
+
     private User() { }
 
     public static User Create(string fullName, string email, string passwordHash) => new()
@@ -33,6 +36,12 @@ public class User : BaseEntity
         CompanyId = companyId,
         Role = role,
     };
+
+    public void SetActive(bool active)
+    {
+        IsActive = active;
+        UpdatedAt = DateTime.UtcNow;
+    }
 
     public void AssignCompany(string companyId)
     {

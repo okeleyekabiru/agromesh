@@ -6,7 +6,7 @@ public interface ITransactionRepository
 {
     Task<Transaction?> GetByIdAsync(string id, CancellationToken ct = default);
     Task<Transaction?> GetByMonoIdAsync(string monoId, CancellationToken ct = default);
-    Task<(List<Transaction> Items, int Total)> GetByFarmIdAsync(string farmId, int page, int pageSize, bool? pendingReview = null, CancellationToken ct = default);
+    Task<(List<Transaction> Items, int Total)> GetByFarmIdAsync(string farmId, int page, int pageSize, bool? pendingReview = null, Domain.Enums.TransactionKind? kind = null, Domain.Enums.TransactionCategory? category = null, CancellationToken ct = default);
     Task<List<Transaction>> GetUncategorizedAsync(string farmId, int limit = 100, CancellationToken ct = default);
     Task<Transaction> AddAsync(Transaction transaction, CancellationToken ct = default);
     Task UpdateAsync(Transaction transaction, CancellationToken ct = default);

@@ -22,6 +22,9 @@ public class Farm : BaseEntity
     public DateTime? BankLinkedAt { get; private set; }
     public DateTime? LastBankSyncAt { get; private set; }
 
+    // Satellite crop readings are refreshed once a day, and by hand no more than once an hour (the free quota is limited).
+    public DateTime? LastSatelliteSyncAt { get; private set; }
+
     public List<Block> Blocks { get; private set; } = [];
     public List<WorkerRole> WorkerRoles { get; private set; } = [];
     public List<Worker> Workers { get; private set; } = [];
@@ -70,6 +73,15 @@ public class Farm : BaseEntity
     public void MarkBankSynced()
     {
         LastBankSyncAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public bool SatelliteSyncDue(DateTime nowUtc, TimeSpan every) =>
+        LastSatelliteSyncAt is null || nowUtc - LastSatelliteSyncAt.Value >= every;
+
+    public void MarkSatelliteSynced()
+    {
+        LastSatelliteSyncAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
 

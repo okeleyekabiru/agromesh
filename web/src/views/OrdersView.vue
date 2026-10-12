@@ -89,9 +89,10 @@
               <!-- @wheel.prevent — see InventoryView.vue's number-input comment: prevents the
                    Chrome/scroll-changes-a-focused-number-input footgun from silently corrupting a
                    quantity/price the user already finished typing. -->
-              <input type="number" class="form-input" v-model.number="line.quantity" min="0.01" step="0.01" placeholder="Qty" style="flex:1" @wheel.prevent />
-              <input type="number" class="form-input" v-model.number="line.unitPrice" min="0" step="0.01" placeholder="Unit ₦" style="flex:1" @wheel.prevent />
+              <input type="number" class="form-input" v-model.number="line.quantity" min="0.01" step="0.01" :placeholder="`No. of ${packOf(line).label}s`" style="flex:1" @wheel.prevent />
+              <input type="number" class="form-input" v-model.number="line.unitPrice" min="0" step="0.01" :placeholder="`₦ per ${packOf(line).label}`" style="flex:1" @wheel.prevent />
               <button class="btn-remove-line" title="Remove line" @click="removeLine(idx)" aria-label="Remove line item">×</button>
+              <div v-if="lineHint(line)" class="line-hint">{{ lineHint(line) }}</div>
             </div>
             <button class="btn btn-ghost btn-sm" style="margin-top:8px;" @click="addLine">+ Add Line</button>
           </div>
@@ -123,6 +124,7 @@ import type { Order, OrderStatus, CreateOrderLineItemRequest } from '@/types'
 import KpiCard from '@/components/ui/KpiCard.vue'
 import StatBadge from '@/components/ui/StatBadge.vue'
 import OrderDetailModal from '@/components/modal/OrderDetailModal.vue'
+import { useRoute, useRouter } from 'vue-router'
 import { extractErrorMessage } from '@/utils/http'
 
 const store = useAgroStore()
@@ -165,6 +167,7 @@ const newSupplierPhone = ref('')
 const newSupplierEmail = ref('')
 const creatingSupplier = ref(false)
 const lineItems = ref<{ inventoryItemId: string; quantity: number | ''; unitPrice: number | '' }[]>([])
+
 const creatingOrder = ref(false)
 const createError = ref('')
 
@@ -182,6 +185,25 @@ const itemsByCategory = computed(() => {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([categoryName, items]) => ({ categoryName, items }))
 })
+
+// Orders are written the way stock is bought: a number of packs (bags, containers…) and a price per pack. The API takes
+// quantity in the item's own unit (kg, L) and a price per unit, so it is converted on submit: 10 bags of 50 kg at
+// ₦28,000 is 500 kg at ₦560 a kg.
+type Line = { inventoryItemId: string; quantity: number | ''; unitPrice: number | '' }
+
+function packOf(line: Line) {
+  const item = store.inventoryItems.find(i => i.id === line.inventoryItemId)
+  return { size: item && item.packSize > 0 ? item.packSize : 1, label: item?.packLabel || 'unit', unit: item?.unit ?? '' }
+}
+
+function lineHint(line: Line): string {
+  const q = Number(line.quantity)
+  if (!line.inventoryItemId || !(q > 0)) return ''
+  const { size, label, unit } = packOf(line)
+  const total = Math.round(q * size * 1000) / 1000
+  const perUnit = Number(line.unitPrice) > 0 ? ` · ₦${(Math.round(Number(line.unitPrice) / size * 100) / 100).toLocaleString()} per ${unit}` : ''
+  return size === 1 ? '' : `${q} ${label}${q === 1 ? '' : 's'} = ${total.toLocaleString()} ${unit}${perUnit}`
+}
 
 const createTotal = computed(() =>
   lineItems.value.reduce((sum, l) => sum + (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0), 0)
@@ -255,11 +277,15 @@ async function submitCreate() {
   try {
     const body: { supplierId: string; lineItems: CreateOrderLineItemRequest[] } = {
       supplierId: selectedSupplierId.value,
-      lineItems: lineItems.value.map(l => ({
-        inventoryItemId: l.inventoryItemId,
-        quantity: Number(l.quantity),
-        unitPrice: Number(l.unitPrice)
-      }))
+      lineItems: lineItems.value.map(l => {
+        const { size } = packOf(l)
+        return {
+          inventoryItemId: l.inventoryItemId,
+          quantity: Math.round(Number(l.quantity) * size * 1000) / 1000,
+          // Six decimals keep packs x price-per-pack equal to the order total to well under a kobo.
+          unitPrice: Math.round((Number(l.unitPrice) / size) * 1e6) / 1e6
+        }
+      })
     }
     await store.createOrder(body)
     showCreate.value = false
@@ -270,10 +296,21 @@ async function submitCreate() {
   }
 }
 
-onMounted(() => {
+const route = useRoute()
+const router = useRouter()
+
+onMounted(async () => {
   store.fetchOrders()
   store.fetchSuppliers()
-  if (!store.inventoryItems.length) store.fetchInventory()
+  if (!store.inventoryItems.length) await store.fetchInventory()
+
+  // Arriving from "Create order" on an item: open the form with that item already on the first line.
+  const wanted = route.query.item
+  if (typeof wanted === 'string' && wanted) {
+    openCreate()
+    lineItems.value = [{ inventoryItemId: wanted, quantity: '', unitPrice: '' }]
+    router.replace({ path: '/orders' })
+  }
 })
 </script>
 
@@ -305,7 +342,8 @@ onMounted(() => {
 .form-group { margin-bottom: 16px; }
 .form-hint { font-size: 11px; color: var(--stone); margin-top: 4px; }
 .new-supplier-form { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
-.line-item-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+.line-item-row { flex-wrap: wrap; display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+.line-hint { flex-basis: 100%; font-size: 11px; color: var(--stone); padding-left: 2px; }
 .btn-remove-line { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--fog); background: transparent; cursor: pointer; font-size: 16px; color: var(--stone); flex-shrink: 0; }
 .order-total-row { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--fog); font-size: 13px; font-weight: 600; color: var(--forest); }
 .order-total-value { font-family: 'JetBrains Mono', monospace; font-size: 15px; }

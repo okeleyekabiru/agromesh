@@ -9,7 +9,7 @@ namespace AgroMesh.Application.Commands.Staff;
 public record AddStaffUserCommand(AddStaffUserRequest Request) : IRequest<AuthUserDto>;
 
 /// <summary>
-/// Admin can add a FarmManager or Supervisor; a FarmManager can add a Supervisor only; everyone
+/// An Admin can add a FarmManager or Supervisor; a FarmManager can add a Supervisor only; everyone
 /// else is forbidden. The new user joins the caller's company.
 /// </summary>
 public class AddStaffUserCommandHandler : IRequestHandler<AddStaffUserCommand, AuthUserDto>

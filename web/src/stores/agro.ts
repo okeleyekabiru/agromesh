@@ -4,14 +4,15 @@ import type {
   Farm, Block, Worker, WorkerRole, ActivityLog, Transaction,
   InventoryItem, OutstandingStock, InventoryCategory, ChemicalProduct, UpcomingTask, LowStockAlert, WeatherWidget, DashboardData,
   AuthUser, AuthResponse, FeatureFlag, FarmSummary, State,
-  BoundarySubmissionResult, PickStockResponse, StockAdjustmentRequest,
+  BoundarySubmissionResult, PickStockResponse, StockAdjustmentRequest, PriceChangeRequest, SatelliteOverview,
   Supplier, Order, CreateOrderLineItemRequest, Report
 } from '@/types'
 import {
   farmApi, blockApi, activityApi, transactionApi,
-  workerApi, workerRoleApi, inventoryApi, inventoryCategoryApi, inventoryAdjustmentsApi, chemicalApi,
+  workerApi, workerRoleApi, inventoryApi, inventoryCategoryApi, inventoryAdjustmentsApi, inventoryPriceChangesApi, chemicalApi,
   authApi, featuresApi, referenceApi, supplierApi, orderApi, reportApi,
-  setFarmId
+  setFarmId,
+  managersApi, satelliteApi
 } from '@/services/api'
 import { normalizeBlobError } from '@/utils/http'
 import { normalizeActivity, normalizeTask, normalizeBlock, normalizeTransaction } from '@/utils/enums'
@@ -27,10 +28,12 @@ export const useAgroStore = defineStore('agro', () => {
   const workerRoles = ref<WorkerRole[]>([])
   const activities = ref<ActivityLog[]>([])
   const transactions = ref<Transaction[]>([])
+  const transactionsTotal = ref(0)
   const inventoryItems = ref<InventoryItem[]>([])
   const outstandingStock = ref<OutstandingStock[]>([])
   const inventoryCategories = ref<InventoryCategory[]>([])
   const pendingAdjustments = ref<StockAdjustmentRequest[]>([])
+  const pendingPriceChanges = ref<PriceChangeRequest[]>([])
   const suppliers = ref<Supplier[]>([])
   const orders = ref<Order[]>([])
   const chemicals = ref<ChemicalProduct[]>([])
@@ -72,9 +75,36 @@ export const useAgroStore = defineStore('agro', () => {
 
   const hasMultipleFarms = computed(() => farms.value.length > 1)
 
+  // Every transaction nobody has reviewed yet, counted by the server across all dates. Until it has been read it falls
+  // back to the dashboard's figure, and last of all to what is on screen (only the page that happens to be loaded).
+  const pendingReviewCount = ref<number | null>(null)
   const pendingReviews = computed(() =>
-    transactions.value.filter(t => !t.reviewedByUser).length
+    pendingReviewCount.value ?? dashboard.value?.pendingReviewCount ?? transactions.value.filter(t => !t.reviewedByUser).length
   )
+
+  async function refreshPendingReviews() {
+    try {
+      pendingReviewCount.value = (await transactionApi.summary()).data.pendingReview
+    } catch { /* keep the last known count */ }
+  }
+
+  // Crop condition per block from satellite (NDVI / NDMI); empty until the Copernicus keys are set on the API.
+  const satellite = ref<SatelliteOverview | null>(null)
+  async function fetchSatellite() {
+    try { satellite.value = (await satelliteApi.get()).data } catch { /* keep what was shown */ }
+  }
+  async function refreshSatellite() {
+    satellite.value = (await satelliteApi.refresh()).data
+  }
+
+  // Farm managers can supervise an activity too: they are accounts, not workers, so they are listed separately.
+  const managers = ref<{ id: string; fullName: string }[]>([])
+  async function fetchManagers() {
+    try { managers.value = (await managersApi.getAll()).data ?? [] } catch { /* the list stays as it was */ }
+  }
+  /** Who supervised: a supervisor worker, or a farm manager. */
+  const supervisorName = (id: string) =>
+    workers.value.find(w => w.id === id)?.name ?? managers.value.find(m => m.id === id)?.fullName ?? ''
 
   const supervisors = computed(() =>
     workers.value.filter(w => w.roleTitle.toLowerCase().includes('supervisor'))
@@ -87,7 +117,8 @@ export const useAgroStore = defineStore('agro', () => {
       : lowStockAlerts.value.length
   )
 
-  const pendingAdjustmentsCount = computed(() => pendingAdjustments.value.length)
+  // Things waiting for an admin on the stock approvals page: stock adjustments and price changes.
+  const pendingAdjustmentsCount = computed(() => pendingAdjustments.value.length + pendingPriceChanges.value.length)
 
   // ── MULTI-FARM ACTIONS ──
 
@@ -254,10 +285,13 @@ export const useAgroStore = defineStore('agro', () => {
     return activity
   }
 
-  async function fetchTransactions(page = 1, pendingReview?: boolean) {
+  /** Loads a page of transactions. `append` adds the page to what is shown (Load more); otherwise it replaces it. */
+  async function fetchTransactions(page = 1, pendingReview?: boolean, append = false, kind?: 'Income' | 'Capital' | 'Expense', category?: string) {
     try {
-      const res = await transactionApi.getAll(page, 20, pendingReview)
-      transactions.value = (res.data.items as Transaction[]).map(normalizeTransaction)
+      const res = await transactionApi.getAll(page, 20, pendingReview, kind, category)
+      const items = (res.data.items as Transaction[]).map(normalizeTransaction)
+      transactions.value = append ? [...transactions.value, ...items.filter(n => !transactions.value.some(t => t.id === n.id))] : items
+      transactionsTotal.value = res.data.total ?? items.length
     } catch (e) {
       error.value = 'Failed to load transactions'
     }
@@ -359,6 +393,7 @@ export const useAgroStore = defineStore('agro', () => {
     const idx = transactions.value.findIndex(t => t.id === id)
     const updated = normalizeTransaction(res.data)
     if (idx !== -1) transactions.value[idx] = updated
+    refreshPendingReviews()
     return updated
   }
 
@@ -423,10 +458,27 @@ export const useAgroStore = defineStore('agro', () => {
 
   /** Hands leftover stock back to the store; throws on a rejected quantity so the caller can show why. */
   /** Prices an item already on hand; optionally fills in past activities that had no input cost. */
+  /** Asks for a price. It is NOT applied: an admin has to approve it first (see the stock approvals page). */
   async function setItemPricing(itemId: string, body: { packSize: number; packLabel: string; pricePerPack: number; backfillActivities: boolean }) {
     const res = await inventoryApi.setPricing(itemId, body)
-    await fetchInventory()
-    return res.data as { item: InventoryItem; activitiesUpdated: number }
+    await fetchPendingPriceChanges()
+    return res.data as PriceChangeRequest
+  }
+
+  async function fetchPendingPriceChanges() {
+    try {
+      pendingPriceChanges.value = (await inventoryPriceChangesApi.getAll('Pending')).data ?? []
+    } catch { /* the queue just stays as it was */ }
+  }
+
+  async function approvePriceChange(requestId: string) {
+    await inventoryPriceChangesApi.approve(requestId)
+    await Promise.all([fetchPendingPriceChanges(), fetchInventory()])
+  }
+
+  async function rejectPriceChange(requestId: string) {
+    await inventoryPriceChangesApi.reject(requestId)
+    await fetchPendingPriceChanges()
   }
 
   async function returnStock(itemId: string, body: { quantity: number; blockId: string; notes?: string | null }) {
@@ -434,7 +486,7 @@ export const useAgroStore = defineStore('agro', () => {
     await Promise.all([fetchInventory(), fetchOutstandingStock()])
   }
 
-  /** Creates a brand-new item or restocks an existing one — see CreateInventoryItemRequest. */
+  /** Adds an item to the catalogue (no stock: stock comes in through a received purchase order). */
   async function addOrRestockInventoryItem(body: {
     name: string
     unit: string
@@ -450,11 +502,6 @@ export const useAgroStore = defineStore('agro', () => {
     const res = await inventoryApi.create(body)
     await fetchInventory()
     return res.data as InventoryItem
-  }
-
-  async function addStockFromReceipt(transactionId: string, body: unknown) {
-    await transactionApi.recordReceipt(transactionId, body)
-    await fetchInventory()
   }
 
   // ── Suppliers (Phase 4) ──
@@ -647,7 +694,7 @@ export const useAgroStore = defineStore('agro', () => {
   async function initDashboard() {
     const hasFarm = await discoverFarm()
     if (!hasFarm) return
-    await Promise.all([fetchFarm(), fetchDashboard(), fetchWeather()])
+    await Promise.all([fetchFarm(), fetchDashboard(), fetchWeather(), refreshPendingReviews()])
     lastSynced.value = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
   }
 
@@ -661,14 +708,17 @@ export const useAgroStore = defineStore('agro', () => {
     // multi-farm state
     companyId, farms, activeFarmId, states, wizardBlocks,
     // computed
-    isAuthenticated, pendingReviews, supervisors, lowStockCount, pendingAdjustmentsCount,
+    managers, fetchManagers, supervisorName,
+    satellite, fetchSatellite, refreshSatellite,
+    isAuthenticated, pendingReviews, refreshPendingReviews, supervisors, lowStockCount, pendingAdjustmentsCount,
     activeFarmSummary, hasMultipleFarms,
     // actions
     fetchFarm, fetchDashboard, fetchWeather, fetchBlocks, fetchActivities, fetchActivity,
-    fetchTransactions, fetchWorkers, addWorker, createWorkerRole, updateWorkerRoleRate, fetchWorkerRoles, fetchInventory, fetchInventoryCategories,
+    transactionsTotal, fetchTransactions, fetchWorkers, addWorker, createWorkerRole, updateWorkerRoleRate, fetchWorkerRoles, fetchInventory, fetchInventoryCategories,
     createInventoryCategory, fetchChemicals,
-    fetchReport, logActivity, reviewTransaction, adjustStock, pickStock, setItemPricing, fetchOutstandingStock, returnStock, outstandingStock, addStockFromReceipt, addOrRestockInventoryItem,
+    fetchReport, logActivity, reviewTransaction, adjustStock, pickStock, setItemPricing, fetchOutstandingStock, returnStock, outstandingStock, addOrRestockInventoryItem,
     fetchPendingAdjustments, approveStockAdjustment, rejectStockAdjustment,
+    pendingPriceChanges, fetchPendingPriceChanges, approvePriceChange, rejectPriceChange,
     fetchSuppliers, createSupplier, fetchOrders, createOrder, placeOrder, receiveOrder, downloadOrderInvoice,
     discoverFarm, updateFarmProfile, initDashboard,
     // multi-farm actions

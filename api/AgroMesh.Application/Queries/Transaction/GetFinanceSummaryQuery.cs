@@ -22,12 +22,14 @@ public class GetFinanceSummaryQueryHandler : IRequestHandler<GetFinanceSummaryQu
 
         var rows = await _transactions.GetBetweenAsync(query.FarmId, from, to, ct);
         var review = await _transactions.GetNeedingReviewAsync(query.FarmId, ct);
+        var pending = await _transactions.GetPendingReviewCountAsync(query.FarmId, ct);
 
         return new FinanceSummaryDto(
             from, to.AddDays(-1),
             Income: rows.Where(t => t.Kind == TransactionKind.Income).Sum(t => t.Amount),
             Capital: rows.Where(t => t.Kind == TransactionKind.Capital).Sum(t => t.Amount),
             Expenses: rows.Where(t => t.Kind == TransactionKind.Expense).Sum(t => -t.Amount),
-            NeedsReview: review.Count);
+            NeedsReview: review.Count,
+            PendingReview: pending);
     }
 }

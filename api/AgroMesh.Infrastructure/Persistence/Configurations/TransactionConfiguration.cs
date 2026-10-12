@@ -21,6 +21,7 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
         builder.Property(t => t.ReviewNotes).HasMaxLength(500);
         builder.Property(t => t.Kind).IsRequired();
         builder.Property(t => t.OrderId).HasMaxLength(50);
+        builder.Property(t => t.BlockId).HasMaxLength(50);
         builder.Property(t => t.Reconciliation).IsRequired();
         builder.Property(t => t.ReconciliationNote).HasMaxLength(500);
 

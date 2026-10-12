@@ -18,6 +18,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         // Stored as a string ("Admin"/"Member") rather than an int ordinal so a manual SELECT
         // against the DB is self-describing and a future added role doesn't silently reorder
         // meaning behind existing stored data.
+        builder.Property(u => u.IsActive).IsRequired().HasDefaultValue(true);
         builder.Property(u => u.Role).IsRequired().HasConversion<string>().HasMaxLength(20);
     }
 }

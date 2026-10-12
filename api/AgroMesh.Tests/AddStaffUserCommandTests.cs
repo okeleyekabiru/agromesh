@@ -16,6 +16,8 @@ public class AddStaffUserCommandTests
             Task.FromResult(Users.FirstOrDefault(u => u.Email == email.Trim().ToLowerInvariant()));
         public Task<User?> GetByIdAsync(string id, CancellationToken ct = default) =>
             Task.FromResult(Users.FirstOrDefault(u => u.Id == id));
+        public Task<List<User>> GetByCompanyAsync(string companyId, CancellationToken ct = default) =>
+            Task.FromResult(Users.Where(u => u.CompanyId == companyId).ToList());
         public Task AddAsync(User user, CancellationToken ct = default) { Users.Add(user); return Task.CompletedTask; }
         public Task SaveAsync(CancellationToken ct = default) => Task.CompletedTask;
     }

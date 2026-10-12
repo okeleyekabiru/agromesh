@@ -25,6 +25,7 @@ public class MonoApiService : IMonoBankService
     private readonly IFinancialCategorizationService _categorizationService;
     private readonly ILogger<MonoApiService> _logger;
     private readonly PaymentReconciler _reconciler;
+    private readonly IBlockRepository _blockRepo;
 
     public MonoApiService(
         IHttpClientFactory httpFactory,
@@ -32,9 +33,11 @@ public class MonoApiService : IMonoBankService
         ITransactionRepository transactionRepo,
         IFinancialCategorizationService categorizationService,
         ILogger<MonoApiService> logger,
-        PaymentReconciler reconciler)
+        PaymentReconciler reconciler,
+        IBlockRepository blockRepo)
     {
         _reconciler = reconciler;
+        _blockRepo = blockRepo;
         _http = httpFactory.CreateClient("mono-client");
         _secretKey = config["Mono:SecretKey"];
         _transactionRepo = transactionRepo;
@@ -92,6 +95,7 @@ public class MonoApiService : IMonoBankService
         }
 
         var transactions = await FetchTransactionsAsync(monoAccountId, ct);
+        var blocks = await _blockRepo.GetByFarmIdAsync(farmId, ct);
         var newCount = 0;
 
         // Oldest first, so an order is placed/paid in the sequence the bank saw it.
@@ -106,6 +110,9 @@ public class MonoApiService : IMonoBankService
             var transaction = Transaction.Create(
                 farmId, dto.Id, dto.Narration, amount, dto.Date,
                 result.Category, result.Confidence, result.Source);
+
+            // "ORD-1042/Alpha/Fertilizer": the payer says which block the spend is for and what kind it is.
+            NarrationInterpreter.Apply(transaction, blocks);
 
             await _transactionRepo.AddAsync(transaction, ct);
             newCount++;
