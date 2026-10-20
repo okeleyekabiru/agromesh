@@ -59,3 +59,6 @@ serilog-*.txt
 # OS
 .DS_Store
 Thumbs.db
+
+# Local secrets for deploying (never commit)
+api/supabase.local.txt

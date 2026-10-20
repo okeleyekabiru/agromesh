@@ -2,3 +2,5 @@
 **/obj/
 **/.vs/
 *.user
+# Real keys live in this file: it must never be baked into an image (images get pushed to registries).
+**/appsettings.Development.json

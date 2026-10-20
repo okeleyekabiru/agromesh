@@ -40,6 +40,9 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=agromesh;Username=agromesh;Password=agromesh_dev"
       ConnectionStrings__Redis: "redis:6379"
+    volumes:
+      # Local keys are mounted in, not baked into the image (see .dockerignore).
+      - ./AgroMesh.API/appsettings.Development.json:/app/appsettings.Development.json:ro
     depends_on:
       db:
         condition: service_healthy
