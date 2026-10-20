@@ -38,7 +38,8 @@ class ApiClient {
       ? _override
       : (!kIsWeb && defaultTargetPlatform == TargetPlatform.android ? 'http://10.0.2.2:5000' : 'http://localhost:5000');
 
-  static const _timeout = Duration(seconds: 15);
+  // Long enough for the API to wake from sleep (a hosted API that scales to zero takes a while on its first request).
+  static const _timeout = Duration(seconds: 45);
 
   static Future<Map<String, String>> _headers({bool auth = true}) async {
     final headers = <String, String>{'Content-Type': 'application/json'};

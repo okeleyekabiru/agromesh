@@ -13,7 +13,7 @@ class SyncService {
 
   static Future<bool> isOnline() async {
     final result = await Connectivity().checkConnectivity();
-    return result != ConnectivityResult.none;
+    return _hasConnection(result);
   }
 
   static Future<SyncResult> syncPending(String farmId) async {
@@ -99,7 +99,11 @@ class SyncService {
   // Listen for connectivity changes and auto-sync
   static Stream<bool> get connectivityStream => Connectivity()
       .onConnectivityChanged
-      .map((result) => result != ConnectivityResult.none);
+      .map(_hasConnection);
+
+  // connectivity_plus reports every active connection (wifi, mobile, ...) as a list; online means any of them is a real one.
+  static bool _hasConnection(List<ConnectivityResult> results) =>
+      results.any((r) => r != ConnectivityResult.none);
 }
 
 class _RowSyncResult {

@@ -18,6 +18,7 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
+  static const _blocksTab = 1; // index of Blocks in the bottom bar
 
   final _screens = const [
     DashboardScreen(),
@@ -103,16 +104,19 @@ class _MainShellState extends State<MainShell> {
           BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: 'Workers'),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const LogActivityScreen()),
-        ),
-        backgroundColor: AgroColors.leaf,
-        foregroundColor: AgroColors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('Log Activity', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-      ),
+      // The Blocks tab has its own button (Add Block), so Log Activity is not offered there.
+      floatingActionButton: _currentIndex == _blocksTab
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LogActivityScreen()),
+              ),
+              backgroundColor: AgroColors.leaf,
+              foregroundColor: AgroColors.white,
+              icon: const Icon(Icons.add),
+              label: const Text('Log Activity', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }

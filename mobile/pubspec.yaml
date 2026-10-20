@@ -20,7 +20,7 @@ dependencies:
   path: ^1.9.0
 
   # Connectivity & sync
-  connectivity_plus: ^5.0.2
+  connectivity_plus: ^7.3.1
   http: ^1.2.0
 
   # Local storage (simple key-value)
