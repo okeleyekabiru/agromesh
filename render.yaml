@@ -1,0 +1,56 @@
+services:
+  - type: redis
+    name: agromesh-redis
+    plan: free
+    ipAllowList: []
+
+  - type: web
+    name: agromesh-api
+    runtime: docker
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
+    plan: free
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      # Set this in the Render dashboard to your Supabase connection string,
+      # e.g. Host=db.<project-ref>.supabase.co;Port=5432;Database=postgres;
+      # Username=postgres;Password=<db-password>;SSL Mode=Require;Trust Server Certificate=true
+      # (use the pooler host/port 6543 instead of 5432 if you want pgbouncer pooling)
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: ConnectionStrings__Redis
+        fromService:
+          type: redis
+          name: agromesh-redis
+          property: connectionString
+      - key: Jwt__Key
+        sync: false
+      - key: Jwt__Issuer
+        value: AgroMesh
+      - key: Anthropic__ApiKey
+        sync: false
+      - key: Copernicus__ClientId
+        sync: false
+      - key: Copernicus__ClientSecret
+        sync: false
+      - key: Mono__SecretKey
+        sync: false
+      - key: Mono__PublicKey
+        sync: false
+      - key: Mono__WebhookSecret
+        sync: false
+
+  - type: web
+    name: agromesh-web
+    runtime: docker
+    dockerfilePath: ./web/Dockerfile
+    dockerContext: ./web
+    plan: free
+    envVars:
+      # Fill this in with agromesh-api's live Render URL after its first deploy
+      # (e.g. https://agromesh-api.onrender.com), then redeploy this service.
+      - key: VITE_API_URL
+        value: https://agromesh-api.onrender.com
+      - key: VITE_FARM_ID
+        value: farm_001
