@@ -95,15 +95,11 @@ try
     {
         app.UseSwagger();
         app.UseSwaggerUI();
-    }
 
-    // Applied in every environment so a fresh database (e.g. the Supabase one behind Render) gets its
-    // schema on first start. Seed data stays Development-only.
-    using (var scope = app.Services.CreateScope())
-    {
+        using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AgroMeshDbContext>();
         await db.Database.MigrateAsync();
-        if (app.Environment.IsDevelopment()) await DatabaseSeeder.SeedAsync(db);
+        await DatabaseSeeder.SeedAsync(db);
     }
 
     app.UseCors("AllowAll");

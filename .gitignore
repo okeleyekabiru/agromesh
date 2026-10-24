@@ -59,3 +59,4 @@ serilog-*.txt
 # OS
 .DS_Store
 Thumbs.db
+supabase-schema.sql
