@@ -40,17 +40,4 @@ services:
         sync: false
       - key: Mono__WebhookSecret
         sync: false
-
-  - type: web
-    name: agromesh-web
-    runtime: docker
-    dockerfilePath: ./web/Dockerfile
-    dockerContext: ./web
-    plan: free
-    envVars:
-      # Fill this in with agromesh-api's live Render URL after its first deploy
-      # (e.g. https://agromesh-api.onrender.com), then redeploy this service.
-      - key: VITE_API_URL
-        value: https://agromesh-api.onrender.com
-      - key: VITE_FARM_ID
-        value: farm_001
+# Frontend (web/) is deployed separately on Vercel, not here.

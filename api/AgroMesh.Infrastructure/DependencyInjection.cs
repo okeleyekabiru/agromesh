@@ -74,6 +74,8 @@ public static class DependencyInjection
 
         services.AddSingleton<BackgroundJobQueue>();
         services.AddSingleton<IBackgroundJobQueue>(sp => sp.GetRequiredService<BackgroundJobQueue>());
+        services.AddSingleton<DailyBankSyncRunner>();
+        services.AddSingleton<Services.Satellite.DailySatelliteRefreshRunner>();
         services.AddHostedService<SchedulingBackgroundService>();
         services.AddHostedService<DailyBankSyncService>();
         services.AddHostedService<Services.Satellite.DailySatelliteRefreshService>();
