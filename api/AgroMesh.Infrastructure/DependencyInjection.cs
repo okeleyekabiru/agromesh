@@ -26,8 +26,10 @@ public static class DependencyInjection
         var redisConnection = config.GetConnectionString("Redis");
         if (!string.IsNullOrWhiteSpace(redisConnection))
         {
+            // Redis is only a cache. AbortOnConnectFail=false keeps an unreachable Redis from throwing when the
+            // multiplexer is first resolved; the cache calls already swallow errors and fall back to the source.
             services.AddSingleton<IConnectionMultiplexer>(_ =>
-                ConnectionMultiplexer.Connect(redisConnection));
+                ConnectionMultiplexer.Connect(BuildRedisOptions(redisConnection)));
         }
 
         services.AddHttpClient("weather-client");
@@ -81,5 +83,33 @@ public static class DependencyInjection
         services.AddHostedService<Services.Satellite.DailySatelliteRefreshService>();
 
         return services;
+    }
+
+    // Accepts either a StackExchange.Redis string ("host:6379,password=...") or the redis:// / rediss:// URL
+    // that hosts like Render provide.
+    private static ConfigurationOptions BuildRedisOptions(string connection)
+    {
+        ConfigurationOptions options;
+        if (Uri.TryCreate(connection, UriKind.Absolute, out var uri) && (uri.Scheme is "redis" or "rediss"))
+        {
+            options = new ConfigurationOptions { Ssl = uri.Scheme == "rediss" };
+            options.EndPoints.Add(uri.Host, uri.Port > 0 ? uri.Port : 6379);
+
+            var userInfo = uri.UserInfo.Split(':', 2);
+            if (userInfo.Length == 2)
+            {
+                if (userInfo[0].Length > 0) options.User = Uri.UnescapeDataString(userInfo[0]);
+                options.Password = Uri.UnescapeDataString(userInfo[1]);
+            }
+            else if (userInfo[0].Length > 0) options.Password = Uri.UnescapeDataString(userInfo[0]);
+        }
+        else
+        {
+            options = ConfigurationOptions.Parse(connection);
+        }
+
+        options.AbortOnConnectFail = false;
+        options.ConnectTimeout = 3000;
+        return options;
     }
 }
