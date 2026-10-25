@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' show Geolocator, LocationAccuracy, LocationPermission;
+import '../blocks/map_pick_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/models.dart';
@@ -210,6 +211,22 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
                       error: _areaError,
                       minPoints: _minAreaPoints,
                       onAdd: _capturePoint,
+                      onPickMap: () async {
+                        final picked = await Navigator.push<List<GeoPoint>>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => MapPickScreen(
+                              title: 'Pick the worked area',
+                              minPoints: _minAreaPoints,
+                              blockGeoJson: _block?.boundaryGeoJson,
+                              coveredGeoJson: _existing?.coveredGeoJson,
+                              remainingGeoJson: _existing?.remainingGeoJson,
+                              initial: List.of(_areaPoints),
+                            ),
+                          ),
+                        );
+                        if (picked != null) setState(() { _areaPoints..clear()..addAll(picked); _areaError = null; });
+                      },
                       onUndo: () => setState(() { if (_areaPoints.isNotEmpty) _areaPoints.removeLast(); }),
                       onClear: () => setState(_areaPoints.clear),
                     ),
@@ -677,12 +694,13 @@ class _StepArea extends StatelessWidget {
   final String? error;
   final int minPoints;
   final VoidCallback onAdd;
+  final VoidCallback onPickMap;
   final VoidCallback onUndo;
   final VoidCallback onClear;
 
   const _StepArea({
     required this.block, required this.existing, required this.points, required this.capturing, required this.error,
-    required this.minPoints, required this.onAdd, required this.onUndo, required this.onClear,
+    required this.minPoints, required this.onAdd, required this.onPickMap, required this.onUndo, required this.onClear,
   });
 
   @override
@@ -726,6 +744,15 @@ class _StepArea extends StatelessWidget {
             child: Text(error!, style: const TextStyle(color: AgroColors.alert, fontSize: 12)),
           ),
         const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: onPickMap,
+            icon: const Icon(Icons.touch_app_outlined, size: 18),
+            label: const Text('Pick on map (tap the corners)'),
+          ),
+        ),
+        const SizedBox(height: 8),
         Row(
           children: [
             Expanded(

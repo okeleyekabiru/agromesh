@@ -9,6 +9,7 @@ import '../../services/api_client.dart';
 import '../../stores/app_store.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/geo_sketch.dart' show geoJsonRings;
+import 'map_pick_screen.dart';
 
 /// GPS corner-marking boundary capture. Walk to each corner of the block and tap "Mark Corner Here", in order
 /// around the edge. A live GPS fix is shown with its accuracy; a corner is taken from the best fix seen in the
@@ -106,6 +107,26 @@ class _BoundaryCaptureScreenState extends State<BoundaryCaptureScreen> {
     } finally {
       if (mounted) setState(() => _isCapturing = false);
     }
+  }
+
+  Future<void> _pickOnMap() async {
+    final picked = await Navigator.push<List<GeoPoint>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapPickScreen(
+          title: 'Pick the boundary on the map',
+          minPoints: _minPoints,
+          blockGeoJson: widget.existingGeoJson,
+          initial: List.of(_points),
+        ),
+      ),
+    );
+    if (picked == null) return;
+    setState(() {
+      _points..clear()..addAll(picked);
+      _accuracies..clear()..addAll(List.filled(picked.length, 0));
+      _error = null;
+    });
   }
 
   void _undoLastPoint() {
@@ -261,6 +282,12 @@ class _BoundaryCaptureScreenState extends State<BoundaryCaptureScreen> {
                         child: const Text('Undo last', style: TextStyle(fontSize: 12)),
                       ),
                   ],
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: _isCapturing ? null : _pickOnMap,
+                  icon: const Icon(Icons.touch_app_outlined, size: 18),
+                  label: const Text('Pick on map (tap the corners)'),
                 ),
                 const SizedBox(height: 8),
                 ElevatedButton.icon(
