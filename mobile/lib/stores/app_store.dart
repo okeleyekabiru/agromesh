@@ -171,7 +171,8 @@ class AppStore extends ChangeNotifier {
   /// full farm/company/block setup lives on the web app). Requires
   /// connectivity: unlike activity logs and boundary points, this is not
   /// queued for later sync.
-  Future<void> addBlock(
+  /// Returns the new block's id and name (so the caller can go straight on to marking its boundary).
+  Future<({String id, String name})?> addBlock(
     String name, {
     required List<BlockCrop> crops,
     double areaValue = 0,
@@ -180,13 +181,26 @@ class AppStore extends ChangeNotifier {
     if (!isOnline) {
       throw Exception('You need an internet connection to add a block.');
     }
-    await ApiClient.post('/api/farms/$farmId/blocks', {
+    final created = await ApiClient.post('/api/farms/$farmId/blocks', {
       'name': name,
       'crops': [
         for (final c in crops) {'cropType': c.cropType.index, 'percentage': c.percentage},
       ],
       'areaValue': areaValue,
       if (plantingYear != null) 'plantingYear': plantingYear,
+    });
+    await refreshBlocks();
+    if (created is Map && created['id'] != null) return (id: '${created['id']}', name: '${created['name'] ?? name}');
+    return null;
+  }
+
+  /// Sends a boundary to the server right now and waits for its answer, so a rejection can be shown. Throws
+  /// [ApiException] with the server's reason. [confirm] overrides the "this looks odd" checks.
+  Future<void> submitBoundaryNow(String blockId, List<GeoPoint> points, {bool confirm = false}) async {
+    await ApiClient.post('/api/blocks/$blockId/boundary/points', {
+      'operationId': _uuid.v4(),
+      'points': [for (final p in points) p.toJson()],
+      if (confirm) 'confirmImplausibleGeometry': true,
     });
     await refreshBlocks();
   }
