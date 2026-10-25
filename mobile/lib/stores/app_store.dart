@@ -353,8 +353,9 @@ class AppStore extends ChangeNotifier {
   /// Farm managers (accounts, not workers) can supervise an activity too. Cached so the choice works offline.
   List<Worker> managers = [];
 
-  /// Who can be picked as supervisor: supervisor workers (or every worker when none is a supervisor) plus farm managers.
-  List<Worker> get supervisorOptions => [...(supervisors.isNotEmpty ? supervisors : workers), ...managers];
+  /// Who can be picked as supervisor: workers whose role is supervisor, plus the admin, farm manager and supervisor accounts.
+  /// Ordinary workers are not offered.
+  List<Worker> get supervisorOptions => [...supervisors, ...managers];
 
   Future<void> refreshManagers() async {
     try {
@@ -364,7 +365,7 @@ class AppStore extends ChangeNotifier {
         for (final j in list)
           Worker(
             id: j['id'] as String, farmId: farmId, name: j['fullName'] as String, initials: '',
-            role: 'Farm manager', type: WorkerType.values.first, active: true, dailyRate: 0,
+            role: _roleLabel(j['role']), type: WorkerType.values.first, active: true, dailyRate: 0,
           ),
       ];
       await DatabaseService.saveCache('managers:$farmId', [for (final j in list) j]);
@@ -375,13 +376,15 @@ class AppStore extends ChangeNotifier {
           for (final j in cached)
             Worker(
               id: j['id'] as String, farmId: farmId, name: j['fullName'] as String, initials: '',
-              role: 'Farm manager', type: WorkerType.values.first, active: true, dailyRate: 0,
+              role: _roleLabel(j['role']), type: WorkerType.values.first, active: true, dailyRate: 0,
             ),
         ];
       }
     }
     notifyListeners();
   }
+
+  static String _roleLabel(dynamic r) => switch ('$r') { 'Admin' => 'Admin', 'Supervisor' => 'Supervisor', _ => 'Farm manager' };
 
   List<Worker> get supervisors => workers.where((w) => w.role.toLowerCase().contains('supervisor')).toList();
 

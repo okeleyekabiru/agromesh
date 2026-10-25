@@ -102,7 +102,7 @@
                 {{ w.name }} — {{ w.roleTitle }}
               </option>
               <option v-for="m in store.managers" :key="m.id" :value="m.id">
-                {{ m.fullName }} — Farm manager
+                {{ m.fullName }} — {{ m.role === 'FarmManager' ? 'Farm manager' : (m.role ?? 'Manager') }}
               </option>
             </select>
           </div>

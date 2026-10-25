@@ -33,7 +33,7 @@ public class GetTeamQueryHandler : IRequestHandler<GetTeamQuery, List<TeamMember
     }
 }
 
-public record ManagerOptionDto(string Id, string FullName);
+public record ManagerOptionDto(string Id, string FullName, string Role);
 
 /// <summary>
 /// The active farm managers of the caller's company, by name. Open to every signed-in user: they appear as choices in an
@@ -56,8 +56,8 @@ public class GetManagerOptionsQueryHandler : IRequestHandler<GetManagerOptionsQu
     {
         var companyId = _currentUser.CompanyId ?? throw new ForbiddenException("Your account is not attached to a company.");
         return (await _users.GetByCompanyAsync(companyId, ct))
-            .Where(u => u.Role == UserRole.FarmManager && u.IsActive)
-            .Select(u => new ManagerOptionDto(u.Id, u.FullName))
+            .Where(u => u.Role is UserRole.Admin or UserRole.FarmManager or UserRole.Supervisor && u.IsActive)
+            .Select(u => new ManagerOptionDto(u.Id, u.FullName, u.Role.ToString()))
             .ToList();
     }
 }
