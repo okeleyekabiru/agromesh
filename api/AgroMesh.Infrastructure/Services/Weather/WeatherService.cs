@@ -79,7 +79,7 @@ public class WeatherService : IWeatherService
     {
         try
         {
-            var forecastTask = TryAsync(() => FetchForecastAsync(lat, lng, ct), "forecast");
+            var forecastTask = ForecastWithFallbackAsync(lat, lng, ct);
             var historicalTask = TryAsync(() => FetchHistoricalAsync(lat, lng, ct), "history");
             await Task.WhenAll(forecastTask, historicalTask);
 
@@ -123,6 +123,66 @@ public class WeatherService : IWeatherService
             res.EnsureSuccessStatusCode();
             return await res.Content.ReadAsStringAsync(ct);
         }
+    }
+
+    /// <summary>Open-Meteo first; MET Norway when it fails.</summary>
+    private async Task<List<DailyWeather>?> ForecastWithFallbackAsync(double lat, double lng, CancellationToken ct)
+        => await TryAsync(() => FetchForecastAsync(lat, lng, ct), "forecast")
+           ?? await TryAsync(() => FetchMetNoForecastAsync(lat, lng, ct), "forecast (MET Norway)");
+
+    /// <summary>
+    /// Backup forecast from MET Norway (free, no key, worldwide) for when Open-Meteo refuses us (HTTP 429 on shared hosting
+    /// addresses). Its hourly/6-hourly series is folded into one row per local day (Nigeria is UTC+1).
+    /// </summary>
+    private async Task<List<DailyWeather>?> FetchMetNoForecastAsync(double lat, double lng, CancellationToken ct)
+    {
+        var url = $"https://api.met.no/weatherapi/locationforecast/2.0/complete?lat={lat:F4}&lon={lng:F4}";
+        using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        req.Headers.UserAgent.ParseAdd("AgroMesh/1.0 (+https://github.com/okeleyekabiru/agromesh)");
+        using var res = await _http.SendAsync(req, ct);
+        res.EnsureSuccessStatusCode();
+        using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync(ct));
+
+        var days = new SortedDictionary<DateTime, (double Rain, double Max, double Min, double Wind, double Cloud, int N, bool Storm)>();
+        foreach (var t in doc.RootElement.GetProperty("properties").GetProperty("timeseries").EnumerateArray())
+        {
+            var local = t.GetProperty("time").GetDateTime().ToUniversalTime().AddHours(1);
+            var day = local.Date;
+            var data = t.GetProperty("data");
+            var inst = data.GetProperty("instant").GetProperty("details");
+            var temp = inst.GetProperty("air_temperature").GetDouble();
+            var wind = inst.TryGetProperty("wind_speed", out var w) ? w.GetDouble() * 3.6 : 0; // m/s -> km/h
+            var cloud = inst.TryGetProperty("cloud_area_fraction", out var c) ? c.GetDouble() : 50;
+
+            // Rain: the hourly figure while the series is hourly, the 6-hourly one after that (never both).
+            double rain = 0;
+            string symbol = "";
+            if (data.TryGetProperty("next_1_hours", out var h1))
+            {
+                rain = h1.GetProperty("details").TryGetProperty("precipitation_amount", out var r) ? r.GetDouble() : 0;
+                symbol = h1.GetProperty("summary").GetProperty("symbol_code").GetString() ?? "";
+            }
+            else if (data.TryGetProperty("next_6_hours", out var h6))
+            {
+                rain = h6.GetProperty("details").TryGetProperty("precipitation_amount", out var r) ? r.GetDouble() : 0;
+                symbol = h6.GetProperty("summary").GetProperty("symbol_code").GetString() ?? "";
+            }
+
+            var cur = days.TryGetValue(day, out var d) ? d : (0, double.MinValue, double.MaxValue, 0, 0, 0, false);
+            days[day] = (cur.Item1 + rain, Math.Max(cur.Item2, temp), Math.Min(cur.Item3, temp), Math.Max(cur.Item4, wind),
+                         cur.Item5 + cloud, cur.Item6 + 1, cur.Item7 || symbol.Contains("thunder"));
+        }
+
+        var list = days.Select(kv =>
+        {
+            var v = kv.Value;
+            var rain = Math.Round(v.Rain, 1);
+            var avgCloud = v.N == 0 ? 50 : v.Cloud / v.N;
+            var code = v.Storm ? 95 : rain >= 10 ? 65 : rain >= 2.5 ? 63 : rain >= 0.5 ? 61 : avgCloud < 20 ? 0 : avgCloud < 60 ? 2 : 3;
+            var chance = rain >= 5 ? 90 : rain >= 1 ? 70 : rain >= 0.2 ? 40 : 10;
+            return new DailyWeather(kv.Key, rain, Math.Round(v.Max, 1), Math.Round(v.Min, 1), Math.Round(v.Wind, 1), code, chance);
+        }).ToList();
+        return list.Count == 0 ? null : list;
     }
 
     private async Task<List<DailyWeather>?> TryAsync(Func<Task<List<DailyWeather>?>> fetch, string what)
