@@ -72,8 +72,9 @@ bool _inside(GeoPoint p, List<GeoPoint> ring) {
 /// [blockRings] is the block's outline (empty when it has none, which skips the "outside the block" check).
 String? areaPointsProblem(List<GeoPoint> pts, {List<List<GeoPoint>> blockRings = const []}) {
   if (pts.length < 3) return null; // too few points is already shown as a count
-  if (areaSquareMetres(pts) < 1) return pointsSameSpotMessage;
+  // Crossing first: a figure of eight has no net area, but "cross" is the more useful thing to tell the user.
   if (pointsCross(pts)) return pointsCrossMessage;
+  if (areaSquareMetres(pts) < 1) return pointsSameSpotMessage;
   if (blockRings.isNotEmpty) {
     final outer = blockRings.first;
     if (outer.length >= 3) {
