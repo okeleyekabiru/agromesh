@@ -247,6 +247,27 @@ class _PictureScreenState extends State<_PictureScreen> {
     }
   }
 
+  /// One satellite pixel is 10 m. A boundary only a few pixels wide cannot show a useful picture.
+  Widget _smallNote() {
+    final b = (_view?['bounds'] as List?)?.map((e) => (e as num).toDouble()).toList();
+    if (b == null || b.length < 4) return const SizedBox.shrink();
+    final heightM = (b[2] - b[0]).abs() * 110574;
+    final widthM = (b[3] - b[1]).abs() * 111320;
+    if (heightM >= 60 && widthM >= 60) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(color: AgroColors.harvest.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+        child: Text(
+          'The boundary of this block is only about ${widthM.round()} × ${heightM.round()} m, smaller than a few satellite pixels (10 m each), so the colours here are not meaningful. '
+          'Mark the boundary again around the real edge of the block.',
+          style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.ink),
+        ),
+      ),
+    );
+  }
+
   static const _ndvi = [
     (Color(0xFF8C7359), 'Bare'), (Color(0xFFD9C78C), 'Sparse'), (Color(0xFFBFD973), 'Light'),
     (Color(0xFF66B84D), 'Healthy'), (Color(0xFF268C33), 'Dense'), (Color(0xFF055A1F), 'Very dense'),
@@ -294,13 +315,15 @@ class _PictureScreenState extends State<_PictureScreen> {
         children: [
           FlutterMap(
             options: MapOptions(
-              initialCameraFit: CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(24)),
+              initialCameraFit: CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(24), maxZoom: 18),
+              maxZoom: 22,
               interactionOptions: const InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
             ),
             children: [
               TileLayer(
                 urlTemplate: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-                maxZoom: 19,
+                maxNativeZoom: 19, // closer than this the tiles are stretched instead of going blank
+                maxZoom: 22,
                 userAgentPackageName: 'com.agromesh.mobile',
               ),
               if (_bytes != null)
@@ -380,13 +403,14 @@ class _PictureScreenState extends State<_PictureScreen> {
           _legend(),
           if (_imgError != null)
             Padding(padding: const EdgeInsets.only(top: 8), child: Text(_imgError!, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.alert))),
+          _smallNote(),
           const SizedBox(height: 8),
           Text(
             _layer == 'Ndvi'
                 ? 'Greenness (NDVI): how dense and healthy the crop is.'
                 : _layer == 'Ndmi'
                     ? 'Leaf water (NDMI): how much water the leaves hold.'
-                    : 'Natural colour, 10 m detail. White patches are cloud.',
+                    : 'Sentinel-2 picture, 10 m detail.',
             style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.stone),
           ),
           Text('One picture covers a 5-day window.', style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.stone)),
