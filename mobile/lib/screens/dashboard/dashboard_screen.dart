@@ -6,7 +6,6 @@ import '../../stores/app_store.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/widgets.dart';
 import '../../widgets/weather_card.dart';
-import '../activity/log_activity_screen.dart';
 import '../stock/out_on_farm_screen.dart';
 import '../more/farm_setup_screen.dart';
 import '../more/activities_screen.dart';
@@ -188,17 +187,8 @@ class DashboardScreen extends StatelessWidget {
                           const SizedBox(height: 12),
                           Text('No activities yet', style: GoogleFonts.syne(fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
                           const SizedBox(height: 4),
-                          Text('Tap Log Activity to record today\'s farm work',
+                          Text('Tap the Log Activity button below to record today\'s farm work',
                             style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone), textAlign: TextAlign.center),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: 180,
-                            child: ElevatedButton.icon(
-                              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LogActivityScreen())),
-                              icon: const Icon(Icons.add, size: 16),
-                              label: const Text('Log Activity'),
-                            ),
-                          ),
                         ],
                       ),
                     )

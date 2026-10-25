@@ -6,6 +6,7 @@ import '../../stores/app_store.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/widgets.dart';
 import '../../services/api_client.dart';
+import 'boundary_capture_screen.dart';
 
 /// Quick add for a block: name, area, what is growing (one crop, or a mix of crops with each one's
 /// share of the block) and the year it was planted. Fertilizer timing depends on the crop, so a mixed
@@ -134,12 +135,26 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
           treeCount: _treeCount,
         );
       } else {
-        await store.addBlock(
+        final created = await store.addBlock(
           name,
           crops: crops,
           areaValue: double.tryParse(_areaCtrl.text.trim()) ?? 0,
           plantingYear: year,
         );
+        // Straight on to the boundary: the block is not much use for scheduling or coverage without one.
+        if (created != null && mounted) {
+          final messenger = ScaffoldMessenger.of(context);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => BoundaryCaptureScreen(blockId: created.id, blockName: created.name)),
+          );
+          messenger.showSnackBar(SnackBar(
+            content: Text('Block "$name" added. Now mark its boundary, or go back to do it later.'),
+            backgroundColor: AgroColors.leaf,
+            behavior: SnackBarBehavior.floating,
+          ));
+          return;
+        }
       }
       if (mounted) {
         Navigator.pop(context);

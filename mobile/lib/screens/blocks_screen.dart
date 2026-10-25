@@ -238,7 +238,7 @@ class _BlockCard extends StatelessWidget {
                 onPressed: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => BoundaryCaptureScreen(blockId: block.id, blockName: block.name),
+                    builder: (_) => BoundaryCaptureScreen(blockId: block.id, blockName: block.name, existingGeoJson: block.boundaryGeoJson),
                   ),
                 ),
                 icon: const Icon(Icons.add_location_alt_outlined, size: 16),

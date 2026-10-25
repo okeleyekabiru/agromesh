@@ -46,7 +46,7 @@ public class GetSatelliteOverviewQueryHandler : IRequestHandler<GetSatelliteOver
             var hasBoundary = SatelliteRefresher.HasUsableBoundary(b);
             if (!hasBoundary)
                 return new BlockSatelliteDto(b.Id, b.Name, false, nameof(CropCondition.NoData), "No boundary",
-                    "This block's boundary is missing or not a real outline, so the satellite cannot look at it. Redraw it on the Blocks page.", null, null, null, []);
+                    SatelliteRefresher.BoundaryProblem(b) ?? "This block's boundary is not a real outline, so the satellite cannot look at it.", null, null, null, []);
             var s = SatelliteStatus.Evaluate(list);
             return new BlockSatelliteDto(b.Id, b.Name, true, s.Condition.ToString(), s.Label, s.Summary, s.AsOf, s.Ndvi, s.Ndmi,
                 list.Where(r => r.ValidShare >= SatelliteStatus.ClearEnough).Select(r => new SatellitePointDto(r.Date, r.Ndvi, r.Ndmi)).ToList());
