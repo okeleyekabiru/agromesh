@@ -135,11 +135,24 @@ class DashboardScreen extends StatelessWidget {
                       const Text('🌤️', style: TextStyle(fontSize: 28)),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Text(
-                          store.weatherFailed
-                              ? 'Weather forecast is not available right now. Check the farm location is set, then pull down to retry.'
-                              : 'Loading the weather forecast…',
-                          style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              store.weatherFailed
+                                  ? 'No weather forecast yet. It needs the farm location (state and town).'
+                                  : 'Loading the weather forecast…',
+                              style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone),
+                            ),
+                            if (store.weatherFailed) ...[
+                              const SizedBox(height: 8),
+                              OutlinedButton.icon(
+                                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FarmSetupScreen())),
+                                icon: const Icon(Icons.place_outlined, size: 16),
+                                label: const Text('Set farm location'),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ],

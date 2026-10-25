@@ -6,7 +6,7 @@ using MediatR;
 
 namespace AgroMesh.Application.Commands.Block;
 
-/// <summary>Fetches fresh satellite readings now. Allowed once an hour per farm, to protect the free quota.</summary>
+/// <summary>Fetches fresh satellite readings now. Allowed once an hour per farm (admins any time), to protect the free quota.</summary>
 public record RefreshSatelliteCommand(string FarmId) : IRequest<SatelliteOverviewDto>;
 
 public class RefreshSatelliteCommandHandler : IRequestHandler<RefreshSatelliteCommand, SatelliteOverviewDto>
@@ -15,9 +15,11 @@ public class RefreshSatelliteCommandHandler : IRequestHandler<RefreshSatelliteCo
     private readonly ISatelliteService _satellite;
     private readonly SatelliteRefresher _refresher;
     private readonly IMediator _mediator;
+    private readonly ICurrentUserAccessor _currentUser;
 
-    public RefreshSatelliteCommandHandler(IFarmRepository farms, ISatelliteService satellite, SatelliteRefresher refresher, IMediator mediator)
+    public RefreshSatelliteCommandHandler(IFarmRepository farms, ISatelliteService satellite, SatelliteRefresher refresher, IMediator mediator, ICurrentUserAccessor currentUser)
     {
+        _currentUser = currentUser;
         _farms = farms;
         _satellite = satellite;
         _refresher = refresher;
@@ -29,7 +31,8 @@ public class RefreshSatelliteCommandHandler : IRequestHandler<RefreshSatelliteCo
         var farm = await _farms.GetByIdAsync(command.FarmId, ct) ?? throw new NotFoundException("Farm", command.FarmId);
         if (!_satellite.IsConfigured)
             throw new DomainException("Satellite monitoring is not connected yet: add the Copernicus client id and secret to the API settings.");
-        if (!farm.SatelliteSyncDue(DateTime.UtcNow, SatelliteRefresher.ManualEvery))
+        // An admin can always refresh; everyone else is limited to once an hour to protect the free quota.
+        if (!_currentUser.IsAdmin && !farm.SatelliteSyncDue(DateTime.UtcNow, SatelliteRefresher.ManualEvery))
             throw new DomainException("Satellite readings were refreshed less than an hour ago. Try again later.");
 
         await _refresher.RefreshFarmAsync(farm, ct);
