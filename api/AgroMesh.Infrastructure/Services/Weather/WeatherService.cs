@@ -28,14 +28,14 @@ public class WeatherService : IWeatherService
 
         try
         {
-            var forecastTask = FetchForecastAsync(lat, lng, ct);
-            var historicalTask = FetchHistoricalAsync(lat, lng, ct);
+            var forecastTask = TryAsync(() => FetchForecastAsync(lat, lng, ct), "forecast");
+            var historicalTask = TryAsync(() => FetchHistoricalAsync(lat, lng, ct), "history");
             await Task.WhenAll(forecastTask, historicalTask);
 
             var forecast = await forecastTask;
-            var historical = await historicalTask;
-
-            if (forecast == null || historical == null) return null;
+            if (forecast == null) return null;
+            // The forecast is the point of the widget: if only the past-30-days rainfall is unavailable, show the forecast without it.
+            var historical = await historicalTask ?? [];
 
             var rainfallLast30 = historical.Sum(d => d.PrecipitationMm);
             var rainyDays = historical.Count(d => d.PrecipitationMm >= 1.0);
@@ -53,6 +53,16 @@ public class WeatherService : IWeatherService
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Open-Meteo weather fetch failed for {Lat},{Lng}", lat, lng);
+            return null;
+        }
+    }
+
+    private async Task<List<DailyWeather>?> TryAsync(Func<Task<List<DailyWeather>?>> fetch, string what)
+    {
+        try { return await fetch(); }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Open-Meteo {What} request failed", what);
             return null;
         }
     }
