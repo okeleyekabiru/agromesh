@@ -409,9 +409,45 @@ class DatabaseService {
   }
 
   /// The server rejected this row for good (e.g. not enough stock) — stop retrying it.
-  static Future<void> markRowFailed(String table, String id) async {
+  static Future<void> markRowFailed(String table, String id, {String? reason}) async {
     final db = await database;
     await db.update(table, {'sync_status': SyncStatus.failed.index}, where: 'id = ?', whereArgs: [id]);
+    if (reason != null) await saveCache('sync_error:$id', [{'reason': reason}]);
+  }
+
+  /// Activities the server refused, with the reason it gave (empty when the reason was not kept).
+  static Future<List<Map<String, dynamic>>> getFailedActivities(String farmId) async {
+    final db = await database;
+    final rows = await db.query('activity_logs',
+        where: 'farm_id = ? AND sync_status = ?', whereArgs: [farmId, SyncStatus.failed.index], orderBy: 'created_at DESC');
+    final out = <Map<String, dynamic>>[];
+    for (final r in rows) {
+      final cached = await readCacheList('sync_error:${r['id']}');
+      out.add({
+        'id': r['id'],
+        'blockName': r['block_name'],
+        'activityType': r['activity_type'],
+        'reason': cached.isEmpty ? '' : '${cached.first['reason']}',
+      });
+    }
+    return out;
+  }
+
+  static Future<void> deleteActivity(String id) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('activity_workers', where: 'activity_id = ?', whereArgs: [id]);
+      await txn.delete('activity_inputs', where: 'activity_id = ?', whereArgs: [id]);
+      await txn.delete('activity_logs', where: 'id = ?', whereArgs: [id]);
+      await txn.delete('kv_cache', where: 'key = ?', whereArgs: ['sync_error:$id']);
+    });
+  }
+
+  /// Puts the refused activities back in the queue to be sent again.
+  static Future<void> requeueFailedActivities(String farmId) async {
+    final db = await database;
+    await db.update('activity_logs', {'sync_status': SyncStatus.pending.index},
+        where: 'farm_id = ? AND sync_status = ?', whereArgs: [farmId, SyncStatus.failed.index]);
   }
 
   // ── WORKERS (from the server; replaces the old local seed data) ──

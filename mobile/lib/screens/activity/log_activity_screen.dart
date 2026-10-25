@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' show Geolocator, LocationAccuracy, LocationPermission;
 import '../blocks/map_pick_screen.dart';
+import '../../services/api_client.dart' show ApiException;
+import '../../services/geo_check.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/models.dart';
@@ -81,7 +83,7 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
   bool get _canProceed {
     if (_step == 0) return _block != null;
     if (_step == 1) return _activityType != null;
-    if (_stepName == 'Area') return _areaPoints.length >= _minAreaPoints;
+    if (_stepName == 'Area') return _areaPoints.length >= _minAreaPoints && !pointsCross(_areaPoints);
     if (_supervisorId == null) return false;
     // Who did the work and what it used are both required.
     if (_workers.isEmpty || _inputs.isEmpty) return false;
@@ -103,6 +105,7 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
     final store = context.read<AppStore>();
     final supervisor = store.supervisorOptions.firstWhere((w) => w.id == _supervisorId);
 
+    try {
     await store.logActivity(
       blockId: _block!.id,
       blockName: _block!.name,
@@ -114,6 +117,21 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
       notes: _notesCtrl.text,
       areaPoints: _needsArea ? List<GeoPoint>.from(_areaPoints) : const [],
     );
+    } on ApiException catch (e) {
+      // The server refused it: stay on the form with the reason so it can be fixed.
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('The activity was not saved'),
+            content: Text(e.message),
+            actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))],
+          ),
+        );
+      }
+      return;
+    }
 
     if (mounted) {
       Navigator.pop(context);
@@ -737,6 +755,11 @@ class _StepArea extends StatelessWidget {
             padding: const EdgeInsets.only(top: 8),
             child: Text('This block has no boundary yet, so the area cannot be checked against its edge.',
               style: GoogleFonts.inter(fontSize: 11, color: AgroColors.harvest)),
+          ),
+        if (pointsCross(points))
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(pointsCrossMessage, style: const TextStyle(color: AgroColors.alert, fontSize: 12, fontWeight: FontWeight.w600)),
           ),
         if (error != null)
           Padding(

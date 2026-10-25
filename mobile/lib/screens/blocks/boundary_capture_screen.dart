@@ -10,6 +10,7 @@ import '../../stores/app_store.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/geo_sketch.dart' show geoJsonRings;
 import 'map_pick_screen.dart';
+import '../../services/geo_check.dart';
 
 /// GPS corner-marking boundary capture. Walk to each corner of the block and tap "Mark Corner Here", in order
 /// around the edge. A live GPS fix is shown with its accuracy; a corner is taken from the best fix seen in the
@@ -136,6 +137,10 @@ class _BoundaryCaptureScreenState extends State<BoundaryCaptureScreen> {
 
   Future<void> _finishBoundary() async {
     if (_points.length < _minPoints) return;
+    if (pointsCross(_points)) {
+      setState(() => _error = pointsCrossMessage);
+      return;
+    }
     setState(() { _isFinishing = true; _error = null; });
     final store = context.read<AppStore>();
     try {

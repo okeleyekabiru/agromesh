@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart' hide Path;
 import '../../models/models.dart';
+import '../../services/geo_check.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/geo_sketch.dart' show geoJsonRings;
 
@@ -91,7 +92,8 @@ class _MapPickScreenState extends State<MapPickScreen> {
   @override
   Widget build(BuildContext context) {
     final start = _startBounds;
-    final enough = _points.length >= widget.minPoints;
+    final crossing = pointsCross([for (final p in _points) GeoPoint(lat: p.latitude, lng: p.longitude)]);
+    final enough = _points.length >= widget.minPoints && !crossing;
 
     return Scaffold(
       backgroundColor: AgroColors.mist,
@@ -181,6 +183,11 @@ class _MapPickScreenState extends State<MapPickScreen> {
               ],
             ),
           ),
+          if (crossing)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Text(pointsCrossMessage, style: const TextStyle(color: AgroColors.alert, fontSize: 12, fontWeight: FontWeight.w600)),
+            ),
           if (_error != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),

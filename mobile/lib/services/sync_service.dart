@@ -49,6 +49,7 @@ class SyncService {
       },
     );
 
+    final rejections = <String, String>{...syncedActivities.reasons};
     final total = syncedActivities.synced + syncedBoundaries.synced;
     final rejected = syncedActivities.rejected + syncedBoundaries.rejected;
     final attempted = activityRows.length + boundaryRows.length;
@@ -58,6 +59,7 @@ class SyncService {
       message: rejected > 0
           ? 'Synced $total of $attempted item(s); $rejected rejected by the server'
           : 'Synced $total of $attempted item(s)',
+      rejections: rejections,
     );
   }
 
@@ -72,6 +74,7 @@ class SyncService {
   }) async {
     int synced = 0;
     int rejected = 0;
+    final reasons = <String, String>{};
     for (final row in rows) {
       try {
         await ApiClient.post(endpointFor(row), await payloadFor(row));
@@ -81,7 +84,8 @@ class SyncService {
         // A 4xx like "not enough stock" will never succeed on retry — mark it failed instead
         // of re-sending it forever. Auth (401/403) and rate-limit errors stay pending.
         if (_isPermanentRejection(e.statusCode)) {
-          await DatabaseService.markRowFailed(table, row['id'] as String);
+          await DatabaseService.markRowFailed(table, row['id'] as String, reason: e.message);
+          reasons[row['id'] as String] = e.message;
           rejected++;
         }
         continue;
@@ -90,7 +94,7 @@ class SyncService {
         continue;
       }
     }
-    return _RowSyncResult(synced, rejected);
+    return _RowSyncResult(synced, rejected, reasons);
   }
 
   static bool _isPermanentRejection(int? status) =>
@@ -109,7 +113,8 @@ class SyncService {
 class _RowSyncResult {
   final int synced;
   final int rejected;
-  const _RowSyncResult(this.synced, this.rejected);
+  final Map<String, String> reasons;
+  const _RowSyncResult(this.synced, this.rejected, this.reasons);
 }
 
 class SyncResult {
@@ -117,9 +122,13 @@ class SyncResult {
   final int synced;
   final String message;
 
+  /// Row id -> the server's reason, for rows it refused for good.
+  final Map<String, String> rejections;
+
   const SyncResult({
     required this.success,
     required this.synced,
     required this.message,
+    this.rejections = const {},
   });
 }

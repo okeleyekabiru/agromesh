@@ -36,6 +36,8 @@ class AppStore extends ChangeNotifier {
   bool isOnline = true;
   bool isSyncing = false;
   int  pendingSyncCount = 0;
+  List<Map<String, dynamic>> failedActivities = const []; // refused by the server: blockName, activityType, reason
+  Map<String, String> _lastRejections = const {};
   String lastSynced = '--:-- --';
   String? blocksError;
 
@@ -99,6 +101,7 @@ class AppStore extends ChangeNotifier {
     final pendingActivities = await DatabaseService.getPendingSyncCount(farmId);
     final pendingBoundaries = await DatabaseService.getPendingBoundaryCount(farmId);
     pendingSyncCount = pendingActivities + pendingBoundaries;
+    failedActivities = await DatabaseService.getFailedActivities(farmId);
   }
 
   Future<void> _checkSync() async {
@@ -289,10 +292,37 @@ class AppStore extends ChangeNotifier {
     await _loadAll();
     notifyListeners();
 
-    // Try to sync immediately if online
+    // Try to sync immediately if online. If the server refuses it, say why (and drop the local copy) so
+    // the form can be fixed and sent again, instead of the activity quietly never arriving.
     if (isOnline) {
       await syncNow();
+      final reason = _lastRejections[activity.id];
+      if (reason != null) {
+        await DatabaseService.deleteActivity(activity.id);
+        await refreshStock();
+        await _loadAll();
+        notifyListeners();
+        throw ApiException(reason, 400);
+      }
     }
+  }
+
+  /// Sends the refused activities again (after fixing what the server complained about, e.g. stock).
+  Future<void> retryFailedActivities() async {
+    await DatabaseService.requeueFailedActivities(farmId);
+    await _loadAll();
+    notifyListeners();
+    await syncNow();
+  }
+
+  /// Gives up on the refused activities and removes them from the phone.
+  Future<void> discardFailedActivities() async {
+    for (final f in failedActivities) {
+      await DatabaseService.deleteActivity('${f['id']}');
+    }
+    await refreshStock();
+    await _loadAll();
+    notifyListeners();
   }
 
   // ── SYNC ──
@@ -302,6 +332,7 @@ class AppStore extends ChangeNotifier {
     notifyListeners();
 
     final result = await SyncService.syncPending(farmId);
+    _lastRejections = result.rejections;
     await refreshWeather();
     await refreshBlocks(); // picks up recalculated (and AI-reviewed) weeding / spraying dates
 
