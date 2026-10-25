@@ -45,7 +45,6 @@ class _SatelliteScreenState extends State<SatelliteScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final manager = isManager(context);
     return LoadScaffold<Map<String, dynamic>>(
       key: ValueKey(_version),
       title: 'Satellite',
@@ -66,8 +65,7 @@ class _SatelliteScreenState extends State<SatelliteScreen> {
                     child: Text('Last updated ${dateText(data['lastSyncAt'])}',
                         style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
                   ),
-                  if (manager)
-                    OutlinedButton(
+                  OutlinedButton(
                       onPressed: _refreshing ? null : () => _refresh(reload),
                       child: Text(_refreshing ? 'Fetching…' : 'Refresh'),
                     ),

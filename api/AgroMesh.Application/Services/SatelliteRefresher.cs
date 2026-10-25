@@ -35,6 +35,18 @@ public class SatelliteRefresher
         return c.HasBoundary && c.BlockHectares is >= MinHectares and <= MaxHectares;
     }
 
+    /// <summary>Why the block cannot be looked at from space, in words a farmer can act on; null when it can.</summary>
+    public static string? BoundaryProblem(Block block)
+    {
+        var c = WorkCoverage.Compute(block.BoundaryGeoJson, []);
+        if (!c.HasBoundary) return "This block has no boundary yet. Mark it on the Blocks page.";
+        if (c.BlockHectares is < MinHectares)
+            return $"The boundary is only {c.BlockHectares:0.####} ha, too small to see from space. It was probably captured with poor GPS or in one spot. Mark it again around the real edge.";
+        if (c.BlockHectares is > MaxHectares)
+            return $"The boundary covers {c.BlockHectares:0} ha, far bigger than a farm block. It was probably captured with bad GPS. Mark it again.";
+        return null;
+    }
+
     /// <summary>Returns the number of blocks that got new numbers. Never throws for one block's failure.</summary>
     public async Task<int> RefreshFarmAsync(Farm farm, CancellationToken ct)
     {
@@ -43,7 +55,7 @@ public class SatelliteRefresher
         var today = DateTime.UtcNow.Date;
         var updated = 0;
         // One block at a time: the repositories share a single DbContext.
-        foreach (var block in (await _blocks.GetByFarmIdAsync(farm.Id, ct)).Where(b => b.Status == BlockStatus.Active && HasUsableBoundary(b)))
+        foreach (var block in (await _blocks.GetByFarmIdAsync(farm.Id, ct)).Where(HasUsableBoundary))
         {
             try
             {
