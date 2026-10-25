@@ -8,6 +8,7 @@ import 'dashboard/dashboard_screen.dart';
 import 'activity/log_activity_screen.dart';
 import 'blocks_screen.dart';
 import 'workers_screen.dart';
+import 'more/more_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -24,9 +25,10 @@ class _MainShellState extends State<MainShell> {
     DashboardScreen(),
     BlocksScreen(),
     WorkersScreen(),
+    MoreScreen(),
   ];
 
-  final _titles = ['Farm Overview', 'Blocks', 'Workers'];
+  final _titles = ['Farm Overview', 'Blocks', 'Workers', 'More'];
 
   @override
   Widget build(BuildContext context) {
@@ -93,6 +95,7 @@ class _MainShellState extends State<MainShell> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),
         backgroundColor: AgroColors.forest,
@@ -102,6 +105,7 @@ class _MainShellState extends State<MainShell> {
           BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: 'Dashboard'),
           BottomNavigationBarItem(icon: Icon(Icons.map_outlined), label: 'Blocks'),
           BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: 'Workers'),
+          BottomNavigationBarItem(icon: Icon(Icons.apps_rounded), label: 'More'),
         ],
       ),
       // The Blocks tab has its own button (Add Block), so Log Activity is not offered there.

@@ -39,7 +39,7 @@ class ApiClient {
       : (!kIsWeb && defaultTargetPlatform == TargetPlatform.android ? 'http://10.0.2.2:5000' : 'http://localhost:5000');
 
   // Long enough for the API to wake from sleep (a hosted API that scales to zero takes a while on its first request).
-  static const _timeout = Duration(seconds: 45);
+  static const _timeout = Duration(seconds: 120);
 
   static Future<Map<String, String>> _headers({bool auth = true}) async {
     final headers = <String, String>{'Content-Type': 'application/json'};
@@ -64,6 +64,26 @@ class ApiClient {
         .post(Uri.parse('$baseUrl$path'), headers: await _headers(auth: auth), body: jsonEncode(body))
         .timeout(_timeout);
     return _handle(res);
+  }
+
+  static Future<dynamic> patch(String path, [Map<String, dynamic>? body]) async {
+    final res = await http
+        .patch(Uri.parse('$baseUrl$path'), headers: await _headers(), body: jsonEncode(body ?? {}))
+        .timeout(_timeout);
+    return _handle(res);
+  }
+
+  static Future<dynamic> delete(String path) async {
+    final res = await http.delete(Uri.parse('$baseUrl$path'), headers: await _headers()).timeout(_timeout);
+    return _handle(res);
+  }
+
+  /// For binary responses (e.g. satellite pictures). Throws [ApiException] on a non-2xx reply.
+  static Future<List<int>> getBytes(String path) async {
+    final res = await http.get(Uri.parse('$baseUrl$path'), headers: await _headers()).timeout(_timeout);
+    if (res.statusCode >= 200 && res.statusCode < 300) return res.bodyBytes;
+    _handle(res);
+    return const [];
   }
 
   static dynamic _handle(http.Response res) {

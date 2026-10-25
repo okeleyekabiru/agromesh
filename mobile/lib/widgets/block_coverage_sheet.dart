@@ -8,19 +8,20 @@ import 'geo_sketch.dart';
 /// Shows what has been done and what is left of one kind of work on a block, in its current cycle,
 /// drawn on the block's outline (green = done, amber = left to do). Needs a connection: the server
 /// does the geometry.
-void showBlockCoverageSheet(BuildContext context, Block block) {
+void showBlockCoverageSheet(BuildContext context, Block block, {ActivityType? initialType}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: AgroColors.white,
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-    builder: (_) => _CoverageSheet(block: block),
+    builder: (_) => _CoverageSheet(block: block, initialType: initialType),
   );
 }
 
 class _CoverageSheet extends StatefulWidget {
   final Block block;
-  const _CoverageSheet({required this.block});
+  final ActivityType? initialType;
+  const _CoverageSheet({required this.block, this.initialType});
 
   @override
   State<_CoverageSheet> createState() => _CoverageSheetState();
@@ -43,6 +44,7 @@ class _CoverageSheetState extends State<_CoverageSheet> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialType != null) _type = widget.initialType!;
     _load();
   }
 

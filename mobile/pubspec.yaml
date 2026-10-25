@@ -41,6 +41,9 @@ dependencies:
   # UI extras
   google_fonts: ^6.2.1
   flutter_svg: ^2.0.10+1
+  url_launcher: ^6.3.3
+  path_provider: ^2.1.6
+  open_filex: ^5.0.0
 
 dev_dependencies:
   flutter_test:
