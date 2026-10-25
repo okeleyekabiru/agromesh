@@ -14,6 +14,8 @@ class AppStore extends ChangeNotifier {
   String farmId = '';
   String farmName = '';
   String farmLocation = '';
+  bool setupDraft = false; // the farm's setup (location, blocks, boundaries) is not finished
+  bool weatherFailed = false;
   bool _connectivitySubscribed = false;
 
   // ── STATE ──
@@ -117,6 +119,7 @@ class AppStore extends ChangeNotifier {
         final farm = Farm.fromJson(match.first);
         farmName = farm.name;
         farmLocation = farm.location;
+        setupDraft = farm.setupStatus == FarmSetupStatus.draft || farm.blockCount == 0;
       }
     } catch (_) {
       // Offline or server error — non-fatal, keep existing farmName/location.
@@ -335,7 +338,9 @@ class AppStore extends ChangeNotifier {
       final info = WeatherInfo.fromApiJson(json as Map<String, dynamic>);
       await DatabaseService.saveCache('weather:$farmId', [info.toJson()]);
       weather = info;
+      weatherFailed = false;
     } catch (_) {
+      weatherFailed = true;
       final cached = await DatabaseService.readCacheList('weather:$farmId');
       if (weather == null && cached.isNotEmpty) weather = WeatherInfo.fromApiJson(cached.first);
     }
@@ -377,6 +382,13 @@ class AppStore extends ChangeNotifier {
     } catch (_) {
       // Offline or server error — keep whatever is cached.
     }
+  }
+
+  /// Pulls the worker list from the server and shows it (used after adding a worker).
+  Future<void> reloadWorkers() async {
+    await refreshWorkers();
+    workers = await DatabaseService.getWorkers(farmId);
+    notifyListeners();
   }
 
   // ── STOCK ──

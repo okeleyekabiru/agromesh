@@ -8,6 +8,9 @@ import '../../widgets/widgets.dart';
 import '../../widgets/weather_card.dart';
 import '../activity/log_activity_screen.dart';
 import '../stock/out_on_farm_screen.dart';
+import '../blocks/add_block_screen.dart';
+import '../more/activities_screen.dart';
+import '../../widgets/dashboard_extras.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -25,6 +28,37 @@ class DashboardScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+
+            // Farm setup not finished
+            if (store.setupDraft) ...[
+              InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddBlockScreen())),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AgroColors.harvest.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AgroColors.harvest.withOpacity(0.25)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.agriculture_outlined, color: AgroColors.harvest, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "Your farm setup isn't finished. Add your blocks and boundaries to unlock scheduling and reporting.",
+                          style: GoogleFonts.inter(fontSize: 12, color: AgroColors.ink),
+                        ),
+                      ),
+                      Text('Continue setup', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
+                      const Icon(Icons.chevron_right, color: AgroColors.leaf, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+            ],
 
             // Pending review banner
             if (store.pendingSyncCount > 0) ...[
@@ -93,6 +127,27 @@ class DashboardScreen extends StatelessWidget {
             if (store.weather != null && store.weather!.forecast.isNotEmpty) ...[
               WeatherCard(weather: store.weather!),
               const SizedBox(height: 14),
+            ] else ...[
+              AgroCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      const Text('🌤️', style: TextStyle(fontSize: 28)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          store.weatherFailed
+                              ? 'Weather forecast is not available right now. Check the farm location is set, then pull down to retry.'
+                              : 'Loading the weather forecast…',
+                          style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
             ],
 
             // KPI grid
@@ -110,6 +165,7 @@ class DashboardScreen extends StatelessWidget {
                 KpiCard(label: 'Pending Sync', value: '${store.pendingSyncCount}', delta: store.isOnline ? 'Will sync' : 'Offline', deltaType: store.pendingSyncCount > 0 ? KpiDeltaType.warn : KpiDeltaType.up),
               ],
             ),
+            const DashboardExtras(),
             const SizedBox(height: 16),
 
             // Recent activities
@@ -119,7 +175,7 @@ class DashboardScreen extends StatelessWidget {
                   AgroCardHeader(
                     title: 'Recent Activities',
                     trailing: TextButton(
-                      onPressed: () {},
+                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ActivitiesScreen())),
                       child: Text('View all', style: GoogleFonts.inter(fontSize: 11, color: AgroColors.leaf, fontWeight: FontWeight.w600)),
                     ),
                   ),

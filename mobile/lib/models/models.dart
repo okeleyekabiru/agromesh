@@ -88,23 +88,29 @@ class AppUser {
   final String email;
   final String fullName;
   final String? companyId;
+  final String role; // Admin | FarmManager | Supervisor | Member
 
   const AppUser({
     required this.id,
     required this.email,
     required this.fullName,
     this.companyId,
+    this.role = 'Member',
   });
+
+  bool get isAdmin => role == 'Admin';
+  bool get isManager => role == 'Admin' || role == 'FarmManager';
 
   factory AppUser.fromJson(Map<String, dynamic> j) => AppUser(
     id: j['id'] as String,
     email: j['email'] as String,
     fullName: j['fullName'] as String? ?? '',
     companyId: j['companyId'] as String?,
+    role: j['role'] as String? ?? 'Member',
   );
 
   Map<String, dynamic> toJson() => {
-    'id': id, 'email': email, 'fullName': fullName, 'companyId': companyId,
+    'id': id, 'email': email, 'fullName': fullName, 'companyId': companyId, 'role': role,
   };
 }
 

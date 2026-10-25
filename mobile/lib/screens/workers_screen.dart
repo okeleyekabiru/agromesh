@@ -5,6 +5,8 @@ import '../stores/app_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/widgets.dart';
 import '../models/models.dart';
+import 'more/common.dart';
+import 'more/wage_bands_screen.dart';
 
 class WorkersScreen extends StatelessWidget {
   const WorkersScreen({super.key});
@@ -26,6 +28,14 @@ class WorkersScreen extends StatelessWidget {
             Expanded(child: KpiCard(label: 'Contractors', value: '${contractors.length}', delta: 'Seasonal', deltaType: KpiDeltaType.mute)),
           ],
         ),
+        if (isManager(context)) ...[
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () => showAddWorkerSheet(context),
+            icon: const Icon(Icons.person_add_alt_1_outlined, size: 18),
+            label: const Text('Add worker'),
+          ),
+        ],
         const SizedBox(height: 16),
 
         AgroCard(
