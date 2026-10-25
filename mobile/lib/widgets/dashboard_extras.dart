@@ -27,13 +27,18 @@ class DashboardExtras extends StatefulWidget {
 class _DashboardExtrasState extends State<DashboardExtras> {
   Map<String, dynamic>? _data;
   String _farm = '';
+  int _activityCount = -1;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final id = context.read<AppStore>().farmId;
-    if (id.isNotEmpty && id != _farm) {
+    // Reload when the farm changes or when pulling down to refresh brought in new activities.
+    final store = context.watch<AppStore>();
+    final id = store.farmId;
+    final count = store.activities.length;
+    if (id.isNotEmpty && (id != _farm || count != _activityCount)) {
       _farm = id;
+      _activityCount = count;
       _load(id);
     }
   }
@@ -56,9 +61,49 @@ class _DashboardExtrasState extends State<DashboardExtras> {
     final pnl = asList(d['cropPnl']);
     final trend = asList(d['spendTrend']);
 
+    String k(num? v) => '₦${((v ?? 0) / 1000).round().toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',')}K';
+    final profit = (d['profitMtd'] as num?) ?? 0;
+    final pending = (d['pendingReviewCount'] as num?)?.toInt() ?? 0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const SizedBox(height: 16),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 1.5,
+          children: [
+            KpiCard(
+              label: 'Total spend · MTD',
+              value: k(d['totalSpendMtd'] as num?),
+              delta: 'Labour ${k(d['labourCostMtd'] as num?)} · Maint. ${k(d['maintenanceCostMtd'] as num?)}',
+              deltaType: KpiDeltaType.mute,
+              dark: true,
+            ),
+            KpiCard(
+              label: 'Profit · MTD',
+              value: naira(profit),
+              delta: 'Income ${naira(d['incomeMtd'] as num?)}',
+              deltaType: profit < 0 ? KpiDeltaType.warn : KpiDeltaType.up,
+            ),
+            KpiCard(
+              label: 'Inputs · MTD',
+              value: k(d['inputCostMtd'] as num?),
+              delta: 'Chemicals, fertilizer, stock used',
+              deltaType: KpiDeltaType.mute,
+            ),
+            KpiCard(
+              label: 'Pending review',
+              value: '$pending',
+              delta: pending > 0 ? 'Need attention' : 'All reviewed',
+              deltaType: pending > 0 ? KpiDeltaType.warn : KpiDeltaType.up,
+            ),
+          ],
+        ),
         const SizedBox(height: 16),
         if (low.isNotEmpty) ...[
           Container(
@@ -151,7 +196,7 @@ class _DashboardExtrasState extends State<DashboardExtras> {
           ),
           const SizedBox(height: 16),
         ],
-        if (manager && trend.length > 1) _TrendCard(points: trend),
+        if (trend.isNotEmpty) _TrendCard(points: trend),
       ],
     );
   }

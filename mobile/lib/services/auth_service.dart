@@ -73,7 +73,13 @@ class AuthService {
       final companyId = await _storage.read(key: _kCompanyId);
       final activeFarmId = await _storage.read(key: _kActiveFarmId);
 
-      final user = AppUser.fromJson(jsonDecode(userJson) as Map<String, dynamic>);
+      var user = AppUser.fromJson(jsonDecode(userJson) as Map<String, dynamic>);
+      // A session saved before the role was kept has no role: read it from the token instead of treating the user as a plain member.
+      final tokenRole = _roleFromToken(token);
+      if (tokenRole != null && tokenRole != user.role) {
+        user = AppUser(id: user.id, email: user.email, fullName: user.fullName, companyId: user.companyId, role: tokenRole);
+        await _storage.write(key: _kUser, value: jsonEncode(user.toJson()));
+      }
       final farms = farmsJson == null
           ? <Farm>[]
           : (jsonDecode(farmsJson) as List).map((f) => Farm.fromJson(f as Map<String, dynamic>)).toList();
@@ -85,6 +91,18 @@ class AuthService {
         farms: farms,
         activeFarmId: (activeFarmId == null || activeFarmId.isEmpty) ? null : activeFarmId,
       );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static String? _roleFromToken(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length < 2) return null;
+      final payload = jsonDecode(utf8.decode(base64Url.decode(base64Url.normalize(parts[1])))) as Map<String, dynamic>;
+      final role = payload['role'] ?? payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+      return role is String && role.isNotEmpty ? role : null;
     } catch (_) {
       return null;
     }
