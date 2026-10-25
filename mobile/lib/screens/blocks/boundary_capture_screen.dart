@@ -137,8 +137,9 @@ class _BoundaryCaptureScreenState extends State<BoundaryCaptureScreen> {
 
   Future<void> _finishBoundary() async {
     if (_points.length < _minPoints) return;
-    if (pointsCross(_points)) {
-      setState(() => _error = pointsCrossMessage);
+    final problem = areaPointsProblem(_points);
+    if (problem != null) {
+      setState(() => _error = problem);
       return;
     }
     setState(() { _isFinishing = true; _error = null; });

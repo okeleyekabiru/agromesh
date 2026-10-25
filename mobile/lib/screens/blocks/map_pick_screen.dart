@@ -92,8 +92,11 @@ class _MapPickScreenState extends State<MapPickScreen> {
   @override
   Widget build(BuildContext context) {
     final start = _startBounds;
-    final crossing = pointsCross([for (final p in _points) GeoPoint(lat: p.latitude, lng: p.longitude)]);
-    final enough = _points.length >= widget.minPoints && !crossing;
+    final problem = areaPointsProblem(
+      [for (final p in _points) GeoPoint(lat: p.latitude, lng: p.longitude)],
+      blockRings: [for (final r in _block) [for (final q in r) GeoPoint(lat: q.latitude, lng: q.longitude)]],
+    );
+    final enough = _points.length >= widget.minPoints && problem == null;
 
     return Scaffold(
       backgroundColor: AgroColors.mist,
@@ -183,10 +186,10 @@ class _MapPickScreenState extends State<MapPickScreen> {
               ],
             ),
           ),
-          if (crossing)
+          if (problem != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Text(pointsCrossMessage, style: const TextStyle(color: AgroColors.alert, fontSize: 12, fontWeight: FontWeight.w600)),
+              child: Text(problem, style: const TextStyle(color: AgroColors.alert, fontSize: 12, fontWeight: FontWeight.w600)),
             ),
           if (_error != null)
             Padding(
