@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../services/api_client.dart';
 import '../../stores/app_store.dart';
 import '../../stores/auth_store.dart';
@@ -146,3 +148,37 @@ Future<T?> showSheet<T>(BuildContext c, Widget child) => showModalBottomSheet<T>
         child: SingleChildScrollView(child: child),
       ),
     );
+
+const _kWebUrl = 'agromesh_web_url';
+const _webUrlDefine = String.fromEnvironment('WEB_APP_URL');
+
+/// Opens a page of the AgroMesh web app in the browser. The web address is asked for once and remembered.
+Future<void> openWebApp(BuildContext context, String path) async {
+  const storage = FlutterSecureStorage();
+  var base = _webUrlDefine.isNotEmpty ? _webUrlDefine : (await storage.read(key: _kWebUrl)) ?? '';
+  if (base.isEmpty && context.mounted) {
+    final ctrl = TextEditingController();
+    final entered = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Web app address'),
+        content: TextField(
+          controller: ctrl,
+          keyboardType: TextInputType.url,
+          decoration: const InputDecoration(hintText: 'https://your-agromesh-web-address'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, ctrl.text.trim()), child: const Text('Open')),
+        ],
+      ),
+    );
+    if (entered == null || entered.isEmpty) return;
+    base = entered.startsWith('http') ? entered : 'https://$entered';
+    await storage.write(key: _kWebUrl, value: base);
+  }
+  final uri = Uri.tryParse('${base.endsWith('/') ? base.substring(0, base.length - 1) : base}$path');
+  if (uri == null || !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+    if (context.mounted) toast(context, 'Could not open the web app.');
+  }
+}

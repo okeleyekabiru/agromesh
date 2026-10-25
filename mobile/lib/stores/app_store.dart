@@ -191,6 +191,29 @@ class AppStore extends ChangeNotifier {
     await refreshBlocks();
   }
 
+  Future<void> updateBlock(
+    String blockId,
+    String name, {
+    required List<BlockCrop> crops,
+    double areaValue = 0,
+    int? plantingYear,
+    int? treeCount,
+  }) async {
+    if (!isOnline) {
+      throw Exception('You need an internet connection to edit a block.');
+    }
+    await ApiClient.patch('/api/farms/$farmId/blocks/$blockId', {
+      'name': name,
+      'crops': [
+        for (final c in crops) {'cropType': c.cropType.index, 'percentage': c.percentage},
+      ],
+      'areaValue': areaValue,
+      if (plantingYear != null) 'plantingYear': plantingYear,
+      if (treeCount != null) 'treeCount': treeCount,
+    });
+    await refreshBlocks();
+  }
+
   // ── BOUNDARY CAPTURE ──
 
   /// Writes a completed GPS corner-capture session to the local outbox. This

@@ -5,12 +5,15 @@ import '../../models/models.dart';
 import '../../stores/app_store.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/widgets.dart';
+import '../../services/api_client.dart';
 
 /// Quick add for a block: name, area, what is growing (one crop, or a mix of crops with each one's
 /// share of the block) and the year it was planted. Fertilizer timing depends on the crop, so a mixed
 /// block has to say which crops are in it. Boundary capture happens afterwards. Needs connectivity.
 class AddBlockScreen extends StatefulWidget {
-  const AddBlockScreen({super.key});
+  /// When set, the form edits this block instead of adding a new one.
+  final Block? editing;
+  const AddBlockScreen({super.key, this.editing});
 
   @override
   State<AddBlockScreen> createState() => _AddBlockScreenState();
@@ -28,6 +31,36 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
   final Map<CropType, int> _mix = {};
   bool _isSubmitting = false;
   String? _error;
+  int? _treeCount;
+
+  bool get _editing => widget.editing != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final b = widget.editing;
+    if (b == null) return;
+    _nameCtrl.text = b.name;
+    _areaCtrl.text = b.hectares.toStringAsFixed(2);
+    _treeCount = b.treeCount;
+    final real = b.crops.where((c) => _crops.contains(c.cropType)).toList();
+    if (real.length > 1) {
+      _mixed = true;
+      for (final c in real) {
+        _mix[c.cropType] = c.percentage.round();
+      }
+    } else if (real.length == 1) {
+      _single = real.first.cropType;
+    }
+    // The year planted is not kept on the phone, so read it from the server.
+    ApiClient.get('/api/farms/${b.farmId}/blocks').then((j) {
+      for (final m in (j is List ? j : const [])) {
+        if (m is Map && m['id'] == b.id && m['plantingYear'] != null && mounted) {
+          setState(() => _yearCtrl.text = '${m['plantingYear']}');
+        }
+      }
+    }).catchError((_) {});
+  }
 
   @override
   void dispose() {
@@ -90,17 +123,29 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
     });
 
     try {
-      await context.read<AppStore>().addBlock(
-            name,
-            crops: crops,
-            areaValue: double.tryParse(_areaCtrl.text.trim()) ?? 0,
-            plantingYear: year,
-          );
+      final store = context.read<AppStore>();
+      if (_editing) {
+        await store.updateBlock(
+          widget.editing!.id,
+          name,
+          crops: crops,
+          areaValue: double.tryParse(_areaCtrl.text.trim()) ?? 0,
+          plantingYear: year,
+          treeCount: _treeCount,
+        );
+      } else {
+        await store.addBlock(
+          name,
+          crops: crops,
+          areaValue: double.tryParse(_areaCtrl.text.trim()) ?? 0,
+          plantingYear: year,
+        );
+      }
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Block "$name" added'),
+            content: Text(_editing ? 'Block "$name" saved' : 'Block "$name" added'),
             backgroundColor: AgroColors.leaf,
             behavior: SnackBarBehavior.floating,
           ),
@@ -119,7 +164,7 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
 
     return Scaffold(
       backgroundColor: AgroColors.mist,
-      appBar: AppBar(title: const Text('Add Block')),
+      appBar: AppBar(title: Text(_editing ? 'Edit Block' : 'Add Block')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -223,7 +268,7 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
               onPressed: (!isOnline || _isSubmitting) ? null : _submit,
               child: _isSubmitting
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Text('Add Block'),
+                : Text(_editing ? 'Save changes' : 'Add Block'),
             ),
           ],
         ),

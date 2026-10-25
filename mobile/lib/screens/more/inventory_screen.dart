@@ -7,6 +7,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/widgets.dart';
 import 'common.dart';
 import 'ops_common.dart';
+import 'orders_screen.dart';
 
 /// Stock levels with pick, adjust (needs approval), set price (needs approval), movements and add item.
 class InventoryScreen extends StatelessWidget {
@@ -122,6 +123,14 @@ class _ItemActions extends StatelessWidget {
       _act(Icons.output, 'Pick for a block', () => _then(context, _PickForm(farm: farm, item: item))),
       _act(Icons.tune, 'Adjust stock (needs approval)', () => _then(context, _AdjustForm(farm: farm, item: item))),
       _act(Icons.sell_outlined, 'Set price (needs approval)', () => _then(context, _PriceForm(farm: farm, item: item))),
+      _act(Icons.shopping_cart_outlined, 'Order more', () async {
+        Navigator.pop(context);
+        final ok = await showNewOrderSheet(context, itemId: id);
+        if (ok == true && context.mounted) {
+          toast(context, 'Order created. Find it under Orders.');
+          await reload();
+        }
+      }),
       _act(Icons.history, 'Stock movements', () {
         Navigator.pop(context);
         showSheet(context, _Movements(farm: farm, id: id, name: '${item['name']}'));

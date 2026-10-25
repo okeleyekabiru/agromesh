@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../services/api_client.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/widgets.dart';
@@ -84,7 +87,26 @@ class _OrderDetail extends StatefulWidget {
 
 class _OrderDetailState extends State<_OrderDetail> {
   bool _busy = false;
+  bool _invoicing = false;
   String? _error;
+
+  Future<void> _invoice() async {
+    setState(() { _invoicing = true; _error = null; });
+    try {
+      final id = '${widget.order['id']}';
+      final bytes = await ApiClient.getBytes('/api/farms/${widget.farm}/orders/$id/invoice');
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/invoice-$id.pdf');
+      await file.writeAsBytes(bytes, flush: true);
+      final r = await OpenFilex.open(file.path);
+      if (r.type != ResultType.done && mounted) {
+        setState(() => _error = 'Saved the invoice, but no app could open a PDF. Install a PDF viewer and try again.');
+      }
+    } catch (e) {
+      if (mounted) setState(() => _error = errText(e));
+    }
+    if (mounted) setState(() => _invoicing = false);
+  }
 
   Future<void> _move(String action, String done) async {
     setState(() { _busy = true; _error = null; });
@@ -116,15 +138,26 @@ class _OrderDetailState extends State<_OrderDetail> {
         ),
       if (_error != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_error!, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.alert))),
       const SizedBox(height: 12),
+      OutlinedButton.icon(
+        onPressed: _invoicing ? null : _invoice,
+        icon: const Icon(Icons.picture_as_pdf_outlined, size: 16),
+        label: Text(_invoicing ? 'Preparing…' : 'Download invoice'),
+      ),
+      const SizedBox(height: 8),
       if (status == 'Draft') primaryButton('Place order', () => _move('place', 'Order placed.'), busy: _busy),
       if (status == 'Placed') primaryButton('Mark received (adds to stock)', () => _move('receive', 'Order received. Stock updated.'), busy: _busy),
     ]);
   }
 }
 
+/// Opens the new-order form, optionally with one item already on the first line. Returns true if an order was created.
+Future<bool?> showNewOrderSheet(BuildContext context, {String? itemId}) =>
+    showSheet<bool>(context, _NewOrder(farm: farmIdFrom(context), initialItemId: itemId));
+
 class _NewOrder extends StatefulWidget {
   final String farm;
-  const _NewOrder({required this.farm});
+  final String? initialItemId;
+  const _NewOrder({required this.farm, this.initialItemId});
   @override
   State<_NewOrder> createState() => _NewOrderState();
 }
@@ -147,6 +180,7 @@ class _NewOrderState extends State<_NewOrder> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialItemId != null) _lines.first.itemId = widget.initialItemId;
     ApiClient.get('/api/farms/${widget.farm}/suppliers').then((j) { if (mounted) setState(() => _suppliers = asList(j)); }).catchError((_) {});
     ApiClient.get('/api/farms/${widget.farm}/inventory').then((j) { if (mounted) setState(() => _items = asList(j)); }).catchError((_) {});
   }

@@ -217,6 +217,20 @@ class _BlockCard extends StatelessWidget {
           _Row('Last Activity', block.lastActivityDate ?? 'Never'),
           _Row('Boundary',      block.hasBoundary ? 'Captured' : 'Not captured yet'),
           Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+            child: SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => AddBlockScreen(editing: block)),
+                ),
+                icon: const Icon(Icons.edit_outlined, size: 16),
+                label: const Text('Edit block'),
+              ),
+            ),
+          ),
+          Padding(
             padding: const EdgeInsets.all(12),
             child: SizedBox(
               width: double.infinity,

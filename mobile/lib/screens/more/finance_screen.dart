@@ -178,8 +178,16 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 label: Text(_syncing ? 'Syncing…' : 'Sync now'),
               )
             else
-              Text('Linking a bank account is done on the web app (Finance page). Once linked, you can sync it here.',
-                  style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.stone)),
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Linking a bank account is done in the browser (Mono Connect). Sign in there, link the account, then come back and sync here.',
+                    style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.stone)),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () => openWebApp(ctx, '/finance'),
+                  icon: const Icon(Icons.open_in_new, size: 16),
+                  label: const Text('Link bank account on the web'),
+                ),
+              ]),
           ],
         ),
       ),
