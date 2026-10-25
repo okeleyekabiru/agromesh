@@ -59,6 +59,41 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(height: 14),
             ],
 
+            // Activities the server refused
+            if (store.failedActivities.isNotEmpty) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AgroColors.alert.withOpacity(0.07),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AgroColors.alert.withOpacity(0.25)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('${store.failedActivities.length} activit${store.failedActivities.length == 1 ? 'y was' : 'ies were'} not accepted by the server',
+                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: AgroColors.alert)),
+                    const SizedBox(height: 4),
+                    for (final f in store.failedActivities.take(3))
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 2),
+                        child: Text(
+                          '${f['blockName']}: ${'${f['reason']}'.isEmpty ? 'reason not kept. Retry to see it, or log it again.' : f['reason']}',
+                          style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.ink),
+                        ),
+                      ),
+                    const SizedBox(height: 6),
+                    Row(children: [
+                      OutlinedButton(onPressed: store.retryFailedActivities, child: const Text('Retry')),
+                      const SizedBox(width: 8),
+                      TextButton(onPressed: store.discardFailedActivities, child: const Text('Discard')),
+                    ]),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+            ],
+
             // Pending review banner
             if (store.pendingSyncCount > 0) ...[
               Container(

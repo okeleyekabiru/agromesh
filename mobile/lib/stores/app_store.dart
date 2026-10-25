@@ -36,6 +36,8 @@ class AppStore extends ChangeNotifier {
   bool isOnline = true;
   bool isSyncing = false;
   int  pendingSyncCount = 0;
+  List<Map<String, dynamic>> failedActivities = const []; // refused by the server: blockName, activityType, reason
+  Map<String, String> _lastRejections = const {};
   String lastSynced = '--:-- --';
   String? blocksError;
 
@@ -84,7 +86,8 @@ class AppStore extends ChangeNotifier {
 
   Future<void> _loadAll() async {
     blocks   = await DatabaseService.getBlocks(farmId);
-    workers    = await DatabaseService.getWorkers(farmId);
+    final cachedWorkers = await DatabaseService.getWorkers(farmId);
+    workers    = _serverWorkers ?? cachedWorkers;
     activities = await DatabaseService.getActivities(farmId);
     stockItems = (await DatabaseService.readCacheList('stock:$farmId')).map(StockItem.fromApiJson).toList();
     outstanding = (await DatabaseService.readCacheList('outstanding:$farmId')).map(OutstandingStock.fromApiJson).toList();
@@ -98,6 +101,7 @@ class AppStore extends ChangeNotifier {
     final pendingActivities = await DatabaseService.getPendingSyncCount(farmId);
     final pendingBoundaries = await DatabaseService.getPendingBoundaryCount(farmId);
     pendingSyncCount = pendingActivities + pendingBoundaries;
+    failedActivities = await DatabaseService.getFailedActivities(farmId);
   }
 
   Future<void> _checkSync() async {
@@ -288,10 +292,37 @@ class AppStore extends ChangeNotifier {
     await _loadAll();
     notifyListeners();
 
-    // Try to sync immediately if online
+    // Try to sync immediately if online. If the server refuses it, say why (and drop the local copy) so
+    // the form can be fixed and sent again, instead of the activity quietly never arriving.
     if (isOnline) {
       await syncNow();
+      final reason = _lastRejections[activity.id];
+      if (reason != null) {
+        await DatabaseService.deleteActivity(activity.id);
+        await refreshStock();
+        await _loadAll();
+        notifyListeners();
+        throw ApiException(reason, 400);
+      }
     }
+  }
+
+  /// Sends the refused activities again (after fixing what the server complained about, e.g. stock).
+  Future<void> retryFailedActivities() async {
+    await DatabaseService.requeueFailedActivities(farmId);
+    await _loadAll();
+    notifyListeners();
+    await syncNow();
+  }
+
+  /// Gives up on the refused activities and removes them from the phone.
+  Future<void> discardFailedActivities() async {
+    for (final f in failedActivities) {
+      await DatabaseService.deleteActivity('${f['id']}');
+    }
+    await refreshStock();
+    await _loadAll();
+    notifyListeners();
   }
 
   // ── SYNC ──
@@ -301,6 +332,7 @@ class AppStore extends ChangeNotifier {
     notifyListeners();
 
     final result = await SyncService.syncPending(farmId);
+    _lastRejections = result.rejections;
     await refreshWeather();
     await refreshBlocks(); // picks up recalculated (and AI-reviewed) weeding / spraying dates
 
@@ -411,20 +443,32 @@ class AppStore extends ChangeNotifier {
 
   /// Pulls the farm's real workers and caches them. Activities reference workers by id, so the
   /// old locally-seeded demo workers could never sync. Offline, the last cached list is used.
+  List<Worker>? _serverWorkers;
+  String? workersError;
+
   Future<void> refreshWorkers() async {
     try {
       final json = await ApiClient.get('/api/farms/$farmId/workers');
       final list = (json as List).cast<Map<String, dynamic>>();
-      await DatabaseService.replaceWorkers(farmId, list.map(Worker.fromApiJson).toList());
-    } catch (_) {
-      // Offline or server error — keep whatever is cached.
+      final fresh = list.map(Worker.fromApiJson).toList();
+      _serverWorkers = fresh; // shown even if saving them on the phone fails
+      workersError = null;
+      try {
+        await DatabaseService.replaceWorkers(farmId, fresh);
+      } catch (e) {
+        debugPrint('caching workers failed: $e');
+      }
+    } catch (e) {
+      // Offline or server error — keep whatever is cached, and say why the list may be stale.
+      workersError = e is ApiException ? e.message : 'Could not load workers. Pull down to try again.';
     }
   }
 
   /// Pulls the worker list from the server and shows it (used after adding a worker).
   Future<void> reloadWorkers() async {
     await refreshWorkers();
-    workers = await DatabaseService.getWorkers(farmId);
+    final cached = await DatabaseService.getWorkers(farmId);
+    workers = _serverWorkers ?? cached;
     notifyListeners();
   }
 

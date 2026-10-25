@@ -1,6 +1,11 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart' hide Path;
 import 'package:google_fonts/google_fonts.dart';
+import 'package:latlong2/latlong.dart' hide Path;
+import 'package:provider/provider.dart';
+import '../../stores/app_store.dart';
+import '../../widgets/geo_sketch.dart' show geoJsonRings;
 import '../../services/api_client.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/widgets.dart';
@@ -242,6 +247,108 @@ class _PictureScreenState extends State<_PictureScreen> {
     }
   }
 
+  /// One satellite pixel is 10 m. A boundary only a few pixels wide cannot show a useful picture.
+  Widget _smallNote() {
+    final b = (_view?['bounds'] as List?)?.map((e) => (e as num).toDouble()).toList();
+    if (b == null || b.length < 4) return const SizedBox.shrink();
+    final heightM = (b[2] - b[0]).abs() * 110574;
+    final widthM = (b[3] - b[1]).abs() * 111320;
+    if (heightM >= 60 && widthM >= 60) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(color: AgroColors.harvest.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+        child: Text(
+          'The boundary of this block is only about ${widthM.round()} × ${heightM.round()} m, smaller than a few satellite pixels (10 m each), so the colours here are not meaningful. '
+          'Mark the boundary again around the real edge of the block.',
+          style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.ink),
+        ),
+      ),
+    );
+  }
+
+  static const _ndvi = [
+    (Color(0xFF8C7359), 'Bare'), (Color(0xFFD9C78C), 'Sparse'), (Color(0xFFBFD973), 'Light'),
+    (Color(0xFF66B84D), 'Healthy'), (Color(0xFF268C33), 'Dense'), (Color(0xFF055A1F), 'Very dense'),
+  ];
+  static const _ndmi = [
+    (Color(0xFFA64D33), 'Very dry'), (Color(0xFFE6A640), 'Dry'), (Color(0xFFF2E673), 'Moderate'),
+    (Color(0xFF8CD1D9), 'Moist'), (Color(0xFF4099D9), 'Wet'), (Color(0xFF0D40A6), 'Very wet'),
+  ];
+
+  Widget _legend() {
+    if (_layer == 'TrueColour') {
+      return Text('Natural colour. White patches are cloud.', style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.stone));
+    }
+    final items = _layer == 'Ndvi' ? _ndvi : _ndmi;
+    return Wrap(
+      spacing: 12,
+      runSpacing: 4,
+      children: [
+        for (final i in items)
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            Container(width: 12, height: 12, decoration: BoxDecoration(color: i.$1, borderRadius: BorderRadius.circular(3))),
+            const SizedBox(width: 5),
+            Text(i.$2, style: GoogleFonts.inter(fontSize: 11, color: AgroColors.stone)),
+          ]),
+      ],
+    );
+  }
+
+  /// Real map: Esri satellite basemap, the Sentinel picture laid over the block, and the block's outline in white
+  /// (the same picture the web app shows).
+  Widget _mapView() {
+    final b = (_view?['bounds'] as List?)?.map((e) => (e as num).toDouble()).toList();
+    if (b == null || b.length < 4) {
+      return emptyNote('This block has no map area yet.');
+    }
+    final bounds = LatLngBounds(LatLng(b[0], b[1]), LatLng(b[2], b[3]));
+    final blocks = context.read<AppStore>().blocks.where((x) => x.id == widget.blockId);
+    final rings = blocks.isEmpty ? <List<LatLng>>[] : geoJsonRings(blocks.first.boundaryGeoJson).map((r) => [for (final p in r) LatLng(p.lat, p.lng)]).toList();
+
+    return Container(
+      height: 380,
+      decoration: BoxDecoration(color: AgroColors.forest, borderRadius: BorderRadius.circular(10)),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          FlutterMap(
+            options: MapOptions(
+              initialCameraFit: CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(24), maxZoom: 18),
+              maxZoom: 22,
+              interactionOptions: const InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                maxNativeZoom: 19, // closer than this the tiles are stretched instead of going blank
+                maxZoom: 22,
+                userAgentPackageName: 'com.agromesh.mobile',
+              ),
+              if (_bytes != null)
+                OverlayImageLayer(overlayImages: [
+                  OverlayImage(bounds: bounds, imageProvider: MemoryImage(_bytes!), opacity: 0.92),
+                ]),
+              if (rings.isNotEmpty)
+                PolygonLayer(polygons: [
+                  for (final r in rings)
+                    Polygon(points: r, color: Colors.transparent, borderColor: Colors.white, borderStrokeWidth: 2),
+                ]),
+              const SimpleAttributionWidget(source: Text('Imagery © Esri · Sentinel-2 © Copernicus')),
+            ],
+          ),
+          if (_imgLoading)
+            const Positioned(
+              left: 10,
+              bottom: 28,
+              child: Chip(label: Text('Fetching the picture…', style: TextStyle(fontSize: 11))),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget body;
@@ -291,29 +398,19 @@ class _PictureScreenState extends State<_PictureScreen> {
               ),
             ],
           ),
-          AspectRatio(
-            aspectRatio: 1,
-            child: Container(
-              decoration: BoxDecoration(color: AgroColors.forest, borderRadius: BorderRadius.circular(10)),
-              clipBehavior: Clip.antiAlias,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  if (_bytes != null) Image.memory(_bytes!, fit: BoxFit.contain),
-                  if (_imgLoading) const Center(child: CircularProgressIndicator(color: AgroColors.palm)),
-                ],
-              ),
-            ),
-          ),
+          _mapView(),
+          const SizedBox(height: 8),
+          _legend(),
           if (_imgError != null)
             Padding(padding: const EdgeInsets.only(top: 8), child: Text(_imgError!, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.alert))),
+          _smallNote(),
           const SizedBox(height: 8),
           Text(
             _layer == 'Ndvi'
                 ? 'Greenness (NDVI): how dense and healthy the crop is.'
                 : _layer == 'Ndmi'
                     ? 'Leaf water (NDMI): how much water the leaves hold.'
-                    : 'Natural colour, 10 m detail. White patches are cloud.',
+                    : 'Sentinel-2 picture, 10 m detail.',
             style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.stone),
           ),
           Text('One picture covers a 5-day window.', style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.stone)),
