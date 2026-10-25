@@ -40,6 +40,7 @@ class _FarmSetupScreenState extends State<FarmSetupScreen> {
     try {
       final j = await ApiClient.get('/api/reference/states');
       _states = asList(j);
+      if (_states.isEmpty) _error = 'The list of states could not be loaded from the server. Pull back and try again in a minute.';
     } catch (e) {
       _error = errText(e);
     }

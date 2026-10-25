@@ -99,7 +99,18 @@ try
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AgroMeshDbContext>();
         await db.Database.MigrateAsync();
-        await DatabaseSeeder.SeedAsync(db);
+    }
+
+    // Reference data (Nigerian states) is needed in every environment, e.g. the farm location picker.
+    // Idempotent: does nothing once the states exist. A failure here must not stop the API from starting.
+    try
+    {
+        using var seedScope = app.Services.CreateScope();
+        await DatabaseSeeder.SeedAsync(seedScope.ServiceProvider.GetRequiredService<AgroMeshDbContext>());
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "Could not seed reference data");
     }
 
     app.UseCors("AllowAll");
