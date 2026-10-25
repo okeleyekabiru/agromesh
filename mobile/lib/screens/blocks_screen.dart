@@ -7,6 +7,9 @@ import '../widgets/widgets.dart';
 import '../models/models.dart';
 import 'blocks/add_block_screen.dart';
 import 'blocks/boundary_capture_screen.dart';
+import 'more/satellite_screen.dart';
+import '../services/api_client.dart';
+import '../widgets/block_coverage_sheet.dart';
 
 class BlocksScreen extends StatefulWidget {
   const BlocksScreen({super.key});
@@ -17,6 +20,30 @@ class BlocksScreen extends StatefulWidget {
 
 class _BlocksScreenState extends State<BlocksScreen> {
   bool _requestedInitialLoad = false;
+  List<Map<String, dynamic>> _progress = [];
+
+  Future<void> _loadProgress() async {
+    final store = context.read<AppStore>();
+    try {
+      final j = await ApiClient.get('/api/farms/${store.farmId}/blocks/coverage-progress');
+      final list = (j is List ? j : const []).whereType<Map>().map((m) => m.cast<String, dynamic>()).toList();
+      if (mounted) setState(() => _progress = list);
+    } catch (_) {
+      // Offline or not allowed: the strip just stays hidden.
+    }
+  }
+
+  void _openProgress(Map<String, dynamic> p) {
+    final store = context.read<AppStore>();
+    final matches = store.blocks.where((b) => b.id == p['blockId']);
+    if (matches.isEmpty) return;
+    final t = p['activityType'];
+    final idx = t is int ? t : 0;
+    showBlockCoverageSheet(context, matches.first,
+        initialType: idx >= 0 && idx < ActivityType.values.length ? ActivityType.values[idx] : null);
+  }
+
+  String _typeLabel(dynamic t) => switch (t) { 0 => 'Weeding', 1 => 'Spraying', 2 => 'Fertilizer', 4 => 'Harvest', _ => 'Work' };
 
   @override
   void didChangeDependencies() {
@@ -24,7 +51,7 @@ class _BlocksScreenState extends State<BlocksScreen> {
     if (!_requestedInitialLoad) {
       _requestedInitialLoad = true;
       final store = context.read<AppStore>();
-      Future.microtask(store.refreshBlocks);
+      Future.microtask(() async { await store.refreshBlocks(); await _loadProgress(); });
     }
   }
 
@@ -45,7 +72,7 @@ class _BlocksScreenState extends State<BlocksScreen> {
       ),
       body: RefreshIndicator(
         color: AgroColors.palm,
-        onRefresh: store.refreshBlocks,
+        onRefresh: () async { await store.refreshBlocks(); await _loadProgress(); },
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
@@ -63,6 +90,64 @@ class _BlocksScreenState extends State<BlocksScreen> {
                   ],
                 ),
               ),
+            if (_progress.isNotEmpty) ...[
+              Text('Blocks in progress (${_progress.length})',
+                  style: GoogleFonts.syne(fontSize: 13, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+              const SizedBox(height: 8),
+              for (final p in _progress)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => _openProgress(p),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AgroColors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AgroColors.fog),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(children: [
+                            Expanded(child: Text('${p['blockName']}', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700))),
+                            Text(_typeLabel(p['activityType']), style: GoogleFonts.inter(fontSize: 11, color: AgroColors.leaf, fontWeight: FontWeight.w600)),
+                          ]),
+                          const SizedBox(height: 6),
+                          LinearProgressIndicator(
+                            value: (((p['percent'] as num?) ?? 0) / 100).clamp(0, 1).toDouble(),
+                            color: AgroColors.palm,
+                            backgroundColor: AgroColors.fog,
+                            minHeight: 6,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${p['percent']}% · ${((p['coveredHectares'] as num?) ?? 0).toStringAsFixed(2)} of ${((p['blockHectares'] as num?) ?? 0).toStringAsFixed(2)} ha',
+                            style: GoogleFonts.inter(fontSize: 11, color: AgroColors.stone),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 8),
+            ],
+            InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SatelliteScreen())),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(color: AgroColors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: AgroColors.fog)),
+                child: Row(children: [
+                  const Text('🛰️', style: TextStyle(fontSize: 16)),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text('Satellite crop monitoring', style: GoogleFonts.inter(fontSize: 12.5, color: AgroColors.ink))),
+                  const Icon(Icons.chevron_right, size: 18, color: AgroColors.stone),
+                ]),
+              ),
+            ),
             if (store.blocks.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 48),

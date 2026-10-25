@@ -8,7 +8,7 @@ import '../../widgets/widgets.dart';
 import '../../widgets/weather_card.dart';
 import '../activity/log_activity_screen.dart';
 import '../stock/out_on_farm_screen.dart';
-import '../blocks/add_block_screen.dart';
+import '../more/farm_setup_screen.dart';
 import '../more/activities_screen.dart';
 import '../../widgets/dashboard_extras.dart';
 
@@ -33,7 +33,7 @@ class DashboardScreen extends StatelessWidget {
             if (store.setupDraft) ...[
               InkWell(
                 borderRadius: BorderRadius.circular(10),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddBlockScreen())),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FarmSetupScreen())),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
@@ -47,7 +47,7 @@ class DashboardScreen extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          "Your farm setup isn't finished. Add your blocks and boundaries to unlock scheduling and reporting.",
+                          "Your farm setup isn't finished. Add your location, blocks and boundaries to unlock scheduling and reporting.",
                           style: GoogleFonts.inter(fontSize: 12, color: AgroColors.ink),
                         ),
                       ),
