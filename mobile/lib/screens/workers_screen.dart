@@ -17,9 +17,20 @@ class WorkersScreen extends StatelessWidget {
     final employees   = store.workers.where((w) => w.type == WorkerType.employee).toList();
     final contractors = store.workers.where((w) => w.type == WorkerType.contractor).toList();
 
-    return ListView(
+    return RefreshIndicator(
+      color: AgroColors.palm,
+      onRefresh: store.reloadWorkers,
+      child: ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       children: [
+        if (store.workersError != null)
+          Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: AgroColors.harvest.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+            child: Text(store.workersError!, style: const TextStyle(fontSize: 12, color: AgroColors.ink)),
+          ),
         // Summary row
         Row(
           children: [
@@ -48,6 +59,7 @@ class WorkersScreen extends StatelessWidget {
         ),
         const SizedBox(height: 80),
       ],
+      ),
     );
   }
 }

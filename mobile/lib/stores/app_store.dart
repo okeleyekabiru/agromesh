@@ -84,7 +84,8 @@ class AppStore extends ChangeNotifier {
 
   Future<void> _loadAll() async {
     blocks   = await DatabaseService.getBlocks(farmId);
-    workers    = await DatabaseService.getWorkers(farmId);
+    final cachedWorkers = await DatabaseService.getWorkers(farmId);
+    workers    = _serverWorkers ?? cachedWorkers;
     activities = await DatabaseService.getActivities(farmId);
     stockItems = (await DatabaseService.readCacheList('stock:$farmId')).map(StockItem.fromApiJson).toList();
     outstanding = (await DatabaseService.readCacheList('outstanding:$farmId')).map(OutstandingStock.fromApiJson).toList();
@@ -411,20 +412,32 @@ class AppStore extends ChangeNotifier {
 
   /// Pulls the farm's real workers and caches them. Activities reference workers by id, so the
   /// old locally-seeded demo workers could never sync. Offline, the last cached list is used.
+  List<Worker>? _serverWorkers;
+  String? workersError;
+
   Future<void> refreshWorkers() async {
     try {
       final json = await ApiClient.get('/api/farms/$farmId/workers');
       final list = (json as List).cast<Map<String, dynamic>>();
-      await DatabaseService.replaceWorkers(farmId, list.map(Worker.fromApiJson).toList());
-    } catch (_) {
-      // Offline or server error — keep whatever is cached.
+      final fresh = list.map(Worker.fromApiJson).toList();
+      _serverWorkers = fresh; // shown even if saving them on the phone fails
+      workersError = null;
+      try {
+        await DatabaseService.replaceWorkers(farmId, fresh);
+      } catch (e) {
+        debugPrint('caching workers failed: $e');
+      }
+    } catch (e) {
+      // Offline or server error — keep whatever is cached, and say why the list may be stale.
+      workersError = e is ApiException ? e.message : 'Could not load workers. Pull down to try again.';
     }
   }
 
   /// Pulls the worker list from the server and shows it (used after adding a worker).
   Future<void> reloadWorkers() async {
     await refreshWorkers();
-    workers = await DatabaseService.getWorkers(farmId);
+    final cached = await DatabaseService.getWorkers(farmId);
+    workers = _serverWorkers ?? cached;
     notifyListeners();
   }
 
