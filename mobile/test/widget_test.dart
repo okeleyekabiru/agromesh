@@ -47,7 +47,7 @@ void main() {
     expect(find.text('Mark Corner Here'), findsOneWidget);
 
     final finishButton = tester.widget<OutlinedButton>(
-      find.widgetWithText(OutlinedButton, 'Finish Boundary (need 3 more)'),
+      find.widgetWithText(OutlinedButton, 'Finish Boundary (need 4 more)'),
     );
     expect(finishButton.onPressed, isNull);
   });
