@@ -98,7 +98,7 @@ export const useAgroStore = defineStore('agro', () => {
   }
 
   // Farm managers can supervise an activity too: they are accounts, not workers, so they are listed separately.
-  const managers = ref<{ id: string; fullName: string }[]>([])
+  const managers = ref<{ id: string; fullName: string; role?: string }[]>([])
   async function fetchManagers() {
     try { managers.value = (await managersApi.getAll()).data ?? [] } catch { /* the list stays as it was */ }
   }

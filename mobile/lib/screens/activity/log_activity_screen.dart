@@ -83,7 +83,7 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
   bool get _canProceed {
     if (_step == 0) return _block != null;
     if (_step == 1) return _activityType != null;
-    if (_stepName == 'Area') return _areaPoints.length >= _minAreaPoints && !pointsCross(_areaPoints);
+    if (_stepName == 'Area') return _areaPoints.length >= _minAreaPoints && areaPointsProblem(_areaPoints, blockRings: geoJsonRings(_block?.boundaryGeoJson)) == null;
     if (_supervisorId == null) return false;
     // Who did the work and what it used are both required.
     if (_workers.isEmpty || _inputs.isEmpty) return false;
@@ -756,10 +756,10 @@ class _StepArea extends StatelessWidget {
             child: Text('This block has no boundary yet, so the area cannot be checked against its edge.',
               style: GoogleFonts.inter(fontSize: 11, color: AgroColors.harvest)),
           ),
-        if (pointsCross(points))
+        if (areaPointsProblem(points, blockRings: geoJsonRings(block?.boundaryGeoJson)) case final problem?)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(pointsCrossMessage, style: const TextStyle(color: AgroColors.alert, fontSize: 12, fontWeight: FontWeight.w600)),
+            child: Text(problem, style: const TextStyle(color: AgroColors.alert, fontSize: 12, fontWeight: FontWeight.w600)),
           ),
         if (error != null)
           Padding(
