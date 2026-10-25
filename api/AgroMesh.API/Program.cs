@@ -107,6 +107,11 @@ try
     app.UseAuthorization();
     app.MapControllers();
 
+    // Pinged by an external scheduler (the Vercel daily cron) to wake a spun-down Render instance.
+    // Waking the process is enough on its own: it restarts DailyBankSyncService and
+    // DailySatelliteRefreshService, whose in-process loops then catch up anything due.
+    app.MapGet("/health", () => Results.Ok()).AllowAnonymous();
+
     app.Run();
 }
 catch (Exception ex)
