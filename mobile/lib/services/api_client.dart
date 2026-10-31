@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode, defaultTargetPlatform, TargetPlatform;
 import 'package:http/http.dart' as http;
 import 'auth_service.dart';
 
@@ -32,11 +32,16 @@ class ApiClient {
   ///   - Physical devices need the host machine's LAN IP.
   static const String _override = String.fromEnvironment('API_BASE_URL');
 
-  /// With no override, an Android build assumes the emulator and reaches the host PC at 10.0.2.2; other
-  /// platforms use localhost. A physical phone must pass --dart-define=API_BASE_URL=http://<PC LAN IP>:5000.
+  /// Hosted API that release builds talk to unless API_BASE_URL says otherwise.
+  static const String _productionUrl = 'https://agromesh-api.onrender.com';
+
+  /// Release builds use the hosted API. Debug runs with no override assume the emulator on Android (host PC at
+  /// 10.0.2.2) and localhost elsewhere. A physical phone in debug must pass --dart-define=API_BASE_URL=http://<PC LAN IP>:5000.
   static final String baseUrl = _override.isNotEmpty
       ? _override
-      : (!kIsWeb && defaultTargetPlatform == TargetPlatform.android ? 'http://10.0.2.2:5000' : 'http://localhost:5000');
+      : kReleaseMode
+          ? _productionUrl
+          : (!kIsWeb && defaultTargetPlatform == TargetPlatform.android ? 'http://10.0.2.2:5000' : 'http://localhost:5000');
 
   // Long enough for the API to wake from sleep (a hosted API that scales to zero takes a while on its first request).
   static const _timeout = Duration(seconds: 120);
