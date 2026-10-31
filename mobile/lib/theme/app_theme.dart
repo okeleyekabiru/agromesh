@@ -12,10 +12,20 @@ class AgroColors {
   static const Color mist    = Color(0xFFF0F4F1);
   static const Color fog     = Color(0xFFE2EBE5);
   static const Color stone   = Color(0xFF4F5F56);
+  static const Color stoneOnDark = Color(0xFFA9BDB0); // muted text on forest/canopy surfaces
   static const Color ink     = Color(0xFF0A1A10);
   static const Color data    = Color(0xFF00C896);
   static const Color alert   = Color(0xFFDC3C3C);
   static const Color white   = Color(0xFFFFFFFF);
+
+  // Work-progress map: blue/orange stays distinguishable for colour-blind users (Okabe-Ito).
+  static const Color coverageDone = Color(0xFF0072B2);
+  static const Color coverageLeft = Color(0xFFE69F00);
+  // Marked sections are also numbered on the map, so colour is never the only cue.
+  static const List<Color> sectionPalette = [
+    Color(0xFFD55E00), Color(0xFF56B4E9), Color(0xFFCC79A7), Color(0xFF009E73),
+    Color(0xFF0072B2), Color(0xFFE69F00), Color(0xFF8E44AD), Color(0xFF444444),
+  ];
 
   // Semantic
   static const Color success = palm;
@@ -69,7 +79,7 @@ class AgroTheme {
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: AgroColors.forest,
       selectedItemColor: AgroColors.palm,
-      unselectedItemColor: AgroColors.stone,
+      unselectedItemColor: AgroColors.stoneOnDark,
       showSelectedLabels: true,
       showUnselectedLabels: true,
       type: BottomNavigationBarType.fixed,

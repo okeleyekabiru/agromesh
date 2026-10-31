@@ -45,7 +45,9 @@ class LoadScaffold<T> extends StatefulWidget {
   final Widget Function(BuildContext context, T data, Future<void> Function() reload) builder;
   final Widget? fab;
   final List<Widget>? actions;
-  const LoadScaffold({super.key, required this.title, required this.load, required this.builder, this.fab, this.actions});
+  /// True when shown as a tab in the main shell, which already has an app bar.
+  final bool embedded;
+  const LoadScaffold({super.key, required this.title, required this.load, required this.builder, this.fab, this.actions, this.embedded = false});
 
   @override
   State<LoadScaffold<T>> createState() => _LoadScaffoldState<T>();
@@ -96,7 +98,7 @@ class _LoadScaffoldState<T> extends State<LoadScaffold<T>> {
     }
     return Scaffold(
       backgroundColor: AgroColors.mist,
-      appBar: AppBar(
+      appBar: widget.embedded ? null : AppBar(
         backgroundColor: AgroColors.forest,
         foregroundColor: AgroColors.white,
         title: Text(widget.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),

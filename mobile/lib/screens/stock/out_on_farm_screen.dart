@@ -9,7 +9,9 @@ import '../../widgets/widgets.dart';
 /// Stock that was picked out of the store for a block but not yet used or returned,
 /// with a way to hand the leftover back (e.g. carried 50 kg, used 38, return 12).
 class OutOnFarmScreen extends StatefulWidget {
-  const OutOnFarmScreen({super.key});
+  /// True when shown as a tab in the main shell, which already has an app bar.
+  final bool embedded;
+  const OutOnFarmScreen({super.key, this.embedded = false});
 
   @override
   State<OutOnFarmScreen> createState() => _OutOnFarmScreenState();
@@ -38,7 +40,7 @@ class _OutOnFarmScreenState extends State<OutOnFarmScreen> {
 
     return Scaffold(
       backgroundColor: AgroColors.mist,
-      appBar: AppBar(title: const Text('Out on the farm')),
+      appBar: widget.embedded ? null : AppBar(title: const Text('Out on the farm')),
       body: RefreshIndicator(
         color: AgroColors.palm,
         onRefresh: store.refreshStock,

@@ -49,7 +49,7 @@ class DashboardScreen extends StatelessWidget {
                           style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink),
                         ),
                       ),
-                      Text('Continue setup', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
+                      Text('Continue setup', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
                       Icon(Icons.chevron_right, color: AgroColors.leaf, size: 16),
                     ],
                   ),
@@ -112,9 +112,9 @@ class DashboardScreen extends StatelessWidget {
                         style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink),
                       ),
                     ),
-                    GestureDetector(
-                      onTap: store.syncNow,
-                      child: const Text('Sync now', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
+                    TextButton(
+                      onPressed: store.syncNow,
+                      child: const Text('Sync now', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
                     ),
                   ],
                 ),
@@ -147,7 +147,7 @@ class DashboardScreen extends StatelessWidget {
                           style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink),
                         ),
                       ),
-                      const Text('Return leftover', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
+                      const Text('Return leftover', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
                       const Icon(Icons.chevron_right, color: AgroColors.leaf, size: 16),
                     ],
                   ),
@@ -222,7 +222,7 @@ class DashboardScreen extends StatelessWidget {
                     title: 'Recent Activities',
                     trailing: TextButton(
                       onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ActivitiesScreen())),
-                      child: const Text('View all', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.leaf, fontWeight: FontWeight.w600)),
+                      child: const Text('View all', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.leaf, fontWeight: FontWeight.w600)),
                     ),
                   ),
                   if (store.activities.isEmpty)

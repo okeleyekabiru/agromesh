@@ -8,6 +8,7 @@ import 'dashboard/dashboard_screen.dart';
 import 'activity/log_activity_screen.dart';
 import 'blocks_screen.dart';
 import 'workers_screen.dart';
+import 'more/inventory_screen.dart';
 import 'more/more_screen.dart';
 
 class MainShell extends StatefulWidget {
@@ -25,10 +26,11 @@ class _MainShellState extends State<MainShell> {
     DashboardScreen(),
     BlocksScreen(),
     WorkersScreen(),
+    InventoryScreen(embedded: true),
     MoreScreen(),
   ];
 
-  final _titles = ['Farm Overview', 'Blocks', 'Workers', 'More'];
+  final _titles = ['Farm Overview', 'Blocks', 'Workers', 'Stock', 'More'];
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +53,7 @@ class _MainShellState extends State<MainShell> {
                   store.farmName.isEmpty
                     ? 'AgroMesh'
                     : (store.farmLocation.isEmpty ? store.farmName : '${store.farmName} · ${store.farmLocation}'),
-                  style: const TextStyle(color: AgroColors.stone, fontSize: 12),
+                  style: const TextStyle(color: AgroColors.stoneOnDark, fontSize: 12),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -105,6 +107,7 @@ class _MainShellState extends State<MainShell> {
           BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: 'Dashboard'),
           BottomNavigationBarItem(icon: Icon(Icons.map_outlined), label: 'Blocks'),
           BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: 'Workers'),
+          BottomNavigationBarItem(icon: Icon(Icons.inventory_2_outlined), label: 'Stock'),
           BottomNavigationBarItem(icon: Icon(Icons.apps_rounded), label: 'More'),
         ],
       ),

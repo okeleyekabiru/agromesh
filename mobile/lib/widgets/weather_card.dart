@@ -77,7 +77,7 @@ class WeatherCard extends StatelessWidget {
             ),
           const Divider(height: 1, color: AgroColors.fog),
           SizedBox(
-            height: 142,
+            height: 172,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.all(12),

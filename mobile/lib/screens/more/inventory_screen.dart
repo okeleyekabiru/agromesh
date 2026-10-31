@@ -10,17 +10,20 @@ import 'orders_screen.dart';
 
 /// Stock levels with pick, adjust (needs approval), set price (needs approval), movements and add item.
 class InventoryScreen extends StatelessWidget {
-  const InventoryScreen({super.key});
+  /// True when shown as the Stock tab: no second app bar, and the shell's Log Activity button is used.
+  final bool embedded;
+  const InventoryScreen({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
     final farm = farmIdFrom(context);
     return LoadScaffold<List<Map<String, dynamic>>>(
       title: 'Inventory',
+      embedded: embedded,
       load: () async => asList(await ApiClient.get('/api/farms/$farm/inventory')),
       builder: (context, items, reload) => _Body(items: items, reload: reload),
       // The FAB lives outside the builder, so it asks the body to reload via the route.
-      fab: Builder(
+      fab: embedded ? null : Builder(
         builder: (ctx) => FloatingActionButton.extended(
           backgroundColor: AgroColors.leaf,
           foregroundColor: Colors.white,

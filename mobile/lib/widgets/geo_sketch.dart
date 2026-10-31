@@ -105,22 +105,22 @@ class _SketchPainter extends CustomPainter {
     }
 
     if (remaining.isNotEmpty) {
-      canvas.drawPath(pathOf(remaining), Paint()..color = const Color(0x73F5A623));
+      canvas.drawPath(pathOf(remaining), Paint()..color = AgroColors.coverageLeft.withValues(alpha: 0.45));
     }
     if (covered.isNotEmpty) {
-      canvas.drawPath(pathOf(covered), Paint()..color = const Color(0x8C3FB56D));
+      canvas.drawPath(pathOf(covered), Paint()..color = AgroColors.coverageDone.withValues(alpha: 0.55));
     }
     if (block.isNotEmpty) {
       canvas.drawPath(
         pathOf(block),
         Paint()
-          ..style = PaintingStyle.stroke
+          ..style = PaintingStyle.stroke          
           ..strokeWidth = 2
           ..color = AgroColors.forest,
       );
     }
 
-    const palette = [Color(0xFFE4572E), Color(0xFF17BEBB), Color(0xFF9B5DE5), Color(0xFFF15BB5), Color(0xFF3A86FF), Color(0xFFFB8500), Color(0xFF2A9D8F), Color(0xFF8338EC)];
+    const palette = AgroColors.sectionPalette;
     for (var i = 0; i < sections.length; i++) {
       final col = palette[i % palette.length];
       Offset? centre;

@@ -62,7 +62,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
         color: AgroColors.palm,
         onRefresh: () => _load(reset: true),
         child: _items.isEmpty
-            ? ListView(children: [
+            ? ListView(physics: const AlwaysScrollableScrollPhysics(), children: [
                 if (_loading) const Padding(padding: EdgeInsets.all(48), child: Center(child: CircularProgressIndicator(color: AgroColors.palm)))
                 else if (_error != null)
                   Padding(
@@ -76,6 +76,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                 else emptyNote('No activities logged yet.'),
               ])
             : ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(16),
                 children: [
                   AgroCard(

@@ -102,13 +102,13 @@ class KpiCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = dark ? AgroColors.forest : AgroColors.white;
-    final labelColor = dark ? AgroColors.stone.withValues(alpha: 0.8) : AgroColors.stone;
+    final labelColor = dark ? AgroColors.stoneOnDark : AgroColors.stone;
     final valueColor = dark ? AgroColors.white : AgroColors.forest;
     final deltaColor = switch (deltaType) {
       KpiDeltaType.up   => AgroColors.palm,
       KpiDeltaType.down => AgroColors.alert,
       KpiDeltaType.warn => AgroColors.harvest,
-      KpiDeltaType.mute => AgroColors.stone,
+      KpiDeltaType.mute => dark ? AgroColors.stoneOnDark : AgroColors.stone,
     };
 
     return Container(
@@ -121,7 +121,11 @@ class KpiCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label.toUpperCase(), style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: labelColor, letterSpacing: 0.8)),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(label.toUpperCase(), maxLines: 1, style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: labelColor, letterSpacing: 0.8)),
+          ),
           const SizedBox(height: 6),
           Text(value, style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 22, fontWeight: FontWeight.w700, color: valueColor, letterSpacing: -0.5)),
           const SizedBox(height: 2),

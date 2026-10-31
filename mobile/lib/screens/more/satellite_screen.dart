@@ -334,7 +334,13 @@ class _PictureScreenState extends State<_PictureScreen> {
                   for (final r in rings)
                     Polygon(points: r, color: Colors.transparent, borderColor: Colors.white, borderStrokeWidth: 2),
                 ]),
-              const SimpleAttributionWidget(source: Text('Imagery © Esri · Sentinel-2 © Copernicus')),
+              const RichAttributionWidget(
+                showFlutterMapAttribution: false,
+                attributions: [
+                  TextSourceAttribution('Imagery © Esri'),
+                  TextSourceAttribution('Sentinel-2 © Copernicus'),
+                ],
+              ),
             ],
           ),
           if (_imgLoading)

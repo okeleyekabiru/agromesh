@@ -93,8 +93,7 @@ class _CoverageSheetState extends State<_CoverageSheet> {
     }
   }
 
-  static const _palette = [Color(0xFFE4572E), Color(0xFF17BEBB), Color(0xFF9B5DE5), Color(0xFFF15BB5), Color(0xFF3A86FF), Color(0xFFFB8500), Color(0xFF2A9D8F), Color(0xFF8338EC)];
-  Color _sectionColour(int n) => _palette[(n - 1) % _palette.length];
+  Color _sectionColour(int n) => AgroColors.sectionPalette[(n - 1) % AgroColors.sectionPalette.length];
 
   String _date(DateTime? d) => d == null ? '' : '${d.day}/${d.month}';
 
@@ -165,11 +164,11 @@ class _CoverageSheetState extends State<_CoverageSheet> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Container(width: 12, height: 12, decoration: BoxDecoration(color: const Color(0xFF3FB56D), borderRadius: BorderRadius.circular(3))),
+                      Container(width: 12, height: 12, decoration: BoxDecoration(color: AgroColors.coverageDone, borderRadius: BorderRadius.circular(3))),
                       const SizedBox(width: 6),
                       const Text('Done', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
                       const SizedBox(width: 16),
-                      Container(width: 12, height: 12, decoration: BoxDecoration(color: const Color(0xFFF5A623), borderRadius: BorderRadius.circular(3))),
+                      Container(width: 12, height: 12, decoration: BoxDecoration(color: AgroColors.coverageLeft, borderRadius: BorderRadius.circular(3))),
                       const SizedBox(width: 6),
                       const Text('Left to do', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
                     ],

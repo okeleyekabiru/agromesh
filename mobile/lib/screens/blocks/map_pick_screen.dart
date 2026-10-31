@@ -166,7 +166,10 @@ class _MapPickScreenState extends State<MapPickScreen> {
                           ),
                         ),
                     ]),
-                    const SimpleAttributionWidget(source: Text('Imagery © Esri')),
+                    const RichAttributionWidget(
+                      showFlutterMapAttribution: false,
+                      attributions: [TextSourceAttribution('Imagery © Esri')],
+                    ),
                   ],
                 ),
                 Positioned(
