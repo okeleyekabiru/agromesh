@@ -304,7 +304,7 @@ watch(() => [props.block?.id, props.activityType], loadExisting)
 <style scoped>
 .picker { display: flex; flex-direction: column; gap: 8px; }
 .picker-top { display: flex; align-items: center; justify-content: space-between; }
-.count { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--stone); }
+.count { font-family: var(--font-sans); font-size: 12px; color: var(--stone); }
 .count.ok { color: var(--palm); font-weight: 600; }
 .picker-actions { display: flex; gap: 6px; }
 .pbtn { border: 1px solid var(--fog); background: white; border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; color: var(--forest); }
@@ -324,6 +324,6 @@ watch(() => [props.block?.id, props.activityType], loadExisting)
 <style>
 .wp-pin span {
   display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%;
-  background: #2d7a4f; color: #fff; font: 600 11px 'JetBrains Mono', monospace; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  background: #2d7a4f; color: #fff; font: 600 11px var(--font-sans); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.4);
 }
 </style>

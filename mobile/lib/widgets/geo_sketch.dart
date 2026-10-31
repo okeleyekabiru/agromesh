@@ -138,7 +138,7 @@ class _SketchPainter extends CustomPainter {
       if (centre != null) {
         canvas.drawCircle(centre, 10, Paint()..color = col);
         final tp = TextPainter(
-          text: TextSpan(text: '${i + 1}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700)),
+          text: TextSpan(text: '${i + 1}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
           textDirection: TextDirection.ltr,
         )..layout();
         tp.paint(canvas, centre - Offset(tp.width / 2, tp.height / 2));
@@ -160,7 +160,7 @@ class _SketchPainter extends CustomPainter {
       for (var i = 0; i < pts.length; i++) {
         canvas.drawCircle(pts[i], 10, Paint()..color = AgroColors.palm);
         final tp = TextPainter(
-          text: TextSpan(text: '${i + 1}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700)),
+          text: TextSpan(text: '${i + 1}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
           textDirection: TextDirection.ltr,
         )..layout();
         tp.paint(canvas, pts[i] - Offset(tp.width / 2, tp.height / 2));

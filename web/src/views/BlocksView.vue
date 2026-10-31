@@ -25,7 +25,7 @@
     <div v-if="store.loading" style="padding:40px;text-align:center;color:var(--stone);font-size:12px;">Loading blocks…</div>
     <div v-else-if="!store.blocks.length" style="padding:60px;text-align:center;">
       <div style="font-size:32px;margin-bottom:12px;">🗺️</div>
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:var(--forest);margin-bottom:4px;">No blocks yet</div>
+      <div style="font-family: var(--font-sans);font-weight:700;font-size:16px;color:var(--forest);margin-bottom:4px;">No blocks yet</div>
       <div style="font-size:12px;color:var(--stone);">Add blocks to your farm to start tracking activities.</div>
     </div>
     <div v-else class="grid-3">
@@ -231,7 +231,7 @@ onMounted(() => { store.fetchBlocks(); loadProgress(); store.fetchSatellite() })
 .block-card { background: white; border: 1px solid var(--fog); border-radius: 12px; overflow: hidden; transition: border-color 0.15s; }
 .block-card:hover { border-color: var(--palm); }
 .block-card-header { padding: 14px 16px; border-bottom: 1px solid var(--fog); display: flex; align-items: center; justify-content: space-between; }
-.block-card-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: var(--forest); }
+.block-card-name { font-family: var(--font-sans); font-weight: 700; font-size: 14px; color: var(--forest); }
 .btn-edit {
   width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--fog);
   background: transparent; cursor: pointer; font-size: 11px; color: var(--stone);
@@ -239,19 +239,19 @@ onMounted(() => { store.fetchBlocks(); loadProgress(); store.fetchSatellite() })
 }
 .btn-edit:hover { border-color: var(--palm); color: var(--leaf, #2d7a4f); }
 .crop-pills { display: flex; gap: 6px; padding: 10px 16px 0; flex-wrap: wrap; }
-.crop-pill { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; padding: 3px 8px; background: rgba(45,122,79,0.08); border: 1px solid rgba(45,122,79,0.15); border-radius: 4px; color: var(--leaf); }
+.crop-pill { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.08em; padding: 3px 8px; background: rgba(45,122,79,0.08); border: 1px solid rgba(45,122,79,0.15); border-radius: 4px; color: var(--leaf); }
 .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--fog); }
 .stat-row:last-child { border-bottom: none; }
-.stat-key { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: var(--stone); text-transform: uppercase; }
-.stat-val { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; color: var(--forest); display: flex; align-items: center; }
+.stat-key { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.08em; color: var(--stone); text-transform: uppercase; }
+.stat-val { font-family: var(--font-sans); font-size: 11px; font-weight: 500; color: var(--forest); display: flex; align-items: center; }
 .stat-val.warn { color: var(--harvest); }
 .stat-val.bad { color: #E53935; }
 .stat-val.muted { color: var(--stone); }
 .stat-row.clickable { cursor: pointer; }
-.ai-chip { margin-left: 6px; font-size: 8px; letter-spacing: 0; color: var(--leaf); text-transform: none; }
-.why { margin-left: 6px; font-size: 8px; color: var(--stone); }
+.ai-chip { margin-left: 6px; font-size: 11px; letter-spacing: 0; color: var(--leaf); text-transform: none; }
+.why { margin-left: 6px; font-size: 11px; color: var(--stone); }
 .why-box { background: rgba(45,122,79,0.05); border-radius: 6px; padding: 8px 10px; margin: 2px 0 6px; }
-.why-line { font-size: 10px; line-height: 1.5; color: var(--ink); }
+.why-line { font-size: 11px; line-height: 1.5; color: var(--ink); }
 .why-line.best { color: var(--leaf); font-weight: 600; margin-top: 2px; }
 .sat-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--stone); margin-bottom: 14px; }
 .sat-err { color: var(--alert); }
@@ -261,8 +261,8 @@ onMounted(() => { store.fetchBlocks(); loadProgress(); store.fetchSatellite() })
 .sat-NoData, .sat-Building { color: var(--stone); }
 .spark { width: 100%; height: 40px; margin: 6px 0 2px; background: var(--mist); border-radius: 6px; }
 .progress-strip { margin-bottom: 18px; }
-.progress-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; color: var(--forest); margin-bottom: 8px; }
-.progress-title span { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--stone); margin-left: 6px; }
+.progress-title { font-family: var(--font-sans); font-weight: 700; font-size: 13px; color: var(--forest); margin-bottom: 8px; }
+.progress-title span { font-family: var(--font-sans); font-size: 11px; color: var(--stone); margin-left: 6px; }
 .progress-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
 .progress-card { text-align: left; border: 1px solid var(--fog); background: white; border-radius: 12px; padding: 10px 12px; cursor: pointer; }
 .progress-card:hover { border-color: var(--palm); }

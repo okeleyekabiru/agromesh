@@ -79,8 +79,8 @@ defineProps<{
 }
 
 .kpi-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--stone);
@@ -88,7 +88,7 @@ defineProps<{
 .kpi-card.dark .kpi-label { color: rgba(107,124,114,0.75); }
 
 .kpi-value {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 700;
   font-size: 26px;
   color: var(--forest);

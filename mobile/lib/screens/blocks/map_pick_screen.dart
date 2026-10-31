@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart' hide Path;
 import 'package:geolocator/geolocator.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart' hide Path;
 import '../../models/models.dart';
 import '../../services/geo_check.dart';
@@ -127,13 +126,13 @@ class _MapPickScreenState extends State<MapPickScreen> {
                     ),
                     PolygonLayer(polygons: [
                       for (final r in _remaining)
-                        Polygon(points: r, color: const Color(0xFFF5A623).withOpacity(0.35), borderColor: const Color(0xFFF5A623), borderStrokeWidth: 1),
+                        Polygon(points: r, color: const Color(0xFFF5A623).withValues(alpha: 0.35), borderColor: const Color(0xFFF5A623), borderStrokeWidth: 1),
                       for (final r in _covered)
-                        Polygon(points: r, color: const Color(0xFF3FB56D).withOpacity(0.45), borderColor: Colors.white, borderStrokeWidth: 1.5),
+                        Polygon(points: r, color: const Color(0xFF3FB56D).withValues(alpha: 0.45), borderColor: Colors.white, borderStrokeWidth: 1.5),
                       for (final r in _block)
                         Polygon(points: r, color: Colors.transparent, borderColor: Colors.white, borderStrokeWidth: 2),
                       if (_points.length >= 3)
-                        Polygon(points: _points, color: AgroColors.palm.withOpacity(0.3), borderColor: const Color(0xFF00E5A0), borderStrokeWidth: 2.5),
+                        Polygon(points: _points, color: AgroColors.palm.withValues(alpha: 0.3), borderColor: const Color(0xFF00E5A0), borderStrokeWidth: 2.5),
                     ]),
                     if (_points.length == 2)
                       PolylineLayer(polylines: [Polyline(points: _points, color: const Color(0xFF00E5A0), strokeWidth: 2.5)]),
@@ -163,7 +162,7 @@ class _MapPickScreenState extends State<MapPickScreen> {
                               border: Border.all(color: Colors.white, width: 2),
                             ),
                             alignment: Alignment.center,
-                            child: Text('${i + 1}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                            child: Text('${i + 1}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                           ),
                         ),
                     ]),
@@ -176,10 +175,10 @@ class _MapPickScreenState extends State<MapPickScreen> {
                   right: 10,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.92), borderRadius: BorderRadius.circular(8)),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.92), borderRadius: BorderRadius.circular(8)),
                     child: Text(
                       'Tap the map at each corner, in order around the edge. Zoom in for accuracy. At least ${widget.minPoints} points.',
-                      style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.ink),
+                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.ink),
                     ),
                   ),
                 ),
@@ -207,7 +206,7 @@ class _MapPickScreenState extends State<MapPickScreen> {
                     Expanded(
                       child: Text(
                         '${_points.length} / ${widget.minPoints} points${enough ? ' ✓' : ''}',
-                        style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.w600, fontSize: 12, color: AgroColors.forest),
+                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w600, fontSize: 13, color: AgroColors.forest),
                       ),
                     ),
                     TextButton(

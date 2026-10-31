@@ -14,6 +14,8 @@ import OnboardingView    from '@/views/OnboardingView.vue'
 import BlocksSetupView from '@/views/BlocksSetupView.vue'
 import ReviewConfirmView from '@/views/ReviewConfirmView.vue'
 
+const currentMonth = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }).toUpperCase()
+
 const routes = [
   // Public
   { path: '/',              name: 'landing',        component: LandingView,      meta: { public: true } },
@@ -22,9 +24,9 @@ const routes = [
   { path: '/setup-review',  name: 'setup-review',   component: ReviewConfirmView, meta: { public: true } },
 
   // App (require auth)
-  { path: '/dashboard',  name: 'dashboard',  component: DashboardView,  meta: { title: 'Farm Overview',  sub: 'JUNE 2025' } },
+  { path: '/dashboard',  name: 'dashboard',  component: DashboardView,  meta: { title: 'Farm Overview',  sub: currentMonth } },
   { path: '/activities', name: 'activities', component: ActivitiesView, meta: { title: 'Activities',     sub: 'ALL ACTIVITY LOGS' } },
-  { path: '/blocks',   name: 'blocks',   component: BlocksView,   meta: { title: 'Blocks',       sub: 'OYO STATE' } },
+  { path: '/blocks',   name: 'blocks',   component: BlocksView,   meta: { title: 'Blocks',       sub: 'FARM PLOTS' } },
   { path: '/finance',    name: 'finance',    component: FinanceView,    meta: { title: 'Finance',        sub: 'MONO SYNC',      feature: 'finance' } },
   { path: '/workers',    name: 'workers',    component: WorkersView,    meta: { title: 'Workers',        sub: 'WORKFORCE',      feature: 'workers' } },
   { path: '/reports',    name: 'reports',    component: ReportsView,    meta: { title: 'Reports',        sub: 'OPERATIONAL',    feature: 'reports' } },

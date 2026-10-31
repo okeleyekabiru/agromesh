@@ -47,7 +47,7 @@
     <div v-if="store.loading" class="loading-state">Loading inventory…</div>
     <div v-else-if="!filteredItems.length" class="card" style="padding:40px;text-align:center;">
       <div style="font-size:32px;margin-bottom:12px;">📦</div>
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:var(--forest);margin-bottom:4px;">No inventory items</div>
+      <div style="font-family: var(--font-sans);font-weight:700;font-size:16px;color:var(--forest);margin-bottom:4px;">No inventory items</div>
       <div style="font-size:12px;color:var(--stone);">Add items to track stock levels and get low-stock alerts.</div>
     </div>
     <div v-else class="card">
@@ -69,8 +69,8 @@
           </div>
           <div class="inv-meta">
             <span class="cat-badge">{{ item.categoryName }}</span>
-            <span v-if="item.chemicalProductName" style="color:var(--stone);font-size:10px;">· {{ item.chemicalProductName }}</span>
-            <span v-if="item.lastMovementDate" style="color:var(--stone);font-size:10px;">· last moved {{ formatDate(item.lastMovementDate) }}</span>
+            <span v-if="item.chemicalProductName" style="color:var(--stone);font-size: 11px;">· {{ item.chemicalProductName }}</span>
+            <span v-if="item.lastMovementDate" style="color:var(--stone);font-size: 11px;">· last moved {{ formatDate(item.lastMovementDate) }}</span>
           </div>
         </div>
         <div class="inv-stock">
@@ -676,7 +676,7 @@ onMounted(() => {
 .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
 .toolbar-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
 .filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.filter-pill { padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--fog); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; cursor: pointer; background: transparent; color: var(--stone); transition: all 0.15s; }
+.filter-pill { padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--fog); font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.08em; cursor: pointer; background: transparent; color: var(--stone); transition: all 0.15s; }
 .filter-pill:hover { border-color: var(--palm); color: var(--forest); }
 .filter-pill.active { background: var(--forest); border-color: var(--forest); color: white; }
 .loading-state { text-align: center; padding: 60px; color: var(--stone); font-size: 13px; }
@@ -686,29 +686,29 @@ onMounted(() => {
 .inv-icon { width: 36px; height: 36px; border-radius: 8px; background: var(--fog); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
 .inv-info { flex: 1; min-width: 0; }
 .inv-name { font-size: 13px; font-weight: 600; color: var(--forest); }
-.inv-price { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--leaf); margin-top: 2px; }
+.inv-price { font-family: var(--font-sans); font-size: 11px; color: var(--leaf); margin-top: 2px; }
 .inv-price.none { color: var(--harvest); }
 .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.opt { font-weight: 400; color: var(--stone); font-size: 10px; margin-left: 4px; }
+.opt { font-weight: 400; color: var(--stone); font-size: 11px; margin-left: 4px; }
 .check-row { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--ink, #223); margin-top: 4px; cursor: pointer; }
 .inv-meta { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
-.cat-badge { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 6px; background: var(--fog); border-radius: 4px; color: var(--stone); }
+.cat-badge { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 6px; background: var(--fog); border-radius: 4px; color: var(--stone); }
 .inv-stock { min-width: 160px; }
-.inv-stock-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--forest); }
+.inv-stock-num { font-family: var(--font-sans); font-size: 13px; font-weight: 600; color: var(--forest); }
 .inv-stock-num.low { color: var(--harvest); }
-.inv-unit { font-size: 10px; font-weight: 400; color: var(--stone); }
+.inv-unit { font-size: 11px; font-weight: 400; color: var(--stone); }
 .inv-bar-wrap { height: 4px; background: var(--fog); border-radius: 2px; margin: 4px 0; overflow: hidden; }
 .inv-bar { height: 100%; border-radius: 2px; transition: width 0.4s; }
-.inv-threshold { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--stone); }
+.inv-threshold { font-family: var(--font-sans); font-size: 11px; color: var(--stone); }
 .inv-badges { min-width: 80px; }
-.badge { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; padding: 2px 6px; border-radius: 4px; }
+.badge { display: inline-block; font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.1em; padding: 2px 6px; border-radius: 4px; }
 .badge-warn { background: #FFF0C0; color: #8A6000; border: 1px solid #F5D77B; }
 .inv-actions { display: flex; gap: 6px; flex-shrink: 0; }
 /* Modals (Adjust + Add Item share the same look) */
 .modal-overlay { position: fixed; inset: 0; background: rgba(10,26,16,0.6); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; }
 .modal { background: white; border-radius: 16px; width: 400px; max-height: 88vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(10,26,16,0.2); }
 .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--fog); display: flex; align-items: center; justify-content: space-between; }
-.modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; color: var(--forest); }
+.modal-title { font-family: var(--font-sans); font-weight: 700; font-size: 15px; color: var(--forest); }
 .modal-close { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--fog); background: transparent; cursor: pointer; font-size: 18px; color: var(--stone); }
 .modal-body { padding: 20px 24px; }
 .modal-footer { padding: 16px 24px; border-top: 1px solid var(--fog); display: flex; justify-content: space-between; }

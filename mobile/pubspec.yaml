@@ -39,7 +39,6 @@ dependencies:
   geolocator: ^11.0.0
 
   # UI extras
-  google_fonts: ^6.2.1
   flutter_svg: ^2.0.10+1
   url_launcher: ^6.3.3
   path_provider: ^2.1.6
@@ -54,3 +53,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: PlusJakartaSans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans-VariableFont_wght.ttf

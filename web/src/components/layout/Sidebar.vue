@@ -276,7 +276,7 @@ const navItems = computed(() =>
 }
 .logo-icon { flex-shrink: 0; }
 .logo-text {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 800;
   font-size: 19px;
   color: white;
@@ -349,8 +349,8 @@ const navItems = computed(() =>
 .farm-menu-item--active { color: #fff; font-weight: 600; }
 .farm-menu-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .farm-menu-draft {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 8px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   letter-spacing: 0.06em;
   padding: 1px 6px;
   border-radius: 4px;
@@ -376,8 +376,8 @@ const navItems = computed(() =>
 .farm-menu-add:hover { background: rgba(61,170,106,0.1); }
 
 .farm-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 8px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: rgba(107,124,114,0.7);
@@ -393,22 +393,22 @@ const navItems = computed(() =>
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--stone);
   margin-top: 2px;
 }
 .farm-sep { opacity: 0.4; }
 .farm-area {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-family: var(--font-sans);
+  font-size: 11px;
 }
 
 /* ── Nav ── */
 .sidebar-nav { flex: 1; padding: 8px 0 8px; overflow-y: auto; overflow-x: hidden; }
 
 .nav-block-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 8px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: rgba(107,124,114,0.55);
@@ -485,8 +485,8 @@ const navItems = computed(() =>
   border-radius: 9px;
   background: var(--harvest);
   color: var(--forest);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -517,14 +517,14 @@ const navItems = computed(() =>
 }
 .sync-info { display: flex; flex-direction: column; gap: 1px; }
 .sync-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 8px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   letter-spacing: 0.14em;
   color: var(--data);
 }
 .sync-time {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   color: rgba(255,255,255,0.5);
 }
 .sync-dot {
@@ -564,8 +564,8 @@ const navItems = computed(() =>
   text-overflow: ellipsis;
 }
 .user-email {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   color: var(--stone);
   white-space: nowrap;
   overflow: hidden;

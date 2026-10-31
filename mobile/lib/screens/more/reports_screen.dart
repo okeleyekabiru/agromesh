@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../services/api_client.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/widgets.dart';
@@ -78,7 +77,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               children: [
                 IconButton(onPressed: () => _shift(-1), icon: const Icon(Icons.chevron_left)),
                 Text('${_monthNames[_month - 1]} $_year',
-                    style: GoogleFonts.syne(fontSize: 15, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+                    style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 15, fontWeight: FontWeight.w700, color: AgroColors.forest)),
                 IconButton(onPressed: _isCurrent ? null : () => _shift(1), icon: const Icon(Icons.chevron_right)),
               ],
             ),
@@ -116,18 +115,18 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
-                                      Text(naira(t['amount'] as num?), style: GoogleFonts.jetBrainsMono(fontSize: 8, color: AgroColors.stone)),
+                                      Text(naira(t['amount'] as num?), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
                                       const SizedBox(height: 3),
                                       Container(
                                         height: maxTrend <= 0 ? 2 : (((t['amount'] as num?) ?? 0) / maxTrend * 80).clamp(2, 80).toDouble(),
                                         decoration: BoxDecoration(
-                                          color: (t['year'] == _year && t['month'] == _month) ? AgroColors.palm : AgroColors.leaf.withOpacity(0.45),
+                                          color: (t['year'] == _year && t['month'] == _month) ? AgroColors.palm : AgroColors.leaf.withValues(alpha: 0.45),
                                           borderRadius: BorderRadius.circular(3),
                                         ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(_short[(((t['month'] as num?) ?? 1).toInt() - 1).clamp(0, 11)],
-                                          style: GoogleFonts.inter(fontSize: 10, color: AgroColors.stone)),
+                                          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
                                     ],
                                   ),
                                 ),
@@ -149,8 +148,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: Row(children: [
-                        Expanded(child: Text('${_activityLabel('${a['activityType']}')} · ${a['count']}', style: GoogleFonts.inter(fontSize: 12.5, color: AgroColors.ink))),
-                        Text(naira(a['cost'] as num?), style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.w600, color: AgroColors.forest)),
+                        Expanded(child: Text('${_activityLabel('${a['activityType']}')} · ${a['count']}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.ink))),
+                        Text(naira(a['cost'] as num?), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w600, color: AgroColors.forest)),
                       ]),
                     ),
                 ],
@@ -169,9 +168,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(children: [
-                            Expanded(child: Text('${c['label']}', style: GoogleFonts.inter(fontSize: 12.5, color: AgroColors.ink))),
+                            Expanded(child: Text('${c['label']}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.ink))),
                             Text('${naira(c['amount'] as num?)} · ${num1(c['percent'] as num?, 0)}%',
-                                style: GoogleFonts.jetBrainsMono(fontSize: 11, color: AgroColors.stone)),
+                                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
                           ]),
                           const SizedBox(height: 4),
                           ClipRRect(
@@ -203,16 +202,16 @@ class _ReportsScreenState extends State<ReportsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('${b['blockName']}', style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+                              Text('${b['blockName']}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, fontWeight: FontWeight.w600, color: AgroColors.ink)),
                               Text('${num1(b['area'] as num?, 2)} $unit · ${b['activityCount'] ?? 0} activities',
-                                  style: GoogleFonts.inter(fontSize: 11, color: AgroColors.stone)),
+                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
                             ],
                           ),
                         ),
                         Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                          Text(naira(b['cost'] as num?), style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.w600, color: AgroColors.forest)),
+                          Text(naira(b['cost'] as num?), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w600, color: AgroColors.forest)),
                           Text(b['costPerArea'] == null ? '—' : '${naira(b['costPerArea'] as num?)}/$unit',
-                              style: GoogleFonts.jetBrainsMono(fontSize: 10, color: AgroColors.stone)),
+                              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
                         ]),
                       ]),
                     ),

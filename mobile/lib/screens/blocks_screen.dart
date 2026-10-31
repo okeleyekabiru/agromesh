@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../stores/app_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/widgets.dart';
@@ -68,7 +67,7 @@ class _BlocksScreenState extends State<BlocksScreen> {
         backgroundColor: store.isOnline ? AgroColors.leaf : AgroColors.stone,
         foregroundColor: AgroColors.white,
         icon: const Icon(Icons.add),
-        label: const Text('Add Block', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+        label: const Text('Add Block', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
       ),
       body: RefreshIndicator(
         color: AgroColors.palm,
@@ -81,18 +80,18 @@ class _BlocksScreenState extends State<BlocksScreen> {
               Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: AgroColors.harvest.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(color: AgroColors.harvest.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                 child: Row(
                   children: [
                     const Icon(Icons.info_outline, size: 14, color: AgroColors.harvest),
                     const SizedBox(width: 8),
-                    Expanded(child: Text(store.blocksError!, style: const TextStyle(fontSize: 12, color: AgroColors.ink))),
+                    Expanded(child: Text(store.blocksError!, style: const TextStyle(fontSize: 13, color: AgroColors.ink))),
                   ],
                 ),
               ),
             if (_progress.isNotEmpty) ...[
               Text('Blocks in progress (${_progress.length})',
-                  style: GoogleFonts.syne(fontSize: 13, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
               const SizedBox(height: 8),
               for (final p in _progress)
                 Padding(
@@ -111,8 +110,8 @@ class _BlocksScreenState extends State<BlocksScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(children: [
-                            Expanded(child: Text('${p['blockName']}', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700))),
-                            Text(_typeLabel(p['activityType']), style: GoogleFonts.inter(fontSize: 11, color: AgroColors.leaf, fontWeight: FontWeight.w600)),
+                            Expanded(child: Text('${p['blockName']}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700))),
+                            Text(_typeLabel(p['activityType']), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.leaf, fontWeight: FontWeight.w600)),
                           ]),
                           const SizedBox(height: 6),
                           LinearProgressIndicator(
@@ -124,7 +123,7 @@ class _BlocksScreenState extends State<BlocksScreen> {
                           const SizedBox(height: 4),
                           Text(
                             '${p['percent']}% · ${((p['coveredHectares'] as num?) ?? 0).toStringAsFixed(2)} of ${((p['blockHectares'] as num?) ?? 0).toStringAsFixed(2)} ha',
-                            style: GoogleFonts.inter(fontSize: 11, color: AgroColors.stone),
+                            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone),
                           ),
                         ],
                       ),
@@ -140,25 +139,25 @@ class _BlocksScreenState extends State<BlocksScreen> {
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(color: AgroColors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: AgroColors.fog)),
-                child: Row(children: [
-                  const Text('🛰️', style: TextStyle(fontSize: 16)),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text('Satellite crop monitoring', style: GoogleFonts.inter(fontSize: 12.5, color: AgroColors.ink))),
-                  const Icon(Icons.chevron_right, size: 18, color: AgroColors.stone),
+                child: const Row(children: [
+                  Text('🛰️', style: TextStyle(fontSize: 16)),
+                  SizedBox(width: 8),
+                  Expanded(child: Text('Satellite crop monitoring', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.ink))),
+                  Icon(Icons.chevron_right, size: 18, color: AgroColors.stone),
                 ]),
               ),
             ),
             if (store.blocks.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 48),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 48),
                 child: Column(
                   children: [
-                    const Icon(Icons.grass_outlined, size: 40, color: AgroColors.fog),
-                    const SizedBox(height: 12),
-                    Text('No blocks yet', style: GoogleFonts.syne(fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
-                    const SizedBox(height: 4),
+                    Icon(Icons.grass_outlined, size: 40, color: AgroColors.fog),
+                    SizedBox(height: 12),
+                    Text('No blocks yet', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+                    SizedBox(height: 4),
                     Text('Tap Add Block to start tracking one here.',
-                      style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone), textAlign: TextAlign.center),
+                      style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone), textAlign: TextAlign.center),
                   ],
                 ),
               )
@@ -265,8 +264,8 @@ class _Row extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label.toUpperCase(), style: GoogleFonts.jetBrainsMono(fontSize: 9, color: AgroColors.stone, letterSpacing: 0.8)),
-          Text(value, style: GoogleFonts.jetBrainsMono(fontSize: 10, fontWeight: FontWeight.w500, color: AgroColors.forest)),
+          Text(label.toUpperCase(), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone, letterSpacing: 0.8)),
+          Text(value, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w500, color: AgroColors.forest)),
         ],
       ),
     );

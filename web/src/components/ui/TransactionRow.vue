@@ -111,8 +111,8 @@ function formatDate(iso: string) {
   text-overflow: ellipsis;
 }
 .txn-meta {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   color: var(--stone);
   margin-top: 2px;
 }
@@ -121,10 +121,10 @@ function formatDate(iso: string) {
 .txn-row.clickable:hover { background: rgba(45,122,79,0.04); }
 .txn-actions { flex-basis: 100%; padding: 8px 0 0 40px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .txn-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.txn-alloc { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--stone); }
+.txn-alloc { font-family: var(--font-sans); font-size: 11px; color: var(--stone); }
 .txn-badges { display: flex; gap: 6px; }
 .txn-amount {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 700;
   font-size: 13px;
   color: var(--forest);

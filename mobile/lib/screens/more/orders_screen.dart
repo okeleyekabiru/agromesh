@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../services/api_client.dart';
@@ -40,13 +39,13 @@ class OrdersScreen extends StatelessWidget {
                           Expanded(
                             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               Text('${o['reference'] ?? ''}'.isEmpty ? '${o['supplierName']}' : '${o['reference']} · ${o['supplierName']}',
-                                  style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13.5, fontWeight: FontWeight.w600, color: AgroColors.ink)),
                               const SizedBox(height: 2),
-                              Text(dateText(o['createdAt']), style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.stone)),
+                              Text(dateText(o['createdAt']), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
                             ]),
                           ),
                           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                            Text(naira(dbl(o['total'])), style: GoogleFonts.jetBrainsMono(fontSize: 12, color: AgroColors.forest)),
+                            Text(naira(dbl(o['total'])), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.forest)),
                             Row(mainAxisSize: MainAxisSize.min, children: [
                               statusBadge('${o['status']}'),
                               if (o['isPaid'] == true) ...[const SizedBox(width: 4), const AgroBadge(label: 'Paid', variant: AgroBadgeVariant.green)],
@@ -134,9 +133,9 @@ class _OrderDetailState extends State<_OrderDetail> {
         Padding(
           padding: const EdgeInsets.only(top: 6),
           child: Text('Pay by bank transfer and put ${o['reference']} in the narration. It is marked paid when the bank sync matches it.',
-              style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.stone)),
+              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
         ),
-      if (_error != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_error!, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.alert))),
+      if (_error != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert))),
       const SizedBox(height: 12),
       OutlinedButton.icon(
         onPressed: _invoicing ? null : _invoice,
@@ -215,7 +214,7 @@ class _NewOrderState extends State<_NewOrder> {
     return Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
       sheetTitle('New order', 'Saved as a draft. Place it from the order.'),
       DropdownButtonFormField<String>(
-        value: _supplier,
+        initialValue: _supplier,
         decoration: const InputDecoration(labelText: 'Supplier', border: OutlineInputBorder()),
         items: [for (final s in _suppliers) DropdownMenuItem(value: '${s['id']}', child: Text('${s['name']}'))],
         onChanged: (v) => setState(() => _supplier = v),
@@ -224,7 +223,7 @@ class _NewOrderState extends State<_NewOrder> {
       textField(_newSupplier, 'Or a new supplier name'),
       for (var n = 0; n < _lines.length; n++) ...[
         DropdownButtonFormField<String>(
-          value: _lines[n].itemId,
+          initialValue: _lines[n].itemId,
           isExpanded: true,
           decoration: InputDecoration(labelText: 'Item ${n + 1}', border: const OutlineInputBorder()),
           items: [for (final i in _items) DropdownMenuItem(value: '${i['id']}', child: Text('${i['name']} (${i['unit']})'))],
@@ -238,7 +237,7 @@ class _NewOrderState extends State<_NewOrder> {
         ]),
       ],
       TextButton.icon(onPressed: () => setState(() => _lines.add(_Line())), icon: const Icon(Icons.add), label: const Text('Add line')),
-      if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.alert))),
+      if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert))),
       primaryButton('Create order', _submit, busy: _busy),
     ]);
   }

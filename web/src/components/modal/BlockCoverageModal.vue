@@ -213,7 +213,7 @@ watch(type, load)
 </script>
 
 <style>
-.sec-num span { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; color: #fff; font: 700 11px 'JetBrains Mono', monospace; border: 2px solid #fff; }
+.sec-num span { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; color: #fff; font: 700 11px var(--font-sans); border: 2px solid #fff; }
 </style>
 
 <style scoped>
@@ -223,14 +223,14 @@ watch(type, load)
 }
 .modal { background: white; border-radius: 16px; width: 640px; max-width: 100%; box-shadow: 0 24px 64px rgba(10,26,16,0.2); }
 .modal-header { padding: 18px 24px 14px; border-bottom: 1px solid var(--fog); display: flex; align-items: center; justify-content: space-between; }
-.modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; color: var(--forest); }
+.modal-title { font-family: var(--font-sans); font-weight: 700; font-size: 15px; color: var(--forest); }
 .modal-close-inline { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--fog); background: transparent; cursor: pointer; font-size: 18px; color: var(--stone); }
 .modal-body { padding: 16px 24px 22px; }
 .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
 .tab { border: 1.5px solid var(--fog); background: transparent; border-radius: 20px; padding: 5px 14px; font-size: 12px; cursor: pointer; color: var(--stone); }
 .tab.on { border-color: var(--palm); background: rgba(45,122,79,0.1); color: var(--forest); font-weight: 600; }
 .summary { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
-.pct { font-family: 'JetBrains Mono', monospace; font-size: 30px; font-weight: 600; color: var(--forest); min-width: 84px; }
+.pct { font-family: var(--font-sans); font-size: 30px; font-weight: 600; color: var(--forest); min-width: 84px; }
 .sum-text { font-size: 12.5px; color: var(--forest); line-height: 1.6; }
 .map { height: 360px; border-radius: 10px; overflow: hidden; border: 1px solid var(--fog); }
 .legend { display: flex; gap: 16px; font-size: 12px; color: var(--stone); margin-top: 8px; }
@@ -247,8 +247,8 @@ watch(type, load)
 .sections-title { font-size: 11.5px; color: var(--stone); margin-bottom: 6px; }
 .section-row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 1px solid var(--fog); background: transparent; border-radius: 8px; padding: 6px 10px; margin-bottom: 4px; font-size: 12.5px; color: var(--forest); cursor: pointer; }
 .section-row.on { border-color: var(--palm); background: rgba(45,122,79,0.08); }
-.num { width: 20px; height: 20px; border-radius: 50%; color: #fff; font: 700 11px 'JetBrains Mono', monospace; display: inline-flex; align-items: center; justify-content: center; }
-.ha { margin-left: auto; font-family: 'JetBrains Mono', monospace; color: var(--stone); }
+.num { width: 20px; height: 20px; border-radius: 50%; color: #fff; font: 700 11px var(--font-sans); display: inline-flex; align-items: center; justify-content: center; }
+.ha { margin-left: auto; font-family: var(--font-sans); color: var(--stone); }
 .note { font-size: 12.5px; color: var(--stone); padding: 8px 0; }
 .error-msg { font-size: 12px; color: var(--alert); }
 </style>

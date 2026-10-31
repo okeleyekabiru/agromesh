@@ -6,7 +6,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'package:agromesh_mobile/screens/auth/login_screen.dart';
@@ -16,11 +15,6 @@ import 'package:agromesh_mobile/theme/app_theme.dart';
 import 'package:agromesh_mobile/widgets/widgets.dart';
 
 void main() {
-  // Avoid GoogleFonts trying to fetch font files over the network during tests.
-  setUpAll(() {
-    GoogleFonts.config.allowRuntimeFetching = false;
-  });
-
   testWidgets('LoginScreen renders email/password fields and a Log In button', (tester) async {
     await tester.pumpWidget(
       ChangeNotifierProvider<AuthStore>(
@@ -37,7 +31,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: AgroTheme.theme,
-        home: BoundaryCaptureScreen(blockId: 'sec_1', blockName: 'Test Section'),
+        home: const BoundaryCaptureScreen(blockId: 'sec_1', blockName: 'Test Section'),
       ),
     );
 

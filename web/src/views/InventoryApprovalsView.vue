@@ -50,7 +50,7 @@
     <div v-if="loading" class="loading-state">Loading pending adjustments…</div>
     <div v-else-if="!store.pendingAdjustments.length && !store.pendingPriceChanges.length" class="card" style="padding:40px;text-align:center;">
       <div style="font-size:32px;margin-bottom:12px;">✅</div>
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:var(--forest);margin-bottom:4px;">No pending adjustments</div>
+      <div style="font-family: var(--font-sans);font-weight:700;font-size:16px;color:var(--forest);margin-bottom:4px;">No pending adjustments</div>
       <div style="font-size:12px;color:var(--stone);">Stock adjustment requests will show up here for review.</div>
     </div>
     <div v-else-if="store.pendingAdjustments.length" class="card">
@@ -166,7 +166,7 @@ onMounted(async () => {
 .approval-info { flex: 1; min-width: 220px; }
 .approval-item-name { font-size: 13px; font-weight: 600; color: var(--forest); }
 .approval-meta { margin-top: 2px; }
-.approval-qty { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--forest); }
+.approval-qty { font-family: var(--font-sans); font-size: 12px; color: var(--forest); }
 .approval-notes { margin-top: 4px; font-size: 11.5px; color: var(--stone); font-style: italic; }
 .approval-actions { display: flex; gap: 6px; flex-shrink: 0; }
 .error-msg { font-size: 11.5px; color: var(--alert); line-height: 1.5; }

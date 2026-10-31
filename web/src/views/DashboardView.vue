@@ -522,7 +522,7 @@ onMounted(async () => {
   margin-bottom: 16px;
 }
 .hero-name {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 700;
   font-size: 18px;
   color: #fff;
@@ -533,8 +533,8 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   color: rgba(255,255,255,0.45);
   margin-top: 5px;
 }
@@ -548,14 +548,14 @@ onMounted(async () => {
 @keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:0.35; } }
 .hero-wx { text-align: right; }
 .hero-temp {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 700; font-size: 34px;
   color: #fff; line-height: 1;
 }
 .hero-deg { font-size: 18px; font-weight: 400; }
 .hero-season {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-size: 11px; text-transform: uppercase;
   letter-spacing: 0.1em; color: rgba(255,255,255,0.45);
   margin-top: 5px;
 }
@@ -581,20 +581,20 @@ onMounted(async () => {
   margin-bottom: 8px;
 }
 .kpi-lbl-inv {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-size: 11px; text-transform: uppercase;
   letter-spacing: 0.12em; color: rgba(255,255,255,0.4);
 }
 .kpi-spark { width: 80px; height: 28px; flex-shrink: 0; }
 .kpi-val-inv {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 700; font-size: 30px;
   color: #fff; letter-spacing: -0.03em;
   line-height: 1; margin-bottom: 6px;
 }
 .kpi-sub-inv {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; color: rgba(255,255,255,0.4);
+  font-family: var(--font-sans);
+  font-size: 11px; color: rgba(255,255,255,0.4);
 }
 
 /* Small KPI cards */
@@ -606,13 +606,13 @@ onMounted(async () => {
 }
 .kpi-card-sm.kpi-warn { border-color: rgba(232,168,56,0.35); background: #FFFEF5; }
 .kpi-lbl {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-size: 11px; text-transform: uppercase;
   letter-spacing: 0.12em; color: var(--stone);
   margin-bottom: 8px;
 }
 .kpi-val {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 700; font-size: 26px;
   color: var(--forest); letter-spacing: -0.02em;
   line-height: 1; margin-bottom: 5px;
@@ -626,13 +626,13 @@ onMounted(async () => {
 .forecast-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; padding: 12px 16px 16px; }
 .fc-day { text-align: center; padding: 10px 4px; border-radius: 10px; border: 1px solid var(--fog); }
 .fc-day.today { border-color: var(--palm); background: rgba(45,122,79,0.06); }
-.fc-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 12px; color: var(--forest); }
-.fc-date { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--stone); }
+.fc-name { font-family: var(--font-sans); font-weight: 700; font-size: 12px; color: var(--forest); }
+.fc-date { font-family: var(--font-sans); font-size: 11px; color: var(--stone); }
 .fc-icon { font-size: 26px; margin: 6px 0 2px; }
 .fc-temp { font-weight: 600; font-size: 13px; color: var(--forest); }
 .fc-temp span { color: var(--stone); font-weight: 400; }
-.fc-rain, .fc-wind { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--stone); margin-top: 2px; }
-.fc-spray { margin-top: 6px; font-size: 10px; color: var(--fog); }
+.fc-rain, .fc-wind { font-family: var(--font-sans); font-size: 11px; color: var(--stone); margin-top: 2px; }
+.fc-spray { margin-top: 6px; font-size: 11px; color: var(--fog); }
 .fc-spray.ok { color: var(--leaf); font-weight: 600; }
 @media (max-width: 900px) { .forecast-row { grid-template-columns: repeat(4, 1fr); } }
 
@@ -649,22 +649,22 @@ onMounted(async () => {
 .bars { display: flex; align-items: flex-end; justify-content: space-around; height: 96px; padding: 0 4px; }
 .bar-col { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
 .bar-fill { width: 70%; border-radius: 5px; background: var(--fog); transition: filter .15s; }
-.bar-val { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--stone); margin-bottom: 4px; }
+.bar-val { font-family: var(--font-sans); font-size: 11px; color: var(--stone); margin-bottom: 4px; }
 .bar-val.cur { color: var(--leaf); }
 .bar-fill.cur { background: var(--leaf); }
 .bar-col:hover .bar-fill { filter: brightness(0.9); }
 .bar-tip {
   position: absolute; bottom: calc(100% + 2px); left: 50%; transform: translateX(-50%);
   background: var(--forest, #1a2e1a); color: #fff; padding: 3px 8px; border-radius: 6px;
-  font-family: 'JetBrains Mono', monospace; font-size: 10px; white-space: nowrap;
+  font-family: var(--font-sans); font-size: 11px; white-space: nowrap;
   opacity: 0; pointer-events: none; transition: opacity .12s; z-index: 5;
 }
 .bar-col:hover .bar-tip { opacity: 1; }
 .bar-months {
   display: flex;
   justify-content: space-around;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: var(--stone);
+  font-family: var(--font-sans);
+  font-size: 11px; color: var(--stone);
   margin-top: 6px; padding: 0 4px;
 }
 .bar-months span { flex: 1; text-align: center; }
@@ -693,20 +693,20 @@ onMounted(async () => {
 .task-body { flex: 1; min-width: 0; }
 .task-head { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
 .task-sec  { font-size: 12px; font-weight: 600; color: var(--forest); }
-.task-arr  { font-size: 10px; color: var(--stone); }
+.task-arr  { font-size: 11px; color: var(--stone); }
 .task-type { font-size: 12px; color: var(--leaf); font-weight: 500; }
 .task-badge {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; letter-spacing: 0.05em;
+  font-family: var(--font-sans);
+  font-size: 11px; letter-spacing: 0.05em;
   padding: 2px 6px; border-radius: 4px;
 }
 .task-badge.ok      { background: rgba(61,170,106,0.1);  color: var(--leaf); }
 .task-badge.soon    { background: #FFF0C0; color: #8A6000; }
 .task-badge.overdue { background: #FEECEC; color: #C62828; }
-.task-reason { font-size: 10px; color: var(--stone); font-style: italic; margin-top: 3px; }
-.task-chem   { font-size: 10px; color: var(--stone); margin-top: 3px; }
-.task-stock  { font-family: 'JetBrains Mono', monospace; font-size: 9px; }
-.no-wx       { font-size: 10px; cursor: help; opacity: 0.55; }
+.task-reason { font-size: 11px; color: var(--stone); font-style: italic; margin-top: 3px; }
+.task-chem   { font-size: 11px; color: var(--stone); margin-top: 3px; }
+.task-stock  { font-family: var(--font-sans); font-size: 11px; }
+.no-wx       { font-size: 11px; cursor: help; opacity: 0.55; }
 
 /* ── 3-col: Weather + Blocks + Crop P&L ────────────────────────────── */
 .grid-3 {
@@ -726,15 +726,15 @@ onMounted(async () => {
 }
 .wx-head > div:first-child { min-width: 0; flex: 1; }
 .wx-temp {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 700; font-size: 36px;
   color: var(--forest); line-height: 1; flex-shrink: 0;
 }
 .wx-deg { font-size: 16px; font-weight: 500; }
 .season-chip {
   display: inline-block;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 8px; text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-size: 11px; text-transform: uppercase;
   letter-spacing: 0.1em; padding: 3px 8px;
   background: rgba(45,122,79,0.07);
   border: 1px solid rgba(45,122,79,0.18);
@@ -743,7 +743,7 @@ onMounted(async () => {
 }
 .wx-stats { display: flex; flex-wrap: wrap; gap: 12px 20px; padding: 14px 18px; border-bottom: 1px solid var(--fog); }
 .wx-stat-val {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 15px; font-weight: 600; color: var(--forest);
   margin-top: 2px;
 }
@@ -754,7 +754,7 @@ onMounted(async () => {
   border: 1px solid rgba(45,122,79,0.13);
   border-radius: 8px; padding: 10px 12px;
 }
-.wx-spray-lbl { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--stone); }
+.wx-spray-lbl { font-family: var(--font-sans); font-size: 11px; color: var(--stone); }
 .wx-spray-dates { overflow-wrap: anywhere; font-size: 11px; font-weight: 600; color: var(--forest); margin-top: 1px; }
 .wx-empty {
   display: flex; flex-direction: column;
@@ -786,8 +786,8 @@ onMounted(async () => {
   transition: width 0.5s ease;
 }
 .sec-amt {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; font-weight: 600; color: var(--forest);
+  font-family: var(--font-sans);
+  font-size: 11px; font-weight: 600; color: var(--forest);
   flex-shrink: 0; min-width: 58px; text-align: right;
 }
 
@@ -799,16 +799,16 @@ onMounted(async () => {
 .pnl-item { display: flex; align-items: flex-start; gap: 8px; }
 .pnl-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
 .pnl-crop {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-size: 11px; text-transform: uppercase;
   letter-spacing: 0.1em; color: var(--stone);
 }
 .pnl-cost {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 700; font-size: 16px; color: var(--forest);
   margin-top: 1px;
 }
-.pnl-profit { font-size: 10px; margin-top: 1px; }
+.pnl-profit { font-size: 11px; margin-top: 1px; }
 .profit-up { color: var(--palm); }
 .profit-dn { color: var(--alert); }
 
@@ -817,8 +817,8 @@ onMounted(async () => {
 
 /* Card label (mono secondary label used in card headers) */
 .card-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-size: 11px; text-transform: uppercase;
   letter-spacing: 0.1em; color: var(--stone);
 }
 

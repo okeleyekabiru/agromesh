@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../models/models.dart';
 import '../../stores/auth_store.dart';
 import '../../theme/app_theme.dart';
@@ -35,7 +34,7 @@ class SelectFarmScreen extends StatelessWidget {
                       title: Text(farm.name, style: Theme.of(context).textTheme.titleMedium),
                       subtitle: Text(
                         farm.setupStatus == FarmSetupStatus.configured ? 'Configured' : 'Draft',
-                        style: GoogleFonts.jetBrainsMono(fontSize: 9, color: AgroColors.stone),
+                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone),
                       ),
                       trailing: const Icon(Icons.chevron_right, color: AgroColors.stone),
                       onTap: () => context.read<AuthStore>().selectFarm(farm),

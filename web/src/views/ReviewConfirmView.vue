@@ -127,15 +127,15 @@ onMounted(async () => {
   padding: 24px 32px 20px;
 }
 .review-logo {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 700;
   font-size: 20px;
   color: #fff;
   letter-spacing: -0.01em;
 }
 .review-subtitle {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(255,255,255,0.6);
@@ -144,7 +144,7 @@ onMounted(async () => {
 
 .review-body { padding: 24px 32px 32px; }
 .review-title {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-size: 18px;
   font-weight: 700;
   color: var(--forest);
@@ -161,11 +161,11 @@ onMounted(async () => {
   margin-bottom: 16px;
 }
 .summary-row { display: flex; justify-content: space-between; padding: 4px 0; }
-.summary-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--stone); }
+.summary-label { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--stone); }
 .summary-value { font-size: 12.5px; font-weight: 600; color: var(--forest); }
 
 .blocks-list { margin-bottom: 16px; }
-.blocks-list-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--stone); margin-bottom: 8px; }
+.blocks-list-label { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--stone); margin-bottom: 8px; }
 .blocks-empty { font-size: 12px; color: var(--stone); padding: 12px; text-align: center; background: var(--mist); border-radius: 8px; }
 .block-row {
   display: flex; align-items: center; justify-content: space-between;
@@ -176,11 +176,11 @@ onMounted(async () => {
 }
 .block-row-name { font-size: 12.5px; font-weight: 600; color: var(--forest); }
 .block-row-meta { display: flex; align-items: center; gap: 8px; }
-.block-row-area { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--stone); }
+.block-row-area { font-family: var(--font-sans); font-size: 11px; color: var(--stone); }
 
 .boundary-src-badge {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 8px; padding: 2px 7px; border-radius: 4px;
+  font-family: var(--font-sans);
+  font-size: 11px; padding: 2px 7px; border-radius: 4px;
   text-transform: uppercase; letter-spacing: 0.05em;
 }
 .boundary-src-badge.src-gps    { background: rgba(61,170,106,0.12); color: #2d7a4f; }

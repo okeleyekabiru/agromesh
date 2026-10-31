@@ -96,7 +96,7 @@ async function submit() {
 .modal-overlay { position: fixed; inset: 0; background: rgba(10,26,16,0.6); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: center; justify-content: center; }
 .modal { background: white; border-radius: 16px; width: 400px; max-width: calc(100vw - 32px); box-shadow: 0 24px 64px rgba(10,26,16,0.2); }
 .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--fog); display: flex; align-items: center; justify-content: space-between; }
-.modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; color: var(--forest); }
+.modal-title { font-family: var(--font-sans); font-weight: 700; font-size: 15px; color: var(--forest); }
 .modal-close { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--fog); background: transparent; cursor: pointer; font-size: 18px; color: var(--stone); }
 .modal-body { padding: 20px 24px; }
 .modal-footer { padding: 16px 24px; border-top: 1px solid var(--fog); display: flex; justify-content: space-between; }

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../services/api_client.dart';
@@ -225,17 +224,17 @@ class _BoundaryCaptureScreenState extends State<BoundaryCaptureScreen> {
                     acc == null
                         ? 'Waiting for GPS…'
                         : 'GPS accuracy about ${acc.round()} m${acc <= _goodAccuracyM ? ' · good' : acc <= 25 ? ' · fair, wait a moment' : ' · poor, move to open sky'}',
-                    style: GoogleFonts.inter(fontSize: 12, color: accColor, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: accColor, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 4, 16, 0),
             child: Text(
               'Walk to each corner, in order around the edge, and tap "Mark Corner Here". Stand still on the corner for a few seconds first. At least $_minPoints corners.',
-              style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.stone),
+              style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone),
             ),
           ),
           Expanded(
@@ -248,7 +247,7 @@ class _BoundaryCaptureScreenState extends State<BoundaryCaptureScreen> {
               ),
               clipBehavior: Clip.antiAlias,
               child: _points.isEmpty && _existing.isEmpty
-                  ? Center(child: Text('No corners marked yet', style: GoogleFonts.inter(color: AgroColors.stone, fontSize: 13)))
+                  ? const Center(child: Text('No corners marked yet', style: TextStyle(fontFamily: 'PlusJakartaSans', color: AgroColors.stone, fontSize: 14)))
                   : SizedBox.expand(
                       child: CustomPaint(
                         painter: BoundarySchematicPainter(
@@ -279,7 +278,7 @@ class _BoundaryCaptureScreenState extends State<BoundaryCaptureScreen> {
                       child: Text(
                         '${_points.length} corner${_points.length == 1 ? '' : 's'} marked'
                         '${_points.length >= 3 ? ' · about ${_areaHa.toStringAsFixed(2)} ha' : ''}',
-                        style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.w600, fontSize: 12, color: AgroColors.forest),
+                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w600, fontSize: 13, color: AgroColors.forest),
                       ),
                     ),
                     if (_points.isNotEmpty)
@@ -398,7 +397,7 @@ class BoundarySchematicPainter extends CustomPainter {
       }
       if (cp.length >= 3) {
         path.close();
-        canvas.drawPath(path, Paint()..color = AgroColors.palm.withOpacity(0.14));
+        canvas.drawPath(path, Paint()..color = AgroColors.palm.withValues(alpha: 0.14));
       }
       canvas.drawPath(path, Paint()
         ..color = AgroColors.leaf
@@ -422,7 +421,7 @@ class BoundarySchematicPainter extends CustomPainter {
 
     if (cm != null) {
       final c = toCanvas(cm);
-      canvas.drawCircle(c, 9, Paint()..color = const Color(0xFF2F80ED).withOpacity(0.22));
+      canvas.drawCircle(c, 9, Paint()..color = const Color(0xFF2F80ED).withValues(alpha: 0.22));
       canvas.drawCircle(c, 5, Paint()..color = const Color(0xFF2F80ED));
       canvas.drawCircle(c, 5, Paint()
         ..color = Colors.white
@@ -466,14 +465,14 @@ class BoundarySchematicPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     )..layout();
     final r = Rect.fromCenter(center: center, width: tp.width + 6, height: tp.height + 2);
-    if (plate) canvas.drawRRect(RRect.fromRectAndRadius(r, const Radius.circular(3)), Paint()..color = Colors.white.withOpacity(0.85));
+    if (plate) canvas.drawRRect(RRect.fromRectAndRadius(r, const Radius.circular(3)), Paint()..color = Colors.white.withValues(alpha: 0.85));
     tp.paint(canvas, center - Offset(tp.width / 2, tp.height / 2));
   }
 
   void _dot(Canvas canvas, Offset center, String label) {
     canvas.drawCircle(center, 8, Paint()..color = AgroColors.forest);
     final tp = TextPainter(
-      text: TextSpan(text: label, style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+      text: TextSpan(text: label, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
       textDirection: TextDirection.ltr,
     )..layout();
     tp.paint(canvas, center - Offset(tp.width / 2, tp.height / 2));

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../models/models.dart';
 import '../services/api_client.dart';
 import '../theme/app_theme.dart';
@@ -111,7 +110,7 @@ class _CoverageSheetState extends State<_CoverageSheet> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('${widget.block.name} · work progress',
-                style: GoogleFonts.syne(fontSize: 16, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 16, fontWeight: FontWeight.w700, color: AgroColors.forest)),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
@@ -128,12 +127,12 @@ class _CoverageSheetState extends State<_CoverageSheet> {
               if (_loading)
                 const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()))
               else if (_error != null)
-                Text(_error!, style: const TextStyle(color: AgroColors.alert, fontSize: 12))
+                Text(_error!, style: const TextStyle(color: AgroColors.alert, fontSize: 13))
               else if (c != null) ...[
                 Row(
                   children: [
                     Text(c.hasBoundary ? '${c.percent.toStringAsFixed(0)}%' : '—',
-                      style: GoogleFonts.jetBrainsMono(fontSize: 28, fontWeight: FontWeight.w600, color: AgroColors.forest)),
+                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 28, fontWeight: FontWeight.w600, color: AgroColors.forest)),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -141,14 +140,14 @@ class _CoverageSheetState extends State<_CoverageSheet> {
                         children: [
                           Text(
                             c.status == 'Complete' ? 'Cycle complete' : c.status == 'InProgress' ? 'In progress' : 'Not started this cycle',
-                            style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700),
+                            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700),
                           ),
                           if (c.hasBoundary)
                             Text('${c.coveredHectares.toStringAsFixed(2)} ha done · ${(c.remainingHectares ?? 0).toStringAsFixed(2)} ha left',
-                              style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
+                              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
                           if (c.lastWorkedOn != null)
                             Text('Started ${_date(c.cycleStartedOn)} · last worked ${_date(c.lastWorkedOn)}',
-                              style: GoogleFonts.inter(fontSize: 11, color: AgroColors.stone)),
+                              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
                         ],
                       ),
                     ),
@@ -168,28 +167,28 @@ class _CoverageSheetState extends State<_CoverageSheet> {
                     children: [
                       Container(width: 12, height: 12, decoration: BoxDecoration(color: const Color(0xFF3FB56D), borderRadius: BorderRadius.circular(3))),
                       const SizedBox(width: 6),
-                      Text('Done', style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
+                      const Text('Done', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
                       const SizedBox(width: 16),
                       Container(width: 12, height: 12, decoration: BoxDecoration(color: const Color(0xFFF5A623), borderRadius: BorderRadius.circular(3))),
                       const SizedBox(width: 6),
-                      Text('Left to do', style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
+                      const Text('Left to do', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
                     ],
                   ),
                   if (c.sections.isNotEmpty) ...[
                     const SizedBox(height: 10),
                     Text('Areas marked this cycle (${c.sections.length})',
-                      style: GoogleFonts.inter(fontSize: 11, color: AgroColors.stone)),
+                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
                     for (final s in c.sections)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Row(
                           children: [
                             CircleAvatar(radius: 9, backgroundColor: _sectionColour(s.number),
-                              child: Text('${s.number}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700))),
+                              child: Text('${s.number}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700))),
                             const SizedBox(width: 10),
-                            Text(_date(s.date), style: GoogleFonts.inter(fontSize: 12.5)),
+                            Text(_date(s.date), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5)),
                             const Spacer(),
-                            Text('${s.hectares.toStringAsFixed(2)} ha', style: GoogleFonts.jetBrainsMono(fontSize: 12, color: AgroColors.stone)),
+                            Text('${s.hectares.toStringAsFixed(2)} ha', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
                           ],
                         ),
                       ),
@@ -200,12 +199,12 @@ class _CoverageSheetState extends State<_CoverageSheet> {
                       onPressed: _forcing ? null : _forceComplete,
                       child: Text(_forcing ? 'Saving…' : 'Mark as complete'),
                     ),
-                    Text('Use when the work is finished but the marked areas fall a little short of the block.',
-                      style: GoogleFonts.inter(fontSize: 11, color: AgroColors.stone)),
+                    const Text('Use when the work is finished but the marked areas fall a little short of the block.',
+                      style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
                   ],
                 ] else
-                  Text('This block has no boundary yet, so what is done and what is left cannot be drawn.',
-                    style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
+                  const Text('This block has no boundary yet, so what is done and what is left cannot be drawn.',
+                    style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
               ],
             ],
           ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../services/api_client.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/widgets.dart';
@@ -69,7 +68,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                   Padding(
                     padding: const EdgeInsets.all(32),
                     child: Column(children: [
-                      Text(_error!, textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 13, color: AgroColors.stone)),
+                      Text(_error!, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.stone)),
                       const SizedBox(height: 12),
                       OutlinedButton(onPressed: () => _load(reset: true), child: const Text('Retry')),
                     ]),
@@ -85,7 +84,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                     ]),
                   ),
                   if (_error != null)
-                    Padding(padding: const EdgeInsets.only(top: 10), child: Text(_error!, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.alert))),
+                    Padding(padding: const EdgeInsets.only(top: 10), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert))),
                   if (_items.length < _total)
                     Padding(
                       padding: const EdgeInsets.only(top: 10),
@@ -122,13 +121,13 @@ class _ActivityRow extends StatelessWidget {
         child: Row(children: [
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(activityName(a['activityType']), style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+              Text(activityName(a['activityType']), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13.5, fontWeight: FontWeight.w600, color: AgroColors.ink)),
               const SizedBox(height: 2),
               Text('${blockName(context, a['blockId'] as String?)} · ${dateText(a['date'])}',
-                  style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.stone)),
+                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
             ]),
           ),
-          Text(naira(cost), style: GoogleFonts.jetBrainsMono(fontSize: 12, color: AgroColors.forest)),
+          Text(naira(cost), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.forest)),
           const Icon(Icons.chevron_right, size: 18, color: AgroColors.stone),
         ]),
       ),
@@ -186,21 +185,21 @@ class _ActivityDetailState extends State<_ActivityDetail> {
         if (a['createdOffline'] == true) const KvRow('Logged', 'Offline, synced later'),
         if (notes.isNotEmpty) ...[
           const SizedBox(height: 8),
-          Text('Notes', style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
-          Text(notes, style: GoogleFonts.inter(fontSize: 13, color: AgroColors.ink)),
+          const Text('Notes', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
+          Text(notes, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.ink)),
         ],
         if (workers.isNotEmpty) ...[
           const SizedBox(height: 12),
-          Text('Workers', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+          const Text('Workers', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w700, color: AgroColors.forest)),
           for (final w in workers) KvRow('${w['workerName']}', '${qty(w['hoursWorked'])} h'),
         ],
         if (inputs.isNotEmpty) ...[
           const SizedBox(height: 12),
-          Text('Inputs used', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+          const Text('Inputs used', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w700, color: AgroColors.forest)),
           for (final i in inputs) KvRow('${i['item']}', '${qty(i['quantity'])} ${i['unit'] ?? ''}'),
         ],
         if (_error != null)
-          Padding(padding: const EdgeInsets.only(top: 8), child: Text('Showing the summary only: $_error', style: GoogleFonts.inter(fontSize: 11, color: AgroColors.stone))),
+          Padding(padding: const EdgeInsets.only(top: 8), child: Text('Showing the summary only: $_error', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone))),
         const SizedBox(height: 8),
       ],
     );

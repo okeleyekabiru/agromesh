@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../services/api_client.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/widgets.dart';
@@ -114,7 +113,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
-                      label: Text(f, style: GoogleFonts.inter(fontSize: 12)),
+                      label: Text(f, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13)),
                       selected: _filter == f,
                       onSelected: (_) => setState(() => _filter = f),
                     ),
@@ -151,7 +150,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(linked ? 'Bank account linked' : 'No bank account linked',
-                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+                    style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.ink)),
               ),
               AgroBadge(label: linked ? 'Linked' : 'Not linked', variant: linked ? AgroBadgeVariant.green : AgroBadgeVariant.stone),
             ]),
@@ -179,8 +178,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
               )
             else
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Linking a bank account is done in the browser (Mono Connect). Sign in there, link the account, then come back and sync here.',
-                    style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.stone)),
+                const Text('Linking a bank account is done in the browser (Mono Connect). Sign in there, link the account, then come back and sync here.',
+                    style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: () => openWebApp(ctx, '/finance'),
@@ -207,14 +206,14 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('${t['narration'] ?? ''}', maxLines: 2, overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, fontWeight: FontWeight.w600, color: AgroColors.ink)),
                   const SizedBox(height: 2),
                   Text('${naira((t['amount'] as num?)?.abs())} · ${dateText(t['date'])}',
-                      style: GoogleFonts.jetBrainsMono(fontSize: 11, color: AgroColors.stone)),
+                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
                   if ((t['reconciliationNote'] as String?)?.isNotEmpty ?? false)
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
-                      child: Text(t['reconciliationNote'] as String, style: GoogleFonts.inter(fontSize: 11, color: AgroColors.stone)),
+                      child: Text(t['reconciliationNote'] as String, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
                     ),
                   const SizedBox(height: 8),
                   Row(children: [
@@ -266,10 +265,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('${t['narration'] ?? ''}', maxLines: 2, overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, fontWeight: FontWeight.w600, color: AgroColors.ink)),
                   const SizedBox(height: 4),
                   Wrap(spacing: 6, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                    Text(dateText(t['date']), style: GoogleFonts.inter(fontSize: 11, color: AgroColors.stone)),
+                    Text(dateText(t['date']), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
                     AgroBadge(label: _catLabel(cat), variant: AgroBadgeVariant.stone),
                     if (kind == 'Capital') const AgroBadge(label: 'Capital', variant: AgroBadgeVariant.harvest),
                     if (!reviewed) const AgroBadge(label: 'To review', variant: AgroBadgeVariant.harvest),
@@ -279,7 +278,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
             ),
             const SizedBox(width: 10),
             Text('${out ? '-' : '+'}${naira(amount.abs())}',
-                style: GoogleFonts.jetBrainsMono(fontSize: 12.5, fontWeight: FontWeight.w600, color: out ? AgroColors.alert : AgroColors.leaf)),
+                style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, fontWeight: FontWeight.w600, color: out ? AgroColors.alert : AgroColors.leaf)),
           ],
         ),
       ),
@@ -356,16 +355,16 @@ class _TxDetailState extends State<_TxDetail> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text('${out ? '-' : '+'}${naira(_amount.abs())}',
-            style: GoogleFonts.jetBrainsMono(fontSize: 22, fontWeight: FontWeight.w600, color: out ? AgroColors.alert : AgroColors.leaf)),
+            style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 22, fontWeight: FontWeight.w600, color: out ? AgroColors.alert : AgroColors.leaf)),
         const SizedBox(height: 6),
-        Text('${t['narration'] ?? ''}', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+        Text('${t['narration'] ?? ''}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.ink)),
         const SizedBox(height: 10),
         KvRow('Date', dateText(t['date'])),
         KvRow('Confidence', _enumName(t['confidence'], const ['High', 'Medium', 'Low'])),
         KvRow('Categorised by', _enumName(t['source'], const ['Dictionary', 'Pattern', 'Llm', 'Manual'])),
         KvRow('Reviewed', t['reviewedByUser'] == true ? 'Yes' : 'Not yet'),
         const Divider(height: 24),
-        Text('Category', style: GoogleFonts.inter(fontSize: 11, color: AgroColors.stone)),
+        const Text('Category', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
         const SizedBox(height: 4),
         DropdownButtonFormField<String>(
           initialValue: _category,
@@ -376,7 +375,7 @@ class _TxDetailState extends State<_TxDetail> {
         ),
         if (!out) ...[
           const SizedBox(height: 12),
-          Text('Money in is', style: GoogleFonts.inter(fontSize: 11, color: AgroColors.stone)),
+          const Text('Money in is', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
           const SizedBox(height: 4),
           SegmentedButton<String>(
             segments: const [ButtonSegment(value: 'Income', label: Text('Income')), ButtonSegment(value: 'Capital', label: Text('Capital'))],
@@ -393,7 +392,7 @@ class _TxDetailState extends State<_TxDetail> {
         if (_error != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(_error!, style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.alert)),
+            child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.alert)),
           ),
         const SizedBox(height: 14),
         Row(mainAxisAlignment: MainAxisAlignment.end, children: [

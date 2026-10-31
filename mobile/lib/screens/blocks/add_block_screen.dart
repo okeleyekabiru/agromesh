@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../models/models.dart';
 import '../../stores/app_store.dart';
 import '../../theme/app_theme.dart';
@@ -189,7 +188,7 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(color: AgroColors.harvest.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(color: AgroColors.harvest.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                 child: const Row(
                   children: [
                     Icon(Icons.cloud_off_outlined, size: 16, color: AgroColors.harvest),
@@ -197,7 +196,7 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
                     Expanded(
                       child: Text(
                         'You are offline. Adding a block requires an internet connection.',
-                        style: TextStyle(fontSize: 12),
+                        style: TextStyle(fontSize: 13),
                       ),
                     ),
                   ],
@@ -212,7 +211,7 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
             const SizedBox(height: 18),
-            Text('What is growing here?', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AgroColors.forest)),
+            const Text('What is growing here?', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w600, color: AgroColors.forest)),
             const SizedBox(height: 8),
             SegmentedButton<bool>(
               segments: const [
@@ -233,8 +232,8 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
                 )).toList(),
               )
             else ...[
-              Text('Pick every crop in this block, then its share of the block. Fertilizer timing follows the crops.',
-                style: GoogleFonts.inter(fontSize: 11, color: AgroColors.stone)),
+              const Text('Pick every crop in this block, then its share of the block. Fertilizer timing follows the crops.',
+                style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -249,7 +248,7 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
                   padding: const EdgeInsets.only(top: 8),
                   child: Row(
                     children: [
-                      Expanded(child: Text(c.label, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AgroColors.forest))),
+                      Expanded(child: Text(c.label, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.forest))),
                       SizedBox(
                         width: 90,
                         child: TextFormField(
@@ -276,7 +275,7 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
-                child: Text(_error!, style: const TextStyle(color: AgroColors.alert, fontSize: 12)),
+                child: Text(_error!, style: const TextStyle(color: AgroColors.alert, fontSize: 13)),
               ),
             const SizedBox(height: 20),
             ElevatedButton(

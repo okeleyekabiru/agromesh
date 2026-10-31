@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart' hide Path;
-import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart' hide Path;
 import 'package:provider/provider.dart';
 import '../../stores/app_store.dart';
@@ -20,7 +19,7 @@ class SatelliteScreen extends StatefulWidget {
 }
 
 class _SatelliteScreenState extends State<SatelliteScreen> {
-  int _version = 0;
+  final int _version = 0;
   bool _refreshing = false;
 
   Future<Map<String, dynamic>> _load() async {
@@ -68,7 +67,7 @@ class _SatelliteScreenState extends State<SatelliteScreen> {
                 children: [
                   Expanded(
                     child: Text('Last updated ${dateText(data['lastSyncAt'])}',
-                        style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
+                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
                   ),
                   OutlinedButton(
                       onPressed: _refreshing ? null : () => _refresh(reload),
@@ -116,14 +115,14 @@ class _BlockCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text('${block['blockName']}',
-                        style: GoogleFonts.syne(fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
                   ),
                   AgroBadge(label: '${block['label'] ?? block['condition']}', variant: variant),
                 ],
               ),
               if ('${block['summary'] ?? ''}'.isNotEmpty) ...[
                 const SizedBox(height: 6),
-                Text('${block['summary']}', style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone, height: 1.4)),
+                Text('${block['summary']}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone, height: 1.4)),
               ],
               const SizedBox(height: 10),
               Row(
@@ -138,7 +137,7 @@ class _BlockCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(block['hasBoundary'] == false ? 'No usable boundary: redraw it on the web app.' : 'Tap to see the pictures',
-                  style: GoogleFonts.inter(fontSize: 11, color: AgroColors.leaf, fontWeight: FontWeight.w600)),
+                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.leaf, fontWeight: FontWeight.w600)),
             ],
           ),
         ),
@@ -156,8 +155,8 @@ class _Metric extends StatelessWidget {
   Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(value, style: GoogleFonts.jetBrainsMono(fontSize: 15, fontWeight: FontWeight.w600, color: AgroColors.forest)),
-          Text(label, style: GoogleFonts.inter(fontSize: 10, color: AgroColors.stone)),
+          Text(value, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 15, fontWeight: FontWeight.w600, color: AgroColors.forest)),
+          Text(label, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
         ],
       );
 }
@@ -258,11 +257,11 @@ class _PictureScreenState extends State<_PictureScreen> {
       padding: const EdgeInsets.only(top: 8),
       child: Container(
         padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(color: AgroColors.harvest.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(color: AgroColors.harvest.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
         child: Text(
           'The boundary of this block is only about ${widthM.round()} × ${heightM.round()} m, smaller than a few satellite pixels (10 m each), so the colours here are not meaningful. '
           'Mark the boundary again around the real edge of the block.',
-          style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.ink),
+          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.ink),
         ),
       ),
     );
@@ -279,7 +278,7 @@ class _PictureScreenState extends State<_PictureScreen> {
 
   Widget _legend() {
     if (_layer == 'TrueColour') {
-      return Text('Natural colour. White patches are cloud.', style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.stone));
+      return const Text('Natural colour. White patches are cloud.', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone));
     }
     final items = _layer == 'Ndvi' ? _ndvi : _ndmi;
     return Wrap(
@@ -290,7 +289,7 @@ class _PictureScreenState extends State<_PictureScreen> {
           Row(mainAxisSize: MainAxisSize.min, children: [
             Container(width: 12, height: 12, decoration: BoxDecoration(color: i.$1, borderRadius: BorderRadius.circular(3))),
             const SizedBox(width: 5),
-            Text(i.$2, style: GoogleFonts.inter(fontSize: 11, color: AgroColors.stone)),
+            Text(i.$2, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
           ]),
       ],
     );
@@ -342,7 +341,7 @@ class _PictureScreenState extends State<_PictureScreen> {
             const Positioned(
               left: 10,
               bottom: 28,
-              child: Chip(label: Text('Fetching the picture…', style: TextStyle(fontSize: 11))),
+              child: Chip(label: Text('Fetching the picture…', style: TextStyle(fontSize: 12))),
             ),
         ],
       ),
@@ -389,7 +388,7 @@ class _PictureScreenState extends State<_PictureScreen> {
                 child: Text(
                   '${dateText(d['date'])} · ${(((d['clearShare'] as num?) ?? 0) * 100).round()}% clear',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600),
                 ),
               ),
               IconButton(
@@ -402,7 +401,7 @@ class _PictureScreenState extends State<_PictureScreen> {
           const SizedBox(height: 8),
           _legend(),
           if (_imgError != null)
-            Padding(padding: const EdgeInsets.only(top: 8), child: Text(_imgError!, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.alert))),
+            Padding(padding: const EdgeInsets.only(top: 8), child: Text(_imgError!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert))),
           _smallNote(),
           const SizedBox(height: 8),
           Text(
@@ -411,9 +410,9 @@ class _PictureScreenState extends State<_PictureScreen> {
                 : _layer == 'Ndmi'
                     ? 'Leaf water (NDMI): how much water the leaves hold.'
                     : 'Sentinel-2 picture, 10 m detail.',
-            style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.stone),
+            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone),
           ),
-          Text('One picture covers a 5-day window.', style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.stone)),
+          const Text('One picture covers a 5-day window.', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
         ],
       );
     }

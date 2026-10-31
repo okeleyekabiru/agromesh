@@ -189,7 +189,7 @@ watch([layer, idx], showImage)
 }
 .modal { background: white; border-radius: 16px; width: 700px; max-width: 100%; box-shadow: 0 24px 64px rgba(10,26,16,0.2); }
 .modal-header { padding: 18px 24px 14px; border-bottom: 1px solid var(--fog); display: flex; align-items: center; justify-content: space-between; }
-.modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; color: var(--forest); }
+.modal-title { font-family: var(--font-sans); font-weight: 700; font-size: 15px; color: var(--forest); }
 .modal-close-inline { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--fog); background: transparent; cursor: pointer; font-size: 18px; color: var(--stone); }
 .modal-body { padding: 16px 24px 22px; }
 .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }

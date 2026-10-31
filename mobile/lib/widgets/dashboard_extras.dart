@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../screens/more/common.dart';
 import '../services/api_client.dart';
 import '../stores/app_store.dart';
@@ -110,19 +109,19 @@ class _DashboardExtrasState extends State<DashboardExtras> {
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AgroColors.alert.withOpacity(0.07),
+              color: AgroColors.alert.withValues(alpha: 0.07),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AgroColors.alert.withOpacity(0.25)),
+              border: Border.all(color: AgroColors.alert.withValues(alpha: 0.25)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('${low.length} item${low.length == 1 ? '' : 's'} below reorder level',
-                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: AgroColors.alert)),
+                    style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w700, color: AgroColors.alert)),
                 const SizedBox(height: 4),
                 for (final a in low)
                   Text('${a['inventoryItemName']}: ${num1(a['currentStock'] as num?)} ${a['unit']} left (reorder at ${num1(a['reorderThreshold'] as num?)})',
-                      style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.ink)),
+                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.ink)),
               ],
             ),
           ),
@@ -153,13 +152,13 @@ class _DashboardExtrasState extends State<DashboardExtras> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('${b['blockName']}', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+                              Text('${b['blockName']}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600)),
                               Text('${b['activityCount'] ?? 0} activities',
-                                  style: GoogleFonts.inter(fontSize: 10.5, color: AgroColors.stone)),
+                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
                             ],
                           ),
                         ),
-                        Text(naira(b['cost'] as num?), style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.w600)),
+                        Text(naira(b['cost'] as num?), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
@@ -178,12 +177,12 @@ class _DashboardExtrasState extends State<DashboardExtras> {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
                     child: Row(
                       children: [
-                        Expanded(child: Text('${c['cropType']}', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600))),
+                        Expanded(child: Text('${c['cropType']}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600))),
                         Text('${naira(c['revenue'] as num?)} in · ${naira(c['cost'] as num?)} out',
-                            style: GoogleFonts.inter(fontSize: 10.5, color: AgroColors.stone)),
+                            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
                         const SizedBox(width: 10),
                         Text(naira(c['netProfit'] as num?),
-                            style: GoogleFonts.jetBrainsMono(
+                            style: TextStyle(fontFamily: 'PlusJakartaSans', 
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: ((c['netProfit'] as num?) ?? 0) < 0 ? AgroColors.alert : AgroColors.leaf,
@@ -222,7 +221,7 @@ class _TaskTile extends StatelessWidget {
             children: [
               Expanded(
                 child: Text('${_activityName(task['activityType'])} · ${task['blockName']}',
-                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+                    style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600)),
               ),
               AgroBadge(label: due, variant: overdue ? AgroBadgeVariant.red : (days <= 3 ? AgroBadgeVariant.harvest : AgroBadgeVariant.green)),
             ],
@@ -231,12 +230,12 @@ class _TaskTile extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 3),
               child: Text('${task['reasoning']}',
-                  maxLines: 3, overflow: TextOverflow.ellipsis, style: GoogleFonts.inter(fontSize: 11, color: AgroColors.stone, height: 1.35)),
+                  maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone, height: 1.35)),
             ),
           if (chem != null && '$chem'.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 3),
-              child: Text('Suggested chemical: $chem', style: GoogleFonts.inter(fontSize: 11, color: AgroColors.leaf, fontWeight: FontWeight.w600)),
+              child: Text('Suggested chemical: $chem', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.leaf, fontWeight: FontWeight.w600)),
             ),
         ],
       ),
@@ -276,7 +275,7 @@ class _TrendCard extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(_monthNames[(((p['month'] as num?)?.toInt() ?? 1) - 1).clamp(0, 11)],
-                                style: GoogleFonts.jetBrainsMono(fontSize: 8.5, color: AgroColors.stone)),
+                                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 8.5, color: AgroColors.stone)),
                           ],
                         ),
                       ),

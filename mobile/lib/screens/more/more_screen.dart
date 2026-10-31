@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/widgets.dart';
 import 'activities_screen.dart';
@@ -52,9 +51,9 @@ class MoreScreen extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(it.title, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+                              Text(it.title, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.ink)),
                               const SizedBox(height: 2),
-                              Text(it.sub, style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.stone)),
+                              Text(it.sub, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
                             ],
                           ),
                         ),

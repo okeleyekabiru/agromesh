@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../services/api_client.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/widgets.dart';
@@ -96,8 +95,8 @@ class _TeamScreenState extends State<TeamScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${m['fullName'] ?? ''}', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AgroColors.ink)),
-                  Text('${m['email'] ?? ''}', style: GoogleFonts.inter(fontSize: 11, color: AgroColors.stone), overflow: TextOverflow.ellipsis),
+                  Text('${m['fullName'] ?? ''}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+                  Text('${m['email'] ?? ''}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone), overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
                   Wrap(spacing: 6, children: [
                     AgroBadge(label: _roleLabel(role), variant: _roleVariant(role)),
@@ -194,7 +193,7 @@ class _AddMemberState extends State<_AddMember> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('Add a team member', style: GoogleFonts.syne(fontSize: 15, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+        const Text('Add a team member', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 15, fontWeight: FontWeight.w700, color: AgroColors.forest)),
         const SizedBox(height: 12),
         TextField(controller: _name, textCapitalization: TextCapitalization.words,
             decoration: const InputDecoration(labelText: 'Full name', isDense: true, border: OutlineInputBorder())),
@@ -215,11 +214,11 @@ class _AddMemberState extends State<_AddMember> {
             onSelectionChanged: _saving ? null : (s) => setState(() => _role = s.first),
           )
         else
-          Text('Farm managers can add supervisors.', style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.stone)),
+          const Text('Farm managers can add supervisors.', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
         if (_error != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(_error!, style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.alert)),
+            child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.alert)),
           ),
         const SizedBox(height: 14),
         Row(mainAxisAlignment: MainAxisAlignment.end, children: [

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -86,7 +85,7 @@ class _LoadScaffoldState<T> extends State<LoadScaffold<T>> {
             const Icon(Icons.cloud_off_outlined, color: AgroColors.stone, size: 36),
             const SizedBox(height: 10),
             Text(_error ?? 'Nothing to show.', textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 13, color: AgroColors.stone)),
+                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.stone)),
             const SizedBox(height: 12),
             OutlinedButton(onPressed: _reload, child: const Text('Retry')),
           ]),
@@ -120,11 +119,11 @@ class KvRow extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Expanded(child: Text(k, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone))),
+          Expanded(child: Text(k, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone))),
           const SizedBox(width: 12),
           Flexible(
             child: Text(v, textAlign: TextAlign.right,
-                style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: vColor ?? AgroColors.ink)),
+                style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w600, color: vColor ?? AgroColors.ink)),
           ),
         ]),
       );
@@ -133,7 +132,7 @@ class KvRow extends StatelessWidget {
 Widget emptyNote(String text) => Padding(
       padding: const EdgeInsets.all(28),
       child: Center(
-        child: Text(text, textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 12.5, color: AgroColors.stone)),
+        child: Text(text, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
       ),
     );
 

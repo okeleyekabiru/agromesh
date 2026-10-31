@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../models/models.dart';
 import '../../stores/app_store.dart';
 import '../../theme/app_theme.dart';
@@ -36,22 +35,22 @@ class DashboardScreen extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: AgroColors.harvest.withOpacity(0.08),
+                    color: AgroColors.harvest.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AgroColors.harvest.withOpacity(0.25)),
+                    border: Border.all(color: AgroColors.harvest.withValues(alpha: 0.25)),
                   ),
-                  child: Row(
+                  child: const Row(
                     children: [
-                      const Icon(Icons.agriculture_outlined, color: AgroColors.harvest, size: 16),
-                      const SizedBox(width: 8),
+                      Icon(Icons.agriculture_outlined, color: AgroColors.harvest, size: 16),
+                      SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           "Your farm setup isn't finished. Add your location, blocks and boundaries to unlock scheduling and reporting.",
-                          style: GoogleFonts.inter(fontSize: 12, color: AgroColors.ink),
+                          style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink),
                         ),
                       ),
-                      Text('Continue setup', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
-                      const Icon(Icons.chevron_right, color: AgroColors.leaf, size: 16),
+                      Text('Continue setup', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
+                      Icon(Icons.chevron_right, color: AgroColors.leaf, size: 16),
                     ],
                   ),
                 ),
@@ -64,22 +63,22 @@ class DashboardScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AgroColors.alert.withOpacity(0.07),
+                  color: AgroColors.alert.withValues(alpha: 0.07),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AgroColors.alert.withOpacity(0.25)),
+                  border: Border.all(color: AgroColors.alert.withValues(alpha: 0.25)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('${store.failedActivities.length} activit${store.failedActivities.length == 1 ? 'y was' : 'ies were'} not accepted by the server',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: AgroColors.alert)),
+                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w700, color: AgroColors.alert)),
                     const SizedBox(height: 4),
                     for (final f in store.failedActivities.take(3))
                       Padding(
                         padding: const EdgeInsets.only(bottom: 2),
                         child: Text(
                           '${f['blockName']}: ${'${f['reason']}'.isEmpty ? 'reason not kept. Retry to see it, or log it again.' : f['reason']}',
-                          style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.ink),
+                          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.ink),
                         ),
                       ),
                     const SizedBox(height: 6),
@@ -99,9 +98,9 @@ class DashboardScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: AgroColors.harvest.withOpacity(0.08),
+                  color: AgroColors.harvest.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AgroColors.harvest.withOpacity(0.25)),
+                  border: Border.all(color: AgroColors.harvest.withValues(alpha: 0.25)),
                 ),
                 child: Row(
                   children: [
@@ -110,12 +109,12 @@ class DashboardScreen extends StatelessWidget {
                     Expanded(
                       child: Text(
                         '${store.pendingSyncCount} activities queued for sync',
-                        style: GoogleFonts.inter(fontSize: 12, color: AgroColors.ink),
+                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink),
                       ),
                     ),
                     GestureDetector(
                       onTap: store.syncNow,
-                      child: Text('Sync now', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
+                      child: const Text('Sync now', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
                     ),
                   ],
                 ),
@@ -134,9 +133,9 @@ class DashboardScreen extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: AgroColors.leaf.withOpacity(0.08),
+                    color: AgroColors.leaf.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AgroColors.leaf.withOpacity(0.25)),
+                    border: Border.all(color: AgroColors.leaf.withValues(alpha: 0.25)),
                   ),
                   child: Row(
                     children: [
@@ -145,10 +144,10 @@ class DashboardScreen extends StatelessWidget {
                       Expanded(
                         child: Text(
                           '${store.outstanding.length} pick${store.outstanding.length == 1 ? '' : 's'} of stock out on the farm',
-                          style: GoogleFonts.inter(fontSize: 12, color: AgroColors.ink),
+                          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink),
                         ),
                       ),
-                      Text('Return leftover', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
+                      const Text('Return leftover', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
                       const Icon(Icons.chevron_right, color: AgroColors.leaf, size: 16),
                     ],
                   ),
@@ -177,7 +176,7 @@ class DashboardScreen extends StatelessWidget {
                               store.weatherFailed
                                   ? 'No weather forecast yet. It needs the farm location (state and town).'
                                   : 'Loading the weather forecast…',
-                              style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone),
+                              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone),
                             ),
                             if (store.weatherFailed) ...[
                               const SizedBox(height: 8),
@@ -223,20 +222,20 @@ class DashboardScreen extends StatelessWidget {
                     title: 'Recent Activities',
                     trailing: TextButton(
                       onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ActivitiesScreen())),
-                      child: Text('View all', style: GoogleFonts.inter(fontSize: 11, color: AgroColors.leaf, fontWeight: FontWeight.w600)),
+                      child: const Text('View all', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.leaf, fontWeight: FontWeight.w600)),
                     ),
                   ),
                   if (store.activities.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(32),
+                    const Padding(
+                      padding: EdgeInsets.all(32),
                       child: Column(
                         children: [
-                          const Icon(Icons.assignment_outlined, size: 40, color: AgroColors.fog),
-                          const SizedBox(height: 12),
-                          Text('No activities yet', style: GoogleFonts.syne(fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
-                          const SizedBox(height: 4),
+                          Icon(Icons.assignment_outlined, size: 40, color: AgroColors.fog),
+                          SizedBox(height: 12),
+                          Text('No activities yet', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+                          SizedBox(height: 4),
                           Text('Tap the Log Activity button below to record today\'s farm work',
-                            style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone), textAlign: TextAlign.center),
+                            style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone), textAlign: TextAlign.center),
                         ],
                       ),
                     )

@@ -176,7 +176,7 @@
           {{ step === 1 ? 'Cancel' : '← Back' }}
         </button>
         <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--stone);">{{ step }} / {{ steps.length }}</span>
+          <span style="font-family: var(--font-sans);font-size: 11px;color:var(--stone);">{{ step }} / {{ steps.length }}</span>
           <button class="btn btn-primary" @click="next" :disabled="!canProceed || submitting">
             {{ step === steps.length ? (submitting ? 'Saving…' : '✓ Submit Activity') : 'Continue →' }}
           </button>
@@ -399,19 +399,19 @@ function addInput() {
 .modal-overlay { position: fixed; inset: 0; background: rgba(10,26,16,0.55); backdrop-filter: blur(6px); z-index: 100; display: flex; align-items: center; justify-content: center; animation: fade-in var(--dur-base) var(--ease-out) both; }
 .modal { background: white; border-radius: 16px; width: 520px; max-height: 88vh; overflow-y: auto; box-shadow: var(--shadow-xl); animation: scale-in var(--dur-enter) var(--ease-out) both; }
 .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--fog); display: flex; align-items: center; justify-content: space-between; }
-.modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: var(--forest); letter-spacing: -0.01em; }
+.modal-title { font-family: var(--font-sans); font-weight: 700; font-size: 16px; color: var(--forest); letter-spacing: -0.01em; }
 .modal-close { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--fog); background: transparent; cursor: pointer; font-size: 18px; color: var(--stone); display: flex; align-items: center; justify-content: center; }
 .modal-close:hover { background: var(--mist); }
 .modal-steps { display: flex; padding: 16px 24px; border-bottom: 1px solid var(--fog); }
 .step { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; }
 .step::after { content: ''; position: absolute; top: 12px; left: 50%; width: 100%; height: 1px; background: var(--fog); }
 .step:last-child::after { display: none; }
-.step-num { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--fog); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--stone); background: white; position: relative; z-index: 1; }
+.step-num { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--fog); display: flex; align-items: center; justify-content: center; font-family: var(--font-sans); font-size: 11px; color: var(--stone); background: white; position: relative; z-index: 1; }
 .step.active .step-num { background: var(--leaf); border-color: var(--leaf); color: white; }
 .step.done .step-num { background: var(--palm); border-color: var(--palm); color: white; }
-.step-label { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--stone); margin-top: 4px; text-align: center; }
+.step-label { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--stone); margin-top: 4px; text-align: center; }
 .step.active .step-label { color: var(--leaf); }
-.unit-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--stone); align-self: center; }
+.unit-tag { font-family: var(--font-sans); font-size: 11px; color: var(--stone); align-self: center; }
 .error-msg { font-size: 11.5px; color: var(--alert); margin-top: 6px; }
 .error-banner { background: #FDECEC; border-bottom: 1px solid #F3B5B5; padding: 10px 24px; font-size: 11px; color: #A32020; font-weight: 600; }
 .warning-banner { background: #FFF8E7; border-bottom: 1px solid #F5D77B; padding: 10px 24px; font-size: 11px; color: #8A6000; font-weight: 600; }
@@ -458,6 +458,6 @@ function addInput() {
 .activity-btn-name { font-size: 11px; font-weight: 600; color: var(--forest); display: block; }
 .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; min-height: 28px; align-items: center; }
 .add-row { display: flex; gap: 8px; }
-.empty-chips { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--stone); }
+.empty-chips { font-family: var(--font-sans); font-size: 11px; color: var(--stone); }
 .form-hint.warn { color: #B8780A; }
 </style>

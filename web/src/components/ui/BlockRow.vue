@@ -67,8 +67,8 @@ const cropLabel = computed(() =>
 .block-row:hover .s-dot { transform: scale(1.3); }
 
 .s-name { font-weight: 600; font-size: 12px; color: var(--forest); flex: 1; }
-.s-crop { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--stone); min-width: 80px; }
-.s-amount { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; color: var(--forest); min-width: 80px; text-align: right; }
+.s-crop { font-family: var(--font-sans); font-size: 11px; color: var(--stone); min-width: 80px; }
+.s-amount { font-family: var(--font-sans); font-size: 11px; font-weight: 500; color: var(--forest); min-width: 80px; text-align: right; }
 
 .s-bar-wrap {
   width: 80px;

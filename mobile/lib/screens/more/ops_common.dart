@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../../services/api_client.dart';
@@ -72,8 +71,8 @@ Widget textField(TextEditingController c, String label, {String? hint, int lines
 Widget sheetTitle(String t, [String? sub]) => Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(t, style: GoogleFonts.syne(fontSize: 16, fontWeight: FontWeight.w700, color: AgroColors.forest)),
-        if (sub != null) Text(sub, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
+        Text(t, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 16, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+        if (sub != null) Text(sub, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
       ]),
     );
 

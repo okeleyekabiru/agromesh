@@ -37,7 +37,7 @@
         <div class="role-title">{{ role.title }}</div>
         <StatBadge :variant="role.defaultType === 'Employee' ? 'green' : 'blue'">{{ role.defaultType }}</StatBadge>
         <div class="role-rate">₦{{ role.payRate.toLocaleString() }} / {{ PAY_FREQUENCY_LABELS[role.payFrequency].toLowerCase() }}</div>
-        <div class="role-count" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--stone);">{{ role.workerCount }} workers</div>
+        <div class="role-count" style="font-family: var(--font-sans);font-size: 11px;color:var(--stone);">{{ role.workerCount }} workers</div>
         <button v-if="canManageBands" class="btn btn-ghost btn-sm" @click="openBand(role)">Edit rate</button>
       </div>
       <div v-if="!store.workerRoles.length" style="padding:32px;text-align:center;color:var(--stone);font-size:12px;">
@@ -81,6 +81,6 @@ onMounted(async () => {
 .role-row { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--fog); }
 .role-row:last-child { border-bottom: none; }
 .role-title { font-size: 12px; font-weight: 600; color: var(--forest); flex: 1; }
-.role-rate { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: var(--forest); min-width: 120px; text-align: right; }
+.role-rate { font-family: var(--font-sans); font-size: 12px; font-weight: 600; color: var(--forest); min-width: 120px; text-align: right; }
 .role-count { min-width: 80px; text-align: right; }
 </style>

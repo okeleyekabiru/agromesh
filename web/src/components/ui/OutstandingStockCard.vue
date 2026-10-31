@@ -127,13 +127,13 @@ function formatDate(iso: string) {
 .out-row:last-child { border-bottom: none; }
 .out-main { flex: 1; min-width: 0; }
 .out-name { font-size: 12px; font-weight: 600; color: var(--forest); }
-.out-sub { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--stone); margin-top: 2px; }
-.out-qty { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: var(--forest); white-space: nowrap; }
-.out-unit { font-family: 'JetBrains Mono', monospace; font-weight: 400; font-size: 9px; color: var(--stone); }
+.out-sub { font-family: var(--font-sans); font-size: 11px; color: var(--stone); margin-top: 2px; }
+.out-qty { font-family: var(--font-sans); font-weight: 700; font-size: 14px; color: var(--forest); white-space: nowrap; }
+.out-unit { font-family: var(--font-sans); font-weight: 400; font-size: 11px; color: var(--stone); }
 .modal-overlay { position: fixed; inset: 0; background: rgba(10,26,16,0.6); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
 .modal { background: white; border-radius: 16px; width: 420px; max-width: 100%; box-shadow: 0 24px 64px rgba(10,26,16,0.2); }
 .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--fog); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; color: var(--forest); }
+.modal-title { font-family: var(--font-sans); font-weight: 700; font-size: 15px; color: var(--forest); }
 .modal-close { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--fog); background: transparent; cursor: pointer; font-size: 18px; color: var(--stone); flex-shrink: 0; }
 .modal-body { padding: 20px 24px; }
 .modal-footer { padding: 16px 24px; border-top: 1px solid var(--fog); display: flex; justify-content: space-between; }

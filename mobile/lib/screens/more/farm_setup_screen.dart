@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../services/api_client.dart';
 import '../../stores/app_store.dart';
@@ -105,13 +104,13 @@ class _FarmSetupScreenState extends State<FarmSetupScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('1 · Where is the farm?', style: GoogleFonts.syne(fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+                        const Text('1 · Where is the farm?', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
                         const SizedBox(height: 4),
-                        Text('Used for the weather forecast and the spraying schedule.',
-                            style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
+                        const Text('Used for the weather forecast and the spraying schedule.',
+                            style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
-                          value: _stateId,
+                          initialValue: _stateId,
                           isExpanded: true,
                           decoration: const InputDecoration(labelText: 'State', border: OutlineInputBorder()),
                           items: [
@@ -134,7 +133,7 @@ class _FarmSetupScreenState extends State<FarmSetupScreen> {
                           ),
                         ),
                         if (store.farmLocation.isNotEmpty)
-                          Text('Current: ${store.farmLocation}', style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.leaf)),
+                          Text('Current: ${store.farmLocation}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.leaf)),
                       ],
                     ),
                   ),
@@ -146,10 +145,10 @@ class _FarmSetupScreenState extends State<FarmSetupScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('2 · Blocks and boundaries', style: GoogleFonts.syne(fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+                        const Text('2 · Blocks and boundaries', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
                         const SizedBox(height: 4),
                         Text('${store.blocks.length} block${store.blocks.length == 1 ? '' : 's'} added. Walk the edge of each block to capture its boundary.',
-                            style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
+                            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
                         const SizedBox(height: 10),
                         OutlinedButton.icon(
                           onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddBlockScreen())),
@@ -167,7 +166,7 @@ class _FarmSetupScreenState extends State<FarmSetupScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('3 · Done', style: GoogleFonts.syne(fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+                        const Text('3 · Done', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
                         const SizedBox(height: 10),
                         FilledButton(onPressed: _saving ? null : _finish, child: const Text('Mark setup complete')),
                       ],
@@ -177,7 +176,7 @@ class _FarmSetupScreenState extends State<FarmSetupScreen> {
                 if (_error != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 12),
-                    child: Text(_error!, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.alert)),
+                    child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert)),
                   ),
               ],
             ),

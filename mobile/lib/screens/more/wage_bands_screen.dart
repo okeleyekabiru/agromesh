@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../services/api_client.dart';
 import '../../stores/app_store.dart';
@@ -70,18 +69,18 @@ class _WageBandsScreenState extends State<WageBandsScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('${r['title']}', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600)),
+                                Text('${r['title']}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600)),
                                 Text('${r['workerCount'] ?? 0} worker(s) · ${(r['defaultType'] ?? 0) == 1 ? 'Contractor' : 'Employee'}',
-                                    style: GoogleFonts.inter(fontSize: 11, color: AgroColors.stone)),
+                                    style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
                               ],
                             ),
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(naira(r['payRate'] as num?), style: GoogleFonts.jetBrainsMono(fontSize: 13, fontWeight: FontWeight.w600)),
+                              Text(naira(r['payRate'] as num?), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600)),
                               Text(_freq[((r['payFrequency'] as num?)?.toInt() ?? 0).clamp(0, 2)],
-                                  style: GoogleFonts.jetBrainsMono(fontSize: 9, color: AgroColors.stone)),
+                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
                             ],
                           ),
                           if (manager)
@@ -150,13 +149,13 @@ class _BandFormState extends State<_BandForm> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(widget.role == null ? 'Add a wage band' : 'Edit rate · ${widget.role!['title']}',
-            style: GoogleFonts.syne(fontSize: 15, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 15, fontWeight: FontWeight.w700, color: AgroColors.forest)),
         const SizedBox(height: 12),
         if (widget.role == null) ...[
           TextField(controller: _title, decoration: const InputDecoration(labelText: 'Role title (e.g. Harvester)')),
           const SizedBox(height: 10),
           DropdownButtonFormField<int>(
-            value: _type,
+            initialValue: _type,
             decoration: const InputDecoration(labelText: 'Default type'),
             items: const [DropdownMenuItem(value: 0, child: Text('Employee')), DropdownMenuItem(value: 1, child: Text('Contractor'))],
             onChanged: (v) => setState(() => _type = v ?? 0),
@@ -166,7 +165,7 @@ class _BandFormState extends State<_BandForm> {
         TextField(controller: _rate, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Pay rate (₦)')),
         const SizedBox(height: 10),
         DropdownButtonFormField<int>(
-          value: _frequency,
+          initialValue: _frequency,
           decoration: const InputDecoration(labelText: 'Paid'),
           items: [for (var i = 0; i < 3; i++) DropdownMenuItem(value: i, child: Text(_freq[i]))],
           onChanged: (v) => setState(() => _frequency = v ?? 0),
@@ -249,17 +248,17 @@ class _WorkerFormState extends State<_WorkerForm> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Add worker', style: GoogleFonts.syne(fontSize: 15, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+        const Text('Add worker', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 15, fontWeight: FontWeight.w700, color: AgroColors.forest)),
         const SizedBox(height: 12),
         if (_loading)
           const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator(color: AgroColors.palm)))
         else if (_roles.isEmpty)
-          Text('Add a wage band first (Wage bands, then Add band).', style: GoogleFonts.inter(fontSize: 12.5, color: AgroColors.stone))
+          const Text('Add a wage band first (Wage bands, then Add band).', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone))
         else ...[
           TextField(controller: _name, textCapitalization: TextCapitalization.words, decoration: const InputDecoration(labelText: 'Full name')),
           const SizedBox(height: 10),
           DropdownButtonFormField<String>(
-            value: _roleId,
+            initialValue: _roleId,
             decoration: const InputDecoration(labelText: 'Wage band'),
             items: [for (final r in _roles) DropdownMenuItem(value: '${r['id']}', child: Text('${r['title']} · ${naira(r['payRate'] as num?)}'))],
             onChanged: (v) {
@@ -269,7 +268,7 @@ class _WorkerFormState extends State<_WorkerForm> {
           ),
           const SizedBox(height: 10),
           DropdownButtonFormField<int>(
-            value: _type,
+            initialValue: _type,
             decoration: const InputDecoration(labelText: 'Type'),
             items: const [DropdownMenuItem(value: 0, child: Text('Employee')), DropdownMenuItem(value: 1, child: Text('Contractor'))],
             onChanged: (v) => setState(() => _type = v ?? 0),

@@ -51,7 +51,7 @@ class _MainShellState extends State<MainShell> {
                   store.farmName.isEmpty
                     ? 'AgroMesh'
                     : (store.farmLocation.isEmpty ? store.farmName : '${store.farmName} · ${store.farmLocation}'),
-                  style: const TextStyle(color: AgroColors.stone, fontSize: 10),
+                  style: const TextStyle(color: AgroColors.stone, fontSize: 12),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -77,7 +77,7 @@ class _MainShellState extends State<MainShell> {
                 children: [
                   Container(width: 7, height: 7, decoration: const BoxDecoration(color: AgroColors.data, shape: BoxShape.circle)),
                   const SizedBox(width: 5),
-                  const Text('ONLINE', style: TextStyle(color: AgroColors.data, fontSize: 9, fontFamily: 'JetBrainsMono')),
+                  const Text('ONLINE', style: TextStyle(color: AgroColors.data, fontSize: 12, fontFamily: 'PlusJakartaSans')),
                 ],
               ),
             ),

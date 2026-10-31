@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../stores/app_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/widgets.dart';
@@ -28,7 +27,7 @@ class WorkersScreen extends StatelessWidget {
           Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: AgroColors.harvest.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(color: AgroColors.harvest.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
             child: Text(store.workersError!, style: const TextStyle(fontSize: 12, color: AgroColors.ink)),
           ),
         // Summary row
@@ -80,7 +79,7 @@ class _WorkerTile extends StatelessWidget {
             decoration: const BoxDecoration(color: AgroColors.canopy, shape: BoxShape.circle),
             child: Center(
               child: Text(worker.initials,
-                style: GoogleFonts.syne(fontSize: 13, fontWeight: FontWeight.w700, color: AgroColors.palm)),
+                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.palm)),
             ),
           ),
           const SizedBox(width: 12),
@@ -89,7 +88,7 @@ class _WorkerTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(worker.name, style: Theme.of(context).textTheme.titleMedium),
-                Text(worker.role, style: GoogleFonts.jetBrainsMono(fontSize: 9, color: AgroColors.stone)),
+                Text(worker.role, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
               ],
             ),
           ),
@@ -102,8 +101,8 @@ class _WorkerTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text('₦${worker.dailyRate.toStringAsFixed(0)}',
-                style: GoogleFonts.syne(fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
-              Text('per day', style: GoogleFonts.jetBrainsMono(fontSize: 9, color: AgroColors.stone)),
+                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+              const Text('per day', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
             ],
           ),
         ],

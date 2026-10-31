@@ -543,7 +543,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 800;
   font-size: 20px;
   color: #fff;
@@ -593,8 +593,8 @@ onMounted(() => {
   border-radius: 20px;
   background: rgba(61,170,106,0.1);
   border: 1px solid rgba(61,170,106,0.25);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #3DAA6A;
@@ -616,7 +616,7 @@ onMounted(() => {
 }
 
 .hero-h1 {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-size: clamp(36px, 5vw, 60px);
   font-weight: 800;
   line-height: 1.1;
@@ -657,15 +657,15 @@ onMounted(() => {
   background: rgba(255,255,255,0.1);
 }
 .h-stat-n {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 800;
   font-size: 22px;
   color: #fff;
   letter-spacing: -0.03em;
 }
 .h-stat-l {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   color: rgba(255,255,255,0.4);
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -722,7 +722,7 @@ onMounted(() => {
 
 .auth-card-head { margin-bottom: 20px; }
 .auth-greeting {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-size: 20px;
   font-weight: 700;
   color: #fff;
@@ -792,8 +792,8 @@ onMounted(() => {
 
 .field-group { display: flex; flex-direction: column; gap: 5px; }
 .field-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(255,255,255,0.45);
@@ -847,8 +847,8 @@ onMounted(() => {
 
 /* GPS location */
 .label-opt {
-  font-size: 9px;
-  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-family: var(--font-sans);
   color: rgba(255,255,255,0.35);
   font-weight: 400;
   margin-left: 6px;
@@ -866,7 +866,7 @@ onMounted(() => {
   border-radius: 10px;
   color: #3DAA6A;
   font-size: 12px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
   margin-bottom: 8px;
@@ -889,8 +889,8 @@ onMounted(() => {
   background: rgba(61,170,106,0.1);
   border: 1px solid rgba(61,170,106,0.25);
   border-radius: 8px;
-  font-size: 10px;
-  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-family: var(--font-sans);
   color: #3DAA6A;
   margin-bottom: 8px;
 }
@@ -906,7 +906,7 @@ onMounted(() => {
 }
 .gps-clear:hover { color: rgba(255,255,255,0.7); }
 .gps-err-msg {
-  font-size: 10px;
+  font-size: 11px;
   color: #EF4444;
   margin-bottom: 6px;
   padding: 0 2px;
@@ -956,8 +956,8 @@ onMounted(() => {
 .pw-good::after    { width: 75%;  background: #EAB308; }
 .pw-strong::after  { width: 100%; background: #22C55E; }
 .pw-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: rgba(255,255,255,0.35);
@@ -972,7 +972,7 @@ onMounted(() => {
   border: none;
   background: #3DAA6A;
   color: #fff;
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.01em;
@@ -1038,8 +1038,8 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   letter-spacing: 0.05em;
   color: rgba(255,255,255,0.3);
   text-transform: uppercase;
@@ -1055,15 +1055,15 @@ onMounted(() => {
   border-top: 1px solid rgba(255,255,255,0.05);
 }
 .feat-section-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: #3DAA6A;
   margin-bottom: 12px;
 }
 .feat-section-h2 {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-size: clamp(24px, 3.5vw, 40px);
   font-weight: 800;
   line-height: 1.15;
@@ -1111,7 +1111,7 @@ onMounted(() => {
   margin-bottom: 14px;
 }
 .feat-card-name {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-size: 15px;
   font-weight: 700;
   color: #fff;
@@ -1132,8 +1132,8 @@ onMounted(() => {
   border-radius: 5px;
   background: rgba(232,168,56,0.08);
   border: 1px solid rgba(232,168,56,0.18);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #E8A838;
@@ -1153,8 +1153,8 @@ onMounted(() => {
 }
 .footer-logo { font-size: 15px; }
 .foot-copy {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   color: rgba(255,255,255,0.25);
   margin: 0;
 }

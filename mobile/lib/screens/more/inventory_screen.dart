@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../services/api_client.dart';
 import '../../stores/app_store.dart';
@@ -56,12 +55,12 @@ class _Body extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: AgroColors.harvest.withOpacity(0.08),
+              color: AgroColors.harvest.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AgroColors.harvest.withOpacity(0.25)),
+              border: Border.all(color: AgroColors.harvest.withValues(alpha: 0.25)),
             ),
             child: Text('$low item${low > 1 ? 's' : ''} below the reorder level.',
-                style: GoogleFonts.inter(fontSize: 12, color: AgroColors.ink)),
+                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink)),
           ),
         AgroCard(
           child: Column(children: [
@@ -74,15 +73,15 @@ class _Body extends StatelessWidget {
                   child: Row(children: [
                     Expanded(
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('${i['name']}', style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+                        Text('${i['name']}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13.5, fontWeight: FontWeight.w600, color: AgroColors.ink)),
                         const SizedBox(height: 2),
                         Text('${i['categoryName'] ?? ''}${dbl(i['unitCost']) > 0 ? ' · ${naira(dbl(i['unitCost']))}/${i['unit']}' : ' · no price'}',
-                            style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.stone)),
+                            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
                       ]),
                     ),
                     Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                       Text('${qty(i['currentStock'])} ${i['unit']}',
-                          style: GoogleFonts.jetBrainsMono(fontSize: 12.5, fontWeight: FontWeight.w600,
+                          style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, fontWeight: FontWeight.w600,
                               color: i['isLowStock'] == true ? AgroColors.alert : AgroColors.forest)),
                       if (i['isLowStock'] == true) const AgroBadge(label: 'Low', variant: AgroBadgeVariant.red),
                     ]),
@@ -141,7 +140,7 @@ class _ItemActions extends StatelessWidget {
   Widget _act(IconData icon, String label, VoidCallback onTap) => ListTile(
         contentPadding: EdgeInsets.zero,
         leading: Icon(icon, color: AgroColors.leaf),
-        title: Text(label, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500)),
+        title: Text(label, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w500)),
         trailing: const Icon(Icons.chevron_right, size: 18),
         onTap: onTap,
       );
@@ -186,14 +185,14 @@ class _PickFormState extends State<_PickForm> {
       sheetTitle('Pick ${widget.item['name']}', 'Take stock out of the store for a block.'),
       numField(_qty, 'Quantity (${widget.item['unit']})'),
       DropdownButtonFormField<String>(
-        value: _block,
+        initialValue: _block,
         decoration: const InputDecoration(labelText: 'Block', border: OutlineInputBorder()),
         items: [for (final b in blocks) DropdownMenuItem(value: b.id, child: Text(b.name))],
         onChanged: (v) => setState(() => _block = v),
       ),
       const SizedBox(height: 10),
       textField(_purpose, 'Purpose', hint: 'e.g. Spraying block A'),
-      if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.alert))),
+      if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert))),
       primaryButton('Pick', _submit, busy: _busy),
     ]);
   }
@@ -234,7 +233,7 @@ class _AdjustFormState extends State<_AdjustForm> {
         sheetTitle('Adjust ${widget.item['name']}', 'Now ${qty(widget.item['currentStock'])} ${widget.item['unit']}. An admin approves the new count.'),
         numField(_qty, 'Counted quantity (${widget.item['unit']})'),
         textField(_notes, 'Reason', hint: 'e.g. stock count', lines: 2),
-        if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.alert))),
+        if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert))),
         primaryButton('Send for approval', _submit, busy: _busy),
       ]);
 }
@@ -282,9 +281,9 @@ class _PriceFormState extends State<_PriceForm> {
           contentPadding: EdgeInsets.zero,
           value: _backfill,
           onChanged: (v) => setState(() => _backfill = v),
-          title: Text('Also cost past activities that used this item', style: GoogleFonts.inter(fontSize: 12.5)),
+          title: const Text('Also cost past activities that used this item', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5)),
         ),
-        if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.alert))),
+        if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert))),
         primaryButton('Send for approval', _submit, busy: _busy),
       ]);
 }
@@ -375,7 +374,7 @@ class _AddItemFormState extends State<_AddItemForm> {
         textField(_name, 'Item name'),
         textField(_unit, 'Unit', hint: 'kg, litres, bags'),
         DropdownButtonFormField<String>(
-          value: _cat,
+          initialValue: _cat,
           decoration: const InputDecoration(labelText: 'Category', border: OutlineInputBorder()),
           items: [for (final c in _cats) DropdownMenuItem(value: '${c['id']}', child: Text('${c['name']}'))],
           onChanged: (v) => setState(() => _cat = v),
@@ -383,7 +382,7 @@ class _AddItemFormState extends State<_AddItemForm> {
         const SizedBox(height: 10),
         numField(_qty, 'Quantity being added'),
         numField(_reorder, 'Reorder when stock falls to'),
-        if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.alert))),
+        if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert))),
         primaryButton('Add', _submit, busy: _busy),
       ]);
 }

@@ -129,7 +129,7 @@
           ← Back
         </button>
         <div style="display:flex;align-items:center;gap:12px;">
-          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--stone);">Step {{ step + 1 }} of {{ steps.length }}</span>
+          <span style="font-family: var(--font-sans);font-size: 11px;color:var(--stone);">Step {{ step + 1 }} of {{ steps.length }}</span>
           <button class="btn btn-primary" @click="next" :disabled="!canProceed || saving">
             {{ step === steps.length - 1 ? (saving ? 'Saving…' : 'Continue to Blocks →') : 'Continue →' }}
           </button>
@@ -317,7 +317,7 @@ onMounted(() => {
 }
 
 .onboard-logo {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 700;
   font-size: 20px;
   color: #fff;
@@ -325,8 +325,8 @@ onMounted(() => {
 }
 
 .onboard-subtitle {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(255,255,255,0.6);
@@ -366,8 +366,8 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   font-weight: 700;
   color: var(--stone);
   background: white;
@@ -380,8 +380,8 @@ onMounted(() => {
 .step-item.done .step-dot { background: var(--palm); border-color: var(--palm); color: white; }
 
 .step-name {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 8px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--stone);
@@ -397,7 +397,7 @@ onMounted(() => {
 }
 
 .step-title {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-size: 18px;
   font-weight: 700;
   color: var(--forest);
@@ -420,8 +420,8 @@ onMounted(() => {
 
 /* GPS */
 .label-opt {
-  font-size: 9px;
-  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-family: var(--font-sans);
   color: var(--stone);
   font-weight: 400;
   margin-left: 6px;
@@ -439,7 +439,7 @@ onMounted(() => {
   border-radius: 10px;
   color: var(--leaf);
   font-size: 12px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
   margin-bottom: 8px;
@@ -463,8 +463,8 @@ onMounted(() => {
   background: rgba(45,122,79,0.08);
   border: 1px solid rgba(45,122,79,0.2);
   border-radius: 8px;
-  font-size: 10px;
-  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-family: var(--font-sans);
   color: var(--leaf);
   margin-bottom: 8px;
 }
@@ -479,15 +479,15 @@ onMounted(() => {
   padding: 0 2px;
 }
 .gps-clear:hover { color: var(--forest); }
-.gps-err-msg { font-size: 10px; color: #E64A19; margin-bottom: 6px; padding: 0 2px; }
+.gps-err-msg { font-size: 11px; color: #E64A19; margin-bottom: 6px; padding: 0 2px; }
 
 /* Roles */
 .roles-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
 .role-input-row { display: flex; gap: 8px; align-items: center; }
 .rate-input-wrap { display: flex; align-items: center; gap: 4px; width: 140px; }
-.rate-prefix { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--stone); }
+.rate-prefix { font-family: var(--font-sans); font-size: 12px; color: var(--stone); }
 .rate-input { flex: 1; width: 80px !important; text-align: right; }
-.rate-suffix { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--stone); white-space: nowrap; }
+.rate-suffix { font-family: var(--font-sans); font-size: 11px; color: var(--stone); white-space: nowrap; }
 
 /* Workers */
 .workers-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }

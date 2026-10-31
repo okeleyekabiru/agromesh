@@ -112,8 +112,8 @@ function formatDate(iso: string) {
 .act-body { flex: 1; min-width: 0; }
 .act-title { font-size: 12px; font-weight: 600; color: var(--forest); }
 .act-detail {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   color: var(--stone);
   margin-top: 2px;
   line-height: 1.5;
@@ -124,14 +124,14 @@ function formatDate(iso: string) {
 
 .act-right { text-align: right; flex-shrink: 0; }
 .act-cost {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 700;
   font-size: 13px;
   color: var(--forest);
 }
 .act-time {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   color: var(--stone);
   margin-top: 2px;
 }

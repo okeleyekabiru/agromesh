@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../services/api_client.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/widgets.dart';
@@ -24,9 +23,9 @@ class ApprovalsScreen extends StatelessWidget {
         final prices = data[0], adjustments = data[1];
         return ListView(padding: const EdgeInsets.all(16), children: [
           if (!admin)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Text('Only an admin can approve or reject these.', style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 10),
+              child: Text('Only an admin can approve or reject these.', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
             ),
           AgroCard(
             child: Column(children: [
@@ -126,11 +125,11 @@ class _RequestState extends State<_Request> {
       decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Expanded(child: Text(widget.title, style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w600, color: AgroColors.ink))),
-          Text(dateText(widget.when), style: GoogleFonts.inter(fontSize: 11, color: AgroColors.stone)),
+          Expanded(child: Text(widget.title, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13.5, fontWeight: FontWeight.w600, color: AgroColors.ink))),
+          Text(dateText(widget.when), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
         ]),
         const SizedBox(height: 4),
-        for (final l in widget.lines) Text(l, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
+        for (final l in widget.lines) Text(l, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
         if (widget.canReview) ...[
           const SizedBox(height: 10),
           Row(children: [

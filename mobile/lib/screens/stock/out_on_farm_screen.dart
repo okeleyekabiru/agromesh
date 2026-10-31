@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../models/models.dart';
 import '../../services/api_client.dart';
 import '../../stores/app_store.dart';
@@ -47,12 +46,12 @@ class _OutOnFarmScreenState extends State<OutOnFarmScreen> {
             ? ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(32),
-                children: [
-                  const SizedBox(height: 60),
+                children: const [
+                  SizedBox(height: 60),
                   Center(
                     child: Text('Nothing is out on the farm.\nPick stock on the web app to see it here.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(fontSize: 13, color: AgroColors.stone, height: 1.5)),
+                      style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.stone, height: 1.5)),
                   ),
                 ],
               )
@@ -75,13 +74,13 @@ class _OutOnFarmScreenState extends State<OutOnFarmScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(g.sample.inventoryItemName,
-                                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
                                 const SizedBox(height: 2),
                                 Text(blockName,
-                                  style: GoogleFonts.jetBrainsMono(fontSize: 10, color: AgroColors.stone)),
+                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
                                 const SizedBox(height: 6),
                                 Text('${formatQty(g.total)} ${g.sample.unit} left',
-                                  style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
+                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
                               ],
                             ),
                           ),
@@ -181,7 +180,7 @@ class _ReturnDialogState extends State<_ReturnDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('${widget.blockName}: ${formatQty(widget.group.total)} $unit still out.',
-              style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
+              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
             const SizedBox(height: 12),
             TextField(
               controller: _qtyCtrl,
@@ -202,7 +201,7 @@ class _ReturnDialogState extends State<_ReturnDialog> {
             ),
             if (_error != null) ...[
               const SizedBox(height: 10),
-              Text(_error!, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.alert)),
+              Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert)),
             ],
           ],
         ),

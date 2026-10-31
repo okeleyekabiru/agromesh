@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import '../models/models.dart';
 import 'block_coverage_sheet.dart';
@@ -14,12 +13,12 @@ class AgroBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (variant) {
-      AgroBadgeVariant.green   => (AgroColors.palm.withOpacity(0.12),   AgroColors.leaf),
-      AgroBadgeVariant.harvest => (AgroColors.harvest.withOpacity(0.12), const Color(0xFF8A6000)),
-      AgroBadgeVariant.red     => (AgroColors.alert.withOpacity(0.1),   AgroColors.alert),
+      AgroBadgeVariant.green   => (AgroColors.palm.withValues(alpha: 0.12),   AgroColors.leaf),
+      AgroBadgeVariant.harvest => (AgroColors.harvest.withValues(alpha: 0.12), const Color(0xFF8A6000)),
+      AgroBadgeVariant.red     => (AgroColors.alert.withValues(alpha: 0.1),   AgroColors.alert),
       AgroBadgeVariant.stone   => (AgroColors.fog,                       AgroColors.stone),
       AgroBadgeVariant.blue    => (const Color(0x193B82F6),              const Color(0xFF2563EB)),
-      AgroBadgeVariant.data    => (AgroColors.data.withOpacity(0.1),    const Color(0xFF007A5E)),
+      AgroBadgeVariant.data    => (AgroColors.data.withValues(alpha: 0.1),    const Color(0xFF007A5E)),
     };
 
     return Container(
@@ -27,7 +26,7 @@ class AgroBadge extends StatelessWidget {
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(4)),
       child: Text(
         label.toUpperCase(),
-        style: GoogleFonts.jetBrainsMono(fontSize: 9, fontWeight: FontWeight.w500, color: fg, letterSpacing: 0.5),
+        style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w500, color: fg, letterSpacing: 0.5),
       ),
     );
   }
@@ -103,7 +102,7 @@ class KpiCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = dark ? AgroColors.forest : AgroColors.white;
-    final labelColor = dark ? AgroColors.stone.withOpacity(0.8) : AgroColors.stone;
+    final labelColor = dark ? AgroColors.stone.withValues(alpha: 0.8) : AgroColors.stone;
     final valueColor = dark ? AgroColors.white : AgroColors.forest;
     final deltaColor = switch (deltaType) {
       KpiDeltaType.up   => AgroColors.palm,
@@ -122,11 +121,11 @@ class KpiCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label.toUpperCase(), style: GoogleFonts.jetBrainsMono(fontSize: 8, color: labelColor, letterSpacing: 0.8)),
+          Text(label.toUpperCase(), style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: labelColor, letterSpacing: 0.8)),
           const SizedBox(height: 6),
-          Text(value, style: GoogleFonts.syne(fontSize: 22, fontWeight: FontWeight.w700, color: valueColor, letterSpacing: -0.5)),
+          Text(value, style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 22, fontWeight: FontWeight.w700, color: valueColor, letterSpacing: -0.5)),
           const SizedBox(height: 2),
-          Text(delta, style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w500, color: deltaColor)),
+          Text(delta, style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w500, color: deltaColor)),
         ],
       ),
     );
@@ -166,7 +165,7 @@ class BlockTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 2),
       child: Text('$label: ${c.shortText}',
-        style: GoogleFonts.inter(fontSize: 10, color: color, fontWeight: c.needsAttention ? FontWeight.w600 : FontWeight.w400)),
+        style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: color, fontWeight: c.needsAttention ? FontWeight.w600 : FontWeight.w400)),
     );
   }
 
@@ -202,7 +201,7 @@ class BlockTile extends StatelessWidget {
                 AgroBadge(label: block.status.label, variant: _badgeVariant),
                 const SizedBox(height: 4),
                 Text('${block.hectares.toStringAsFixed(0)} ha',
-                  style: GoogleFonts.jetBrainsMono(fontSize: 10, color: AgroColors.stone)),
+                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
               ],
             ),
           ],
@@ -229,7 +228,7 @@ class ActivityTile extends StatelessWidget {
           Container(
             width: 36, height: 36,
             decoration: BoxDecoration(
-              color: AgroColors.palm.withOpacity(0.1),
+              color: AgroColors.palm.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(child: Text(activity.activityType.icon, style: const TextStyle(fontSize: 16))),
@@ -243,13 +242,13 @@ class ActivityTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${activity.blockName} · ${activity.workers.length} workers',
-                  style: GoogleFonts.jetBrainsMono(fontSize: 9, color: AgroColors.stone),
+                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone),
                 ),
                 if (activity.inputs.isNotEmpty) ...[
                   const SizedBox(height: 1),
                   Text(
                     activity.inputs.map((i) => i.toString()).join(', '),
-                    style: GoogleFonts.jetBrainsMono(fontSize: 9, color: AgroColors.stone),
+                    style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -264,7 +263,7 @@ class ActivityTile extends StatelessWidget {
               if (activity.totalCost > 0)
                 Text(
                   '₦${activity.totalCost.toStringAsFixed(0)}',
-                  style: GoogleFonts.syne(fontSize: 13, fontWeight: FontWeight.w700, color: AgroColors.forest),
+                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest),
                 ),
               const SizedBox(height: 4),
               _SyncIndicator(status: activity.syncStatus),
@@ -310,9 +309,9 @@ class WorkerChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('👤', style: TextStyle(fontSize: 11)),
+          const Text('👤', style: TextStyle(fontSize: 12)),
           const SizedBox(width: 5),
-          Text(label, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500, color: AgroColors.forest)),
+          Text(label, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w500, color: AgroColors.forest)),
           if (onRemove != null) ...[
             const SizedBox(width: 4),
             GestureDetector(
@@ -336,7 +335,7 @@ class OfflineBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: AgroColors.harvest.withOpacity(0.1),
+      color: AgroColors.harvest.withValues(alpha: 0.1),
       child: Row(
         children: [
           const Icon(Icons.cloud_off_outlined, size: 14, color: AgroColors.harvest),
@@ -346,7 +345,7 @@ class OfflineBanner extends StatelessWidget {
               pendingCount > 0
                 ? 'Offline · $pendingCount activities queued for sync'
                 : 'Offline · Activities saved locally',
-              style: GoogleFonts.inter(fontSize: 12, color: AgroColors.ink),
+              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink),
             ),
           ),
         ],
@@ -366,8 +365,8 @@ class MonoLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text.toUpperCase(),
-      style: GoogleFonts.jetBrainsMono(
-        fontSize: 9, fontWeight: FontWeight.w500,
+      style: TextStyle(fontFamily: 'PlusJakartaSans', 
+        fontSize: 12, fontWeight: FontWeight.w500,
         color: color ?? AgroColors.stone, letterSpacing: 1,
       ),
     );
@@ -416,7 +415,7 @@ class AgroTextField extends StatelessWidget {
           onTap: onTap,
           validator: validator,
           onChanged: onChanged,
-          style: GoogleFonts.inter(fontSize: 13, color: AgroColors.forest),
+          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.forest),
           decoration: InputDecoration(hintText: hint, suffixIcon: suffixIcon),
         ),
       ],
@@ -434,17 +433,17 @@ void showBlockWorkSheet(BuildContext context, Block block, BlockWork work) {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('$title — ${c.shortText}',
-            style: GoogleFonts.syne(fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
           const SizedBox(height: 4),
-          Text(c.headline, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
+          Text(c.headline, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
           const SizedBox(height: 6),
           ...c.factors.map((f) => Padding(
             padding: const EdgeInsets.only(bottom: 3),
-            child: Text('• $f', style: GoogleFonts.inter(fontSize: 12, color: AgroColors.ink, height: 1.4)),
+            child: Text('• $f', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink, height: 1.4)),
           )),
           if (c.recommendedSprayDate != null)
             Text('💧 Best spray day: ${c.recommendedSprayDate!.day}/${c.recommendedSprayDate!.month}',
-              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
+              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
         ],
       ),
     );
@@ -463,7 +462,7 @@ void showBlockWorkSheet(BuildContext context, Block block, BlockWork work) {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(block.name, style: GoogleFonts.syne(fontSize: 18, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+              Text(block.name, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 18, fontWeight: FontWeight.w700, color: AgroColors.forest)),
               const SizedBox(height: 12),
               section('Weeding', work.weeding),
               section('Spraying', work.spraying),

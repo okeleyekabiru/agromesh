@@ -23,11 +23,11 @@ defineProps<{ worker: Worker }>()
 <style scoped>
 .worker-row { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--fog); gap: 12px; }
 .worker-row:last-child { border-bottom: none; }
-.w-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--canopy); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; color: var(--palm); flex-shrink: 0; }
+.w-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--canopy); display: flex; align-items: center; justify-content: center; font-family: var(--font-sans); font-weight: 700; font-size: 13px; color: var(--palm); flex-shrink: 0; }
 .w-info { flex: 1; }
 .w-name { font-size: 12px; font-weight: 600; color: var(--forest); }
-.w-role { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--stone); margin-top: 1px; }
+.w-role { font-family: var(--font-sans); font-size: 11px; color: var(--stone); margin-top: 1px; }
 .w-stats { text-align: right; }
-.w-days { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: var(--forest); }
-.w-pay { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--stone); }
+.w-days { font-family: var(--font-sans); font-weight: 700; font-size: 14px; color: var(--forest); }
+.w-pay { font-family: var(--font-sans); font-size: 11px; color: var(--stone); }
 </style>

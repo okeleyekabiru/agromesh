@@ -26,7 +26,7 @@
     <div v-if="store.loading" class="loading-state">Loading orders…</div>
     <div v-else-if="!filteredOrders.length" class="card" style="padding:40px;text-align:center;">
       <div style="font-size:32px;margin-bottom:12px;">🧾</div>
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:var(--forest);margin-bottom:4px;">No orders yet</div>
+      <div style="font-family: var(--font-sans);font-weight:700;font-size:16px;color:var(--forest);margin-bottom:4px;">No orders yet</div>
       <div style="font-size:12px;color:var(--stone);">Place an order with a supplier to restock inventory.</div>
     </div>
     <div v-else class="card">
@@ -318,7 +318,7 @@ onMounted(async () => {
 .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
 .toolbar-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
 .filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.filter-pill { padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--fog); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; cursor: pointer; background: transparent; color: var(--stone); transition: all 0.15s; }
+.filter-pill { padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--fog); font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.08em; cursor: pointer; background: transparent; color: var(--stone); transition: all 0.15s; }
 .filter-pill:hover { border-color: var(--palm); color: var(--forest); }
 .filter-pill.active { background: var(--forest); border-color: var(--forest); color: white; }
 .loading-state { text-align: center; padding: 60px; color: var(--stone); font-size: 13px; }
@@ -328,14 +328,14 @@ onMounted(async () => {
 .ord-info { flex: 1; min-width: 0; }
 .ord-supplier { font-size: 13px; font-weight: 600; color: var(--forest); }
 .ord-ref { margin-left: 6px; font-size: 11px; font-weight: 600; color: var(--stone); background: var(--fog); padding: 1px 6px; border-radius: 4px; }
-.ord-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--stone); margin-top: 2px; }
-.ord-total { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--forest); min-width: 100px; text-align: right; }
+.ord-meta { font-family: var(--font-sans); font-size: 11px; color: var(--stone); margin-top: 2px; }
+.ord-total { font-family: var(--font-sans); font-size: 13px; font-weight: 600; color: var(--forest); min-width: 100px; text-align: right; }
 .ord-actions { flex-shrink: 0; }
 /* Modal */
 .modal-overlay { position: fixed; inset: 0; background: rgba(10,26,16,0.6); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; }
 .modal { background: white; border-radius: 16px; width: 460px; max-height: 88vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(10,26,16,0.2); }
 .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--fog); display: flex; align-items: center; justify-content: space-between; }
-.modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; color: var(--forest); }
+.modal-title { font-family: var(--font-sans); font-weight: 700; font-size: 15px; color: var(--forest); }
 .modal-close { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--fog); background: transparent; cursor: pointer; font-size: 18px; color: var(--stone); }
 .modal-body { padding: 20px 24px; }
 .modal-footer { padding: 16px 24px; border-top: 1px solid var(--fog); display: flex; justify-content: space-between; }
@@ -346,6 +346,6 @@ onMounted(async () => {
 .line-hint { flex-basis: 100%; font-size: 11px; color: var(--stone); padding-left: 2px; }
 .btn-remove-line { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--fog); background: transparent; cursor: pointer; font-size: 16px; color: var(--stone); flex-shrink: 0; }
 .order-total-row { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--fog); font-size: 13px; font-weight: 600; color: var(--forest); }
-.order-total-value { font-family: 'JetBrains Mono', monospace; font-size: 15px; }
+.order-total-value { font-family: var(--font-sans); font-size: 15px; }
 .error-msg { font-size: 11.5px; color: var(--alert); line-height: 1.5; margin-top: 8px; }
 </style>

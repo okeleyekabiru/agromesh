@@ -193,18 +193,18 @@ onMounted(load)
 <style scoped>
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .month-bar { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 16px; }
-.month-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: var(--forest); min-width: 160px; text-align: center; }
+.month-name { font-family: var(--font-sans); font-weight: 700; font-size: 16px; color: var(--forest); min-width: 160px; text-align: center; }
 .report-stat { padding: 14px 16px; border-bottom: 1px solid var(--fog); display: flex; align-items: center; justify-content: space-between; }
 .report-stat:last-child { border-bottom: none; }
 .report-label { font-size: 12px; color: var(--ink); }
-.report-value { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: var(--forest); letter-spacing: -0.01em; }
-.sub { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--stone); margin-top: 2px; }
-.no-area { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--harvest); }
-.per-ha { font-size: 10px; color: var(--stone); font-family: 'Inter', sans-serif; margin-left: 2px; }
+.report-value { font-family: var(--font-sans); font-weight: 700; font-size: 16px; color: var(--forest); letter-spacing: -0.01em; }
+.sub { font-family: var(--font-sans); font-size: 11px; color: var(--stone); margin-top: 2px; }
+.no-area { font-family: var(--font-sans); font-size: 11px; color: var(--harvest); }
+.per-ha { font-size: 11px; color: var(--stone); font-family: var(--font-sans); margin-left: 2px; }
 .trend { display: flex; align-items: flex-end; gap: 8px; height: 120px; }
 .trend-col { flex: 1; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; }
 .trend-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 4px; }
-.trend-val { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--stone); }
+.trend-val { font-family: var(--font-sans); font-size: 11px; color: var(--stone); }
 .empty-sm, .empty-state { padding: 24px; text-align: center; color: var(--stone); font-size: 12px; }
 @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
 </style>

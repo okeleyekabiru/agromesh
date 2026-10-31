@@ -57,7 +57,7 @@ const showAddBlockModal = inject<Ref<boolean>>('showAddBlockModal')!
 }
 .topbar-left { display: flex; flex-direction: column; gap: 1px; }
 .page-title {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 700;
   font-size: 16px;
   color: var(--forest);
@@ -65,8 +65,8 @@ const showAddBlockModal = inject<Ref<boolean>>('showAddBlockModal')!
   line-height: 1.1;
 }
 .page-sub {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   color: var(--stone);
   letter-spacing: 0.12em;
   text-transform: uppercase;

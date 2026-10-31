@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' show Geolocator, LocationAccuracy, LocationPermission;
 import '../blocks/map_pick_screen.dart';
-import '../../services/api_client.dart' show ApiException;
 import '../../services/geo_check.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../models/models.dart';
 import '../../services/api_client.dart';
 import '../../stores/app_store.dart';
@@ -186,6 +184,7 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
       appBar: AppBar(
         title: const Text('Log Activity'),
         leading: IconButton(
+          tooltip: 'Close',
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
         ),
@@ -374,13 +373,13 @@ class _Stepper extends StatelessWidget {
                   child: isDone
                     ? const Icon(Icons.check, color: Colors.white, size: 12)
                     : Text('${stepIndex + 1}',
-                        style: GoogleFonts.jetBrainsMono(fontSize: 10, color: isActive ? Colors.white : AgroColors.stone)),
+                        style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: isActive ? Colors.white : AgroColors.stone)),
                 ),
               ),
               const SizedBox(height: 4),
               Text(steps[stepIndex],
-                style: GoogleFonts.jetBrainsMono(
-                  fontSize: 8, letterSpacing: 0.5,
+                style: TextStyle(fontFamily: 'PlusJakartaSans', 
+                  fontSize: 12, letterSpacing: 0.5,
                   color: isActive ? AgroColors.leaf : AgroColors.stone)),
             ],
           );
@@ -410,19 +409,19 @@ class _StepLocation extends StatelessWidget {
         const MonoLabel('Block'),
         const SizedBox(height: 6),
         DropdownButtonFormField<Block>(
-          value: selectedBlock,
-          hint: Text('Choose block...', style: GoogleFonts.inter(fontSize: 13, color: AgroColors.stone)),
+          initialValue: selectedBlock,
+          hint: const Text('Choose block...', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.stone)),
           decoration: const InputDecoration(),
           items: blocks.map((s) => DropdownMenuItem(
             value: s,
-            child: Text('${s.name} — ${s.crop.label}', style: GoogleFonts.inter(fontSize: 13)),
+            child: Text('${s.name} — ${s.crop.label}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14)),
           )).toList(),
           onChanged: onBlockChanged,
         ),
         if (selectedBlock != null) ...[
           const SizedBox(height: 4),
           Text('${selectedBlock!.hectares.toStringAsFixed(0)} ha · Last activity: ${selectedBlock!.lastActivityDate ?? 'Never'}',
-            style: GoogleFonts.jetBrainsMono(fontSize: 9, color: AgroColors.stone)),
+            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
         ],
       ],
     );
@@ -458,7 +457,7 @@ class _StepActivity extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: isSelected ? AgroColors.leaf.withOpacity(0.06) : Colors.transparent,
+                  color: isSelected ? AgroColors.leaf.withValues(alpha: 0.06) : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isSelected ? AgroColors.leaf : AgroColors.fog,
@@ -471,8 +470,8 @@ class _StepActivity extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(type.label,
-                        style: GoogleFonts.inter(
-                          fontSize: 11, fontWeight: FontWeight.w600,
+                        style: TextStyle(fontFamily: 'PlusJakartaSans', 
+                          fontSize: 12, fontWeight: FontWeight.w600,
                           color: isSelected ? AgroColors.leaf : AgroColors.forest),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -491,10 +490,10 @@ class _StepActivity extends StatelessWidget {
           TextField(
             controller: notes,
             maxLines: 2,
-            style: GoogleFonts.inter(fontSize: 13, color: AgroColors.forest),
-            decoration: InputDecoration(
+            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.forest),
+            decoration: const InputDecoration(
               hintText: 'Any details about this activity...',
-              hintStyle: GoogleFonts.inter(fontSize: 13, color: AgroColors.stone),
+              hintStyle: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.stone),
             ),
           ),
         ],
@@ -562,21 +561,21 @@ class _StepWorkersInputs extends StatelessWidget {
           const SizedBox(height: 10),
         ],
         if (availableWorkers.isEmpty)
-          Text('No workers yet — they sync from the farm when you are online.',
-            style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone))
+          const Text('No workers yet — they sync from the farm when you are online.',
+            style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone))
         else
           Row(
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: workerPickId,
+                  initialValue: workerPickId,
                   isExpanded: true,
-                  hint: Text('Choose worker...', style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
+                  hint: const Text('Choose worker...', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
                   decoration: const InputDecoration(),
                   items: availableWorkers.map((w) => DropdownMenuItem(
                     value: w.id,
                     child: Text('${w.name} (${w.type.label})',
-                      style: GoogleFonts.inter(fontSize: 13), overflow: TextOverflow.ellipsis),
+                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14), overflow: TextOverflow.ellipsis),
                   )).toList(),
                   onChanged: onWorkerPicked,
                 ),
@@ -587,10 +586,10 @@ class _StepWorkersInputs extends StatelessWidget {
                 child: TextField(
                   controller: hoursCtrl,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  style: GoogleFonts.inter(fontSize: 13, color: AgroColors.forest),
-                  decoration: InputDecoration(
+                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.forest),
+                  decoration: const InputDecoration(
                     hintText: 'Hrs',
-                    hintStyle: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone),
+                    hintStyle: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone),
                   ),
                 ),
               ),
@@ -620,16 +619,16 @@ class _StepWorkersInputs extends StatelessWidget {
           const SizedBox(height: 10),
         ],
         if (stockItems.isEmpty)
-          Text('No suitable stock for this activity — add stock on the web app, then sync.',
-            style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone))
+          const Text('No suitable stock for this activity — add stock on the web app, then sync.',
+            style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone))
         else ...[
           Row(
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: stockItemId,
+                  initialValue: stockItemId,
                   isExpanded: true,
-                  hint: Text('Choose from stock...', style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone)),
+                  hint: const Text('Choose from stock...', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
                   decoration: const InputDecoration(),
                   items: stockItems.map((i) {
                     final left = availableFor(i.id);
@@ -637,7 +636,7 @@ class _StepWorkersInputs extends StatelessWidget {
                       value: i.id,
                       enabled: left > 0,
                       child: Text('${i.name} — ${formatQty(left)} ${i.unit}',
-                        style: GoogleFonts.inter(fontSize: 13, color: left > 0 ? AgroColors.forest : AgroColors.stone),
+                        style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: left > 0 ? AgroColors.forest : AgroColors.stone),
                         overflow: TextOverflow.ellipsis),
                     );
                   }).toList(),
@@ -650,10 +649,10 @@ class _StepWorkersInputs extends StatelessWidget {
                 child: TextField(
                   controller: inputQtyCtrl,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  style: GoogleFonts.inter(fontSize: 13, color: AgroColors.forest),
+                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.forest),
                   decoration: InputDecoration(
                     hintText: stock == null ? 'Qty' : stock.unit,
-                    hintStyle: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone),
+                    hintStyle: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone),
                   ),
                 ),
               ),
@@ -670,12 +669,12 @@ class _StepWorkersInputs extends StatelessWidget {
             Text(
               '${formatQty(pickedFor(stock.id))} ${stock.unit} picked out for ${block?.name ?? 'this block'} · '
               '${formatQty(stock.currentStock)} ${stock.unit} in the store. Picked stock is used first.',
-              style: GoogleFonts.jetBrainsMono(fontSize: 9, color: AgroColors.stone),
+              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone),
             ),
           ],
           if (inputError != null) ...[
             const SizedBox(height: 6),
-            Text(inputError!, style: GoogleFonts.inter(fontSize: 12, color: AgroColors.alert)),
+            Text(inputError!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert)),
           ],
         ],
 
@@ -687,12 +686,12 @@ class _StepWorkersInputs extends StatelessWidget {
         const MonoLabel('Supervisor'),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
-          value: selectedSupervisorId,
-          hint: Text('Select supervisor...', style: GoogleFonts.inter(fontSize: 13, color: AgroColors.stone)),
+          initialValue: selectedSupervisorId,
+          hint: const Text('Select supervisor...', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.stone)),
           decoration: const InputDecoration(),
           items: supervisors.map((w) => DropdownMenuItem(
             value: w.id,
-            child: Text(w.name, style: GoogleFonts.inter(fontSize: 13)),
+            child: Text(w.name, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14)),
           )).toList(),
           onChanged: onSupervisorChanged,
         ),
@@ -731,7 +730,7 @@ class _StepArea extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'Walk around the edge of the area that was worked and tap Add point at each corner, in order. At least $minPoints points.',
-          style: GoogleFonts.inter(fontSize: 12, color: AgroColors.stone),
+          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone),
         ),
         const SizedBox(height: 12),
         GeoSketch(
@@ -747,14 +746,14 @@ class _StepArea extends StatelessWidget {
               existing!.status == 'Complete'
                   ? 'The whole block is already covered this cycle: this will start a new cycle.'
                   : 'Green is already done this cycle (${existing!.coveredHectares.toStringAsFixed(2)} ha). Mark only the amber part so the work does not overlap.',
-              style: GoogleFonts.inter(fontSize: 11.5, color: AgroColors.forest),
+              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.forest),
             ),
           ),
         if (block != null && !block!.hasBoundary)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
+          const Padding(
+            padding: EdgeInsets.only(top: 8),
             child: Text('This block has no boundary yet, so the area cannot be checked against its edge.',
-              style: GoogleFonts.inter(fontSize: 11, color: AgroColors.harvest)),
+              style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.harvest)),
           ),
         if (areaPointsProblem(points, blockRings: geoJsonRings(block?.boundaryGeoJson)) case final problem?)
           Padding(
@@ -764,7 +763,7 @@ class _StepArea extends StatelessWidget {
         if (error != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(error!, style: const TextStyle(color: AgroColors.alert, fontSize: 12)),
+            child: Text(error!, style: const TextStyle(color: AgroColors.alert, fontSize: 13)),
           ),
         const SizedBox(height: 12),
         SizedBox(
@@ -825,7 +824,7 @@ class _Footer extends StatelessWidget {
           OutlinedButton(
             onPressed: onBack,
             style: OutlinedButton.styleFrom(minimumSize: const Size(100, 44)),
-            child: Text(step == 0 ? 'Cancel' : '← Back', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13)),
+            child: Text(step == 0 ? 'Cancel' : '← Back', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w600, fontSize: 14)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -834,7 +833,7 @@ class _Footer extends StatelessWidget {
               child: isSubmitting
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                 : Text(isLast ? '✓ Submit Activity' : 'Continue →',
-                    style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
+                    style: const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w600, fontSize: 14)),
             ),
           ),
         ],
