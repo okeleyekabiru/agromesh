@@ -704,6 +704,13 @@ onMounted(() => {
 .badge { display: inline-block; font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.1em; padding: 2px 6px; border-radius: 4px; }
 .badge-warn { background: #FFF0C0; color: #8A6000; border: 1px solid #F5D77B; }
 .inv-actions { display: flex; gap: 6px; flex-shrink: 0; }
+@media (max-width: 700px) {
+  .inv-row { flex-wrap: wrap; align-items: flex-start; padding: 12px 14px; gap: 10px 12px; }
+  .inv-info { flex: 1 1 calc(100% - 56px); }
+  .inv-stock, .inv-badges { flex: 1 1 100%; min-width: 0; }
+  .inv-actions { flex: 1 1 100%; flex-wrap: wrap; }
+  .inv-actions .btn { flex: 1 1 auto; }
+}
 /* Modals (Adjust + Add Item share the same look) */
 .modal-overlay { position: fixed; inset: 0; background: rgba(10,26,16,0.6); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; }
 .modal { background: white; border-radius: 16px; width: 400px; max-height: 88vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(10,26,16,0.2); }
