@@ -434,6 +434,14 @@ namespace AgroMesh.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("BrandAccentColor")
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<string>("BrandPrimaryColor")
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
                     b.Property<double?>("CentroidLat")
                         .HasColumnType("double precision");
 
@@ -633,6 +641,10 @@ namespace AgroMesh.Infrastructure.Persistence.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
+                    b.Property<string>("AccentColor")
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
                     b.Property<string>("BillToAddress")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -686,6 +698,10 @@ namespace AgroMesh.Infrastructure.Persistence.Migrations
                     b.Property<string>("PaymentBankName")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PrimaryColor")
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
 
                     b.Property<string>("SignatoryName")
                         .HasMaxLength(150)

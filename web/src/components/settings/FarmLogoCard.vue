@@ -23,7 +23,7 @@
 
       <div class="logo-side">
         <p class="logo-help">
-          Shown in the sidebar instead of the AgroMesh logo and printed at the top of your invoices.
+          Printed at the top of your invoices. The app keeps showing the AgroMesh logo.
           PNG, JPEG or WebP, up to 2 MB and 4096 x 4096 pixels.
         </p>
 
@@ -61,7 +61,7 @@
     <ConfirmDialog
       v-if="confirmRemove"
       title="Remove the farm logo?"
-      message="The sidebar goes back to the AgroMesh logo and new invoice PDFs print the farm name instead."
+      message="New invoice PDFs will print the farm name instead of the logo."
       confirm-label="Remove logo"
       :busy="busy"
       :error="removeError"

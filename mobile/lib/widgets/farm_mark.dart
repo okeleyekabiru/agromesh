@@ -1,7 +1,5 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../stores/app_store.dart';
 import '../theme/app_theme.dart';
 
 /// The AgroMesh "A" mark.
@@ -22,20 +20,8 @@ class AgroMark extends StatelessWidget {
   }
 }
 
-/// Shown where the app logo appears once someone is logged in: the farm's own logo when it has one, otherwise (no
-/// logo, still loading, or the image cannot be decoded) the AgroMesh mark. The login screen never uses this.
-class FarmMark extends StatelessWidget {
-  final double size;
-  const FarmMark({super.key, this.size = 32});
-
-  @override
-  Widget build(BuildContext context) {
-    final bytes = context.select<AppStore, Uint8List?>((s) => s.farmLogoBytes);
-    return FarmMarkImage(bytes: bytes, size: size);
-  }
-}
-
-/// [FarmMark] without the store, so it can be previewed (and tested) with any bytes.
+/// A farm's own logo on a white tile, or the AgroMesh mark when there are no bytes (or they cannot be decoded). Used
+/// for previewing the logo in the farm settings; the app header always shows the AgroMesh mark.
 class FarmMarkImage extends StatelessWidget {
   final Uint8List? bytes;
   final double size;

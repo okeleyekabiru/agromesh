@@ -63,7 +63,21 @@ class BusinessProfile {
   final String? bankAccountNumber;
   final String? bankName;
 
-  const BusinessProfile({this.address, this.phone, this.email, this.website, this.bankAccountName, this.bankAccountNumber, this.bankName});
+  /// Farm brand colours (`#RRGGBB`, upper case) used by invoices that have no colour of their own; null = not set.
+  final String? brandPrimaryColor;
+  final String? brandAccentColor;
+
+  const BusinessProfile({
+    this.address,
+    this.phone,
+    this.email,
+    this.website,
+    this.bankAccountName,
+    this.bankAccountNumber,
+    this.bankName,
+    this.brandPrimaryColor,
+    this.brandAccentColor,
+  });
 
   static const empty = BusinessProfile();
 
@@ -75,6 +89,43 @@ class BusinessProfile {
         bankAccountName: _str(j['bankAccountName']),
         bankAccountNumber: _str(j['bankAccountNumber']),
         bankName: _str(j['bankName']),
+        brandPrimaryColor: normalizeHexColor(_str(j['brandPrimaryColor'])),
+        brandAccentColor: normalizeHexColor(_str(j['brandAccentColor'])),
+      );
+
+  /// A copy with other brand colours (null clears one). Everything else is kept, so a PUT never drops a field.
+  BusinessProfile withBrandColors({String? primary, String? accent}) => BusinessProfile(
+        address: address,
+        phone: phone,
+        email: email,
+        website: website,
+        bankAccountName: bankAccountName,
+        bankAccountNumber: bankAccountNumber,
+        bankName: bankName,
+        brandPrimaryColor: primary,
+        brandAccentColor: accent,
+      );
+
+  /// A copy with other text fields; the brand colours are kept.
+  BusinessProfile withFields({
+    String? address,
+    String? phone,
+    String? email,
+    String? website,
+    String? bankAccountName,
+    String? bankAccountNumber,
+    String? bankName,
+  }) =>
+      BusinessProfile(
+        address: address,
+        phone: phone,
+        email: email,
+        website: website,
+        bankAccountName: bankAccountName,
+        bankAccountNumber: bankAccountNumber,
+        bankName: bankName,
+        brandPrimaryColor: brandPrimaryColor,
+        brandAccentColor: brandAccentColor,
       );
 
   /// PUT is a full replace: blank / missing clears the field.
@@ -86,7 +137,52 @@ class BusinessProfile {
         'bankAccountName': bankAccountName,
         'bankAccountNumber': bankAccountNumber,
         'bankName': bankName,
+        'brandPrimaryColor': brandPrimaryColor,
+        'brandAccentColor': brandAccentColor,
       };
+}
+
+// ── BRAND COLOURS ──
+// The server accepts exactly `#RRGGBB` (any case), answers in UPPER case and treats blank as "not set".
+
+const String kDefaultPrimaryColor = '#138A44';
+const String kDefaultAccentColor = '#F5C90C';
+
+final RegExp _hexColor = RegExp(r'^#[0-9A-Fa-f]{6}$');
+
+/// True when [s] (surrounding spaces ignored) is exactly `#RRGGBB`.
+bool isHexColor(String? s) => s != null && _hexColor.hasMatch(s.trim());
+
+/// `#rrggbb` -> `#RRGGBB`. Null for blank (= not set) and for anything that is not a valid colour.
+String? normalizeHexColor(String? s) {
+  final t = s?.trim();
+  if (t == null || t.isEmpty) return null;
+  return _hexColor.hasMatch(t) ? t.toUpperCase() : null;
+}
+
+/// Why [s] cannot be sent as the [label] (e.g. "primary colour"), or null when it is blank or valid.
+String? hexColorProblem(String label, String? s) {
+  final t = s?.trim() ?? '';
+  if (t.isEmpty || _hexColor.hasMatch(t)) return null;
+  return 'The $label must look like #138A44: a # followed by 6 digits or letters A to F.';
+}
+
+/// The packed ARGB value of a valid `#RRGGBB`, or null.
+int? hexColorValue(String? s) {
+  final n = normalizeHexColor(s);
+  return n == null ? null : 0xFF000000 | int.parse(n.substring(1), radix: 16);
+}
+
+/// Where a resolved invoice colour came from, in words.
+String colorSourceLabel(String? source) {
+  switch (source) {
+    case 'invoice':
+      return 'set on this invoice';
+    case 'farm':
+      return "your farm's brand colour";
+    default:
+      return "the template's default";
+  }
 }
 
 // ── INVOICE TEMPLATES ──
@@ -95,14 +191,70 @@ class InvoiceTemplate {
   final String name;
   final String? description;
   final bool isDefault;
-  const InvoiceTemplate({required this.key, required this.name, this.description, this.isDefault = false});
+  final String defaultPrimaryColor;
+  final String defaultAccentColor;
+  final String? previewUrl;
+  const InvoiceTemplate({
+    required this.key,
+    required this.name,
+    this.description,
+    this.isDefault = false,
+    this.defaultPrimaryColor = kDefaultPrimaryColor,
+    this.defaultAccentColor = kDefaultAccentColor,
+    this.previewUrl,
+  });
 
   factory InvoiceTemplate.fromJson(Map<String, dynamic> j) => InvoiceTemplate(
         key: '${j['key']}',
         name: '${j['name'] ?? j['key']}',
         description: _str(j['description']),
         isDefault: j['isDefault'] == true,
+        defaultPrimaryColor: normalizeHexColor(_str(j['defaultPrimaryColor'])) ?? kDefaultPrimaryColor,
+        defaultAccentColor: normalizeHexColor(_str(j['defaultAccentColor'])) ?? kDefaultAccentColor,
+        previewUrl: _str(j['previewUrl']),
       );
+
+  Map<String, dynamic> toJson() => {
+        'key': key,
+        'name': name,
+        'description': description,
+        'isDefault': isDefault,
+        'defaultPrimaryColor': defaultPrimaryColor,
+        'defaultAccentColor': defaultAccentColor,
+        'previewUrl': previewUrl,
+      };
+}
+
+/// The server's order: the default template (ngf) first, then by name. Applied again on the phone so an older saved copy
+/// or a reordered reply still shows the same order.
+List<InvoiceTemplate> sortTemplates(Iterable<InvoiceTemplate> templates) {
+  final list = templates.toList();
+  list.sort((a, b) {
+    if (a.isDefault != b.isDefault) return a.isDefault ? -1 : 1;
+    return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+  });
+  return list;
+}
+
+/// The template list from the API reply (entries without a key are ignored).
+List<InvoiceTemplate> parseTemplates(dynamic json) => sortTemplates([
+      for (final t in (json is List ? json : const []))
+        if (t is Map && '${t['key'] ?? ''}'.isNotEmpty) InvoiceTemplate.fromJson(t.cast<String, dynamic>()),
+    ]);
+
+/// Path of the sample-PDF preview of [templateKey]. A colour that is null or invalid is left out, so the server falls back
+/// to the farm brand colour and then the template default. The `#` is encoded as `%23`.
+String invoicePreviewPath(String farmId, String templateKey, {String? primaryColor, String? accentColor}) {
+  final primary = normalizeHexColor(primaryColor);
+  final accent = normalizeHexColor(accentColor);
+  final query = <String, String>{
+    if (primary != null) 'primaryColor': primary,
+    if (accent != null) 'accentColor': accent,
+  };
+  return Uri(
+    path: '/api/farms/$farmId/invoice-templates/$templateKey/preview',
+    queryParameters: query.isEmpty ? null : query,
+  ).toString();
 }
 
 // ── SALES INVOICES ──
@@ -189,6 +341,16 @@ class Invoice {
   final String? signatoryName;
   final String templateKey;
 
+  /// Colours stored on the invoice (null = inherit the farm brand colour, then the template default).
+  final String? primaryColor;
+  final String? accentColor;
+
+  /// What the PDF uses now, and where each came from: 'invoice' | 'farm' | 'default'.
+  final String? resolvedPrimaryColor;
+  final String? resolvedAccentColor;
+  final String primaryColorSource;
+  final String accentColorSource;
+
   const Invoice({
     required this.id,
     required this.reference,
@@ -209,6 +371,12 @@ class Invoice {
     this.termsAndNotes,
     this.signatoryName,
     this.templateKey = 'ngf',
+    this.primaryColor,
+    this.accentColor,
+    this.resolvedPrimaryColor,
+    this.resolvedAccentColor,
+    this.primaryColorSource = 'default',
+    this.accentColorSource = 'default',
   });
 
   factory Invoice.fromJson(Map<String, dynamic> j) => Invoice(
@@ -231,6 +399,12 @@ class Invoice {
         termsAndNotes: _str(j['termsAndNotes']),
         signatoryName: _str(j['signatoryName']),
         templateKey: '${j['templateKey'] ?? 'ngf'}',
+        primaryColor: normalizeHexColor(_str(j['primaryColor'])),
+        accentColor: normalizeHexColor(_str(j['accentColor'])),
+        resolvedPrimaryColor: normalizeHexColor(_str(j['resolvedPrimaryColor'])),
+        resolvedAccentColor: normalizeHexColor(_str(j['resolvedAccentColor'])),
+        primaryColorSource: _str(j['primaryColorSource']) ?? 'default',
+        accentColorSource: _str(j['accentColorSource']) ?? 'default',
       );
 }
 
@@ -250,8 +424,13 @@ Map<String, dynamic> invoiceRequestBody({
   String? termsAndNotes,
   String? signatoryName,
   required String templateKey,
-}) =>
-    {
+  String? primaryColor,
+  String? accentColor,
+}) {
+  // PUT is a full replace: leaving a colour out clears it, so an edit passes the colours it loaded. Null = inherit.
+  final problem = hexColorProblem('primary colour', primaryColor) ?? hexColorProblem('accent colour', accentColor);
+  if (problem != null) throw ArgumentError(problem);
+  return {
       'date': dateOnly(date),
       'dueDate': dateOnly(dueDate),
       'billToName': billToName.trim(),
@@ -266,7 +445,10 @@ Map<String, dynamic> invoiceRequestBody({
       'termsAndNotes': _str(termsAndNotes),
       'signatoryName': _str(signatoryName),
       'templateKey': templateKey,
+      'primaryColor': normalizeHexColor(primaryColor),
+      'accentColor': normalizeHexColor(accentColor),
     };
+}
 
 // ── VENDOR INVOICES ──
 class VendorInvoice {

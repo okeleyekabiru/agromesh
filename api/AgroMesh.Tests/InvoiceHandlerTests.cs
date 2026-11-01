@@ -37,8 +37,9 @@ public class InvoiceHandlerTests
         public InvoiceRenderModel? LastModel;
         public string? LastKey;
         public IReadOnlyList<InvoiceTemplateInfo> Templates { get; } =
-            [new InvoiceTemplateInfo("ngf", "NGF - Invoice", "Nature's Gold Farm"), new InvoiceTemplateInfo("plain", "Plain", "A plain layout")];
+            [new InvoiceTemplateInfo("ngf", "NGF - Invoice", "Nature's Gold Farm", "#138A44", "#F5C90C"), new InvoiceTemplateInfo("plain", "Plain", "A plain layout", "#222222", "#888888")];
         public bool Exists(string key) => Templates.Any(t => t.Key == key);
+        public InvoiceTemplateInfo? Find(string key) => Templates.FirstOrDefault(t => t.Key == key);
         public byte[] Render(string key, InvoiceRenderModel model) { LastKey = key; LastModel = model; return "%PDF-fake"u8.ToArray(); }
     }
 
@@ -68,7 +69,7 @@ public class InvoiceHandlerTests
         public CreateInvoiceCommandHandler Create => new(Farms, Invoices, Registry, User);
         public UpdateInvoiceCommandHandler Update => new(Farms, Invoices, Registry, User);
         public DeleteInvoiceCommandHandler Delete => new(Farms, Invoices, User);
-        public GetInvoiceQueryHandler Get => new(Farms, Invoices, User);
+        public GetInvoiceQueryHandler Get => new(Farms, Invoices, Registry, User);
         public GetInvoicesQueryHandler List => new(Farms, Invoices, User);
         public GetInvoiceTemplatesQueryHandler Templates => new(Farms, Registry, User);
         public GenerateInvoicePdfQueryHandler Pdf => new(Farms, Invoices, Files, Registry, User);
@@ -370,7 +371,7 @@ public class InvoiceHandlerTests
         var created = await h.Create.Handle(new CreateInvoiceCommand("farm-1", Request()), default);
         var user = new FakeUser(role);
 
-        var get = await new GetInvoiceQueryHandler(h.Farms, h.Invoices, user).Handle(new GetInvoiceQuery("farm-1", created.Id), default);
+        var get = await new GetInvoiceQueryHandler(h.Farms, h.Invoices, h.Registry, user).Handle(new GetInvoiceQuery("farm-1", created.Id), default);
         var list = await new GetInvoicesQueryHandler(h.Farms, h.Invoices, user).Handle(new GetInvoicesQuery("farm-1"), default);
 
         Assert.Equal(created.Id, get.Id);
@@ -516,6 +517,7 @@ public class InvoiceHandlerTests
     {
         public IReadOnlyList<InvoiceTemplateInfo> Templates => [];
         public bool Exists(string key) => false;
+        public InvoiceTemplateInfo? Find(string key) => null;
         public byte[] Render(string key, InvoiceRenderModel model) => throw new InvalidOperationException();
     }
 }

@@ -51,6 +51,6 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
         invoice.AssignNumber(await _invoiceRepo.ReserveNextNumberAsync(farm.Id, ct));
         await _invoiceRepo.AddAsync(invoice, ct);
 
-        return InvoiceMapping.ToDto(invoice);
+        return InvoiceMapping.ToDto(invoice, InvoiceMapping.ResolveTheme(invoice, farm, _templates));
     }
 }

@@ -14,9 +14,15 @@ public record FarmBusinessProfileDto(
     string? Website,
     string? BankAccountName,
     string? BankAccountNumber,
-    string? BankName);
+    string? BankName,
+    string? BrandPrimaryColor = null,
+    string? BrandAccentColor = null);
 
-/// <summary>A full replacement: a field left out (null or blank) is cleared.</summary>
+/// <summary>
+/// A full replacement: a field left out (null or blank) is cleared. The two brand colours are the exception, so that a client
+/// that does not know about them cannot wipe them: omitted or null keeps the current colour, an empty string resets it to the
+/// default, and "#RRGGBB" sets it.
+/// </summary>
 public record UpdateFarmBusinessProfileRequest(
     string? Address,
     string? Phone,
@@ -24,4 +30,6 @@ public record UpdateFarmBusinessProfileRequest(
     string? Website,
     string? BankAccountName,
     string? BankAccountNumber,
-    string? BankName);
+    string? BankName,
+    string? BrandPrimaryColor = null,
+    string? BrandAccentColor = null);

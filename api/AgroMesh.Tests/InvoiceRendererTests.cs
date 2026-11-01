@@ -73,6 +73,8 @@ public class InvoiceRendererTests
     {
         public string Key => "stub";
         public string Name => "Stub";
+        public string DefaultPrimaryColor => "#111111";
+        public string DefaultAccentColor => "#999999";
         public string Description => "Test only";
         public byte[] Render(InvoiceRenderModel model) => "stub"u8.ToArray();
     }

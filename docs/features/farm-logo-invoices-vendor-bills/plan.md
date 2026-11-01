@@ -18,3 +18,12 @@ Order is red-green per step; run `dotnet test api/AgroMesh.slnx` after each.
 Migration/data model: tables `StoredFiles`, `Invoices`, `VendorInvoices`; columns on `Farms`: `LogoFileId`, `LogoUpdatedAt`, `Address`, `Phone`, `Email`, `Website`, `BankAccountName`, `BankAccountNumber`, `BankName`. Unique (FarmId, Number) on Invoices.
 
 Risks: variable Plus Jakarta Sans in QuestPDF (verify visually, fall back to static instance); bytea size on the free DB tier (limits kept low); concurrent invoice numbering (unique index + retry); `FarmDto` positional record extended only with defaulted trailing parameters.
+
+## Third pass plan (brand colours, ten templates, preview)
+
+1. `BrandColor` (validate/normalise/luminance/legible text) in Domain; `InvoiceThemeResolver` + `InvoiceSampleData` in Application. Tests: `BrandColorTests`, `InvoiceThemeResolverTests`.
+2. Entities/DTOs/commands/queries: `Farm.BrandPrimaryColor/BrandAccentColor`, `Invoice.PrimaryColor/AccentColor`, business profile and invoice requests/responses. Tests: `InvoiceColourHandlerTests`, `FarmBusinessProfileHandlerTests`, `InvoiceHandlerTests`.
+3. Renderer: `InvoiceTemplateBase` (palette, fonts, logo), `InvoiceBlocks*`, ngf refactor, templates in `ModernTemplatesA/B/C.cs`, registry cap of 10 and DI registration of exactly 10. Tests: `InvoiceTemplateCatalogTests`, `InvoiceRendererTests`.
+4. Preview: `GenerateInvoicePreviewQuery`, route `invoice-templates/{key}/preview`. Tests: `InvoicePreviewControllerTests`.
+5. Migration `20261101110452_InvoiceBrandColours` (4 nullable varchar(7) columns, reversible).
+6. Visual check against a throwaway Postgres; fix cramped/clipped layouts (Callout total wrap, Minimal and Angle spilling to a second page).

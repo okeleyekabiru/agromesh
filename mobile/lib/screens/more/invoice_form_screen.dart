@@ -4,6 +4,8 @@ import '../../models/billing_models.dart';
 import '../../services/api_client.dart';
 import '../../services/database_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/brand_color_field.dart';
+import '../../widgets/invoice_template_picker.dart';
 import '../../widgets/widgets.dart';
 import 'billing_common.dart';
 import 'common.dart';
@@ -65,6 +67,15 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
   late DateTime _due;
   List<InvoiceTemplate> _templates = const [InvoiceTemplate(key: 'ngf', name: 'NGF - Invoice', isDefault: true)];
   String _templateKey = 'ngf';
+  final _primaryColor = TextEditingController();
+  final _accentColor = TextEditingController();
+
+  /// false = "Use my farm's brand colours" (sends no colour of its own); true = this invoice's own colours.
+  bool _customColors = false;
+  BusinessProfile? _farmProfile;
+  bool _offline = false;
+  bool _previewing = false;
+  String? _previewError;
   bool _loading = true;
   bool _saving = false;
   String? _error;
@@ -89,6 +100,9 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
       _terms.text = e.termsAndNotes ?? '';
       _signatory.text = e.signatoryName ?? '';
       _templateKey = e.templateKey;
+      _primaryColor.text = e.primaryColor ?? '';
+      _accentColor.text = e.accentColor ?? '';
+      _customColors = e.primaryColor != null || e.accentColor != null;
       _lines.addAll(e.lineItems.map(_LineEdit.from));
     } else {
       final now = DateTime.now();
@@ -101,7 +115,7 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
 
   @override
   void dispose() {
-    for (final c in [_billName, _billPhone, _billEmail, _billAddress, _vat, _payName, _payNumber, _payBank, _terms, _signatory]) {
+    for (final c in [_billName, _billPhone, _billEmail, _billAddress, _vat, _payName, _payNumber, _payBank, _terms, _signatory, _primaryColor, _accentColor]) {
       c.dispose();
     }
     for (final l in _lines) {
@@ -110,38 +124,99 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
     super.dispose();
   }
 
-  /// Templates (from the server) and, for a new invoice, the farm's bank details to prefill the payment block.
+  /// Templates (from the server, or the saved copy offline) and the farm business profile: its bank details prefill the
+  /// payment block of a new invoice, and its brand colours are what "Use my farm's brand colours" resolves to.
   Future<void> _loadSetup() async {
+    final tKey = 'invoicetemplates:${widget.farmId}';
+    List<InvoiceTemplate> list = const [];
     try {
-      final j = await ApiClient.get('/api/farms/${widget.farmId}/invoice-templates');
-      final list = asList(j).map(InvoiceTemplate.fromJson).toList();
-      if (list.isNotEmpty) {
-        _templates = list;
-        if (!_editing || !list.any((t) => t.key == _templateKey)) {
-          _templateKey = (list.firstWhere((t) => t.isDefault, orElse: () => list.first)).key;
-        }
-      }
-    } catch (_) {/* keep the built-in default template */}
-
-    if (!_editing) {
-      BusinessProfile? profile;
-      try {
-        final j = await ApiClient.get('/api/farms/${widget.farmId}/business-profile');
-        if (j is Map) {
-          await DatabaseService.saveCache('bizprofile:${widget.farmId}', [j.cast<String, dynamic>()]);
-          profile = BusinessProfile.fromJson(j.cast<String, dynamic>());
-        }
-      } catch (_) {
-        final cached = await DatabaseService.readCacheList('bizprofile:${widget.farmId}');
-        if (cached.isNotEmpty) profile = BusinessProfile.fromJson(cached.first);
-      }
-      if (profile != null && _payName.text.isEmpty && _payNumber.text.isEmpty && _payBank.text.isEmpty) {
-        _payName.text = profile.bankAccountName ?? '';
-        _payNumber.text = profile.bankAccountNumber ?? '';
-        _payBank.text = profile.bankName ?? '';
+      list = parseTemplates(await ApiClient.get('/api/farms/${widget.farmId}/invoice-templates'));
+      _offline = false;
+      if (list.isNotEmpty) await _cacheWrite(tKey, [for (final t in list) t.toJson()]);
+    } catch (e) {
+      if (shouldUseOfflineCache(e)) {
+        _offline = true;
+        list = parseTemplates(await _cacheRead(tKey));
       }
     }
+    if (list.isNotEmpty) {
+      _templates = list;
+      // A saved invoice keeps its own template even when the list does not contain it (the picker adds it back).
+      if (!_editing && !list.any((t) => t.key == _templateKey)) {
+        _templateKey = (list.firstWhere((t) => t.isDefault, orElse: () => list.first)).key;
+      }
+    }
+
+    BusinessProfile? profile;
+    try {
+      final j = await ApiClient.get('/api/farms/${widget.farmId}/business-profile');
+      if (j is Map) {
+        profile = BusinessProfile.fromJson(j.cast<String, dynamic>());
+        await _cacheWrite('bizprofile:${widget.farmId}', [j.cast<String, dynamic>()]);
+      }
+    } catch (_) {
+      final cached = await _cacheRead('bizprofile:${widget.farmId}');
+      if (cached.isNotEmpty) profile = BusinessProfile.fromJson(cached.first);
+    }
+    _farmProfile = profile;
+    if (!_editing && profile != null && _payName.text.isEmpty && _payNumber.text.isEmpty && _payBank.text.isEmpty) {
+      _payName.text = profile.bankAccountName ?? '';
+      _payNumber.text = profile.bankAccountNumber ?? '';
+      _payBank.text = profile.bankName ?? '';
+    }
     if (mounted) setState(() => _loading = false);
+  }
+
+  // The saved copy is a convenience: a storage problem must never look like "offline" or block the form.
+  Future<void> _cacheWrite(String key, Object json) async {
+    try {
+      await DatabaseService.saveCache(key, json);
+    } catch (_) {/* best effort */}
+  }
+
+  Future<List<Map<String, dynamic>>> _cacheRead(String key) async {
+    try {
+      return await DatabaseService.readCacheList(key);
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// The templates to show: the loaded list, plus the invoice's own template when the list does not contain it.
+  List<InvoiceTemplate> get _pickable => _templates.any((t) => t.key == _templateKey)
+      ? _templates
+      : sortTemplates([..._templates, InvoiceTemplate(key: _templateKey, name: _templateKey)]);
+
+  InvoiceTemplate get _template => _pickable.firstWhere((t) => t.key == _templateKey);
+
+  /// Why the typed colours cannot be used, or null (also null in "farm brand colours" mode, where none are sent).
+  String? get _colorProblem => !_customColors
+      ? null
+      : hexColorProblem('primary colour', _primaryColor.text) ?? hexColorProblem('accent colour', _accentColor.text);
+
+  /// The colours this invoice gets, as they would be sent: both null unless "custom" with valid text.
+  String? get _sendPrimary => _customColors ? normalizeHexColor(_primaryColor.text) : null;
+  String? get _sendAccent => _customColors ? normalizeHexColor(_accentColor.text) : null;
+
+  /// Colour for the template sketches: this invoice's, else the farm's brand colour, else null (the template's own default).
+  Color? _sketch(String? own, String? farm) {
+    final v = hexColorValue(own ?? farm);
+    return v == null ? null : Color(v);
+  }
+
+  Future<void> _preview() async {
+    final problem = _colorProblem;
+    if (problem != null) return setState(() => _previewError = problem);
+    setState(() { _previewing = true; _previewError = null; });
+    try {
+      final path = invoicePreviewPath(widget.farmId, _templateKey, primaryColor: _sendPrimary, accentColor: _sendAccent);
+      final bytes = await ApiClient.getBytes(path);
+      final err = await saveAndOpen(bytes, 'invoice-preview-$_templateKey.pdf');
+      if (mounted && err != null) setState(() => _previewError = err);
+    } catch (e) {
+      if (mounted) setState(() => _previewError = previewFailText(e));
+    }
+    if (mounted) setState(() => _previewing = false);
   }
 
   double get _vatPercent => (parseNumber(_vat.text) ?? 0).clamp(0, 100).toDouble();
@@ -169,6 +244,8 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
     final dateProblem = dateRangeProblem('The invoice date', _date) ?? dateRangeProblem('The due date', _due);
     if (dateProblem != null) return _fail(dateProblem);
     if (_due.isBefore(_date)) return _fail('The due date cannot be before the invoice date.');
+    final colorProblem = _colorProblem;
+    if (colorProblem != null) return _fail(colorProblem);
 
     setState(() { _saving = true; _error = null; });
     try {
@@ -187,6 +264,8 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
       termsAndNotes: _terms.text,
       signatoryName: _signatory.text,
       templateKey: _templateKey,
+      primaryColor: _sendPrimary,
+      accentColor: _sendAccent,
       );
       final path = '/api/farms/${widget.farmId}/invoices';
       final res = _editing ? await ApiClient.put('$path/${widget.existing!.id}', body) : await ApiClient.post(path, body);
@@ -342,13 +421,87 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                   sectionLabel('Terms and signature'),
                   _text(_terms, 'Terms & conditions / notes', max: 2000, lines: 3),
                   _text(_signatory, 'Signatory name', max: 150),
-                  DropdownButtonFormField<String>(
-                    initialValue: _templates.any((t) => t.key == _templateKey) ? _templateKey : _templates.first.key,
-                    isExpanded: true,
-                    decoration: const InputDecoration(labelText: 'Template', border: OutlineInputBorder()),
-                    items: [for (final t in _templates) DropdownMenuItem(value: t.key, child: Text(t.name, overflow: TextOverflow.ellipsis))],
-                    onChanged: (v) => setState(() => _templateKey = v ?? _templateKey),
+                ]),
+              ),
+              const SizedBox(height: 14),
+              AgroCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  sectionLabel('Template'),
+                  if (_offline) offlineNote('Offline: showing the saved templates.'),
+                  InvoiceTemplatePicker(
+                    templates: _pickable,
+                    selectedKey: _templateKey,
+                    primaryOverride: _sketch(_sendPrimary, _farmProfile?.brandPrimaryColor),
+                    accentOverride: _sketch(_sendAccent, _farmProfile?.brandAccentColor),
+                    onSelected: (k) => setState(() { _templateKey = k; _previewError = null; }),
                   ),
+                  const SizedBox(height: 14),
+                  sectionLabel('Colours'),
+                  // The card paints a background, so the tiles need their own Material for their ink and focus effects.
+                  Material(
+                    type: MaterialType.transparency,
+                    child: RadioGroup<bool>(
+                    groupValue: _customColors,
+                    onChanged: (v) => setState(() => _customColors = v ?? false),
+                    child: Column(children: [
+                      RadioListTile<bool>(
+                        value: false,
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text("Use my farm's brand colours", style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14)),
+                        subtitle: Text(
+                          _farmProfile?.brandPrimaryColor == null && _farmProfile?.brandAccentColor == null
+                              ? "No brand colours set on the farm yet, so the template's default colours are used. Set them in Farm logo & profile."
+                              : 'Follows the farm: ${_farmProfile?.brandPrimaryColor ?? 'default'} and ${_farmProfile?.brandAccentColor ?? 'default'}. Changing the farm colours changes this invoice too.',
+                          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5),
+                        ),
+                      ),
+                      const RadioListTile<bool>(
+                        value: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text('Custom colours', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14)),
+                        subtitle: Text('Only for this invoice. Leave a colour blank to keep following the farm or template.', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5)),
+                      ),
+                    ]),
+                    ),
+                  ),
+                  if (_customColors) ...[
+                    const SizedBox(height: 8),
+                    BrandColorField(
+                      controller: _primaryColor,
+                      label: 'Primary colour',
+                      defaultHex: _farmProfile?.brandPrimaryColor ?? _template.defaultPrimaryColor,
+                      defaultLabel: _farmProfile?.brandPrimaryColor != null ? 'farm colour' : 'template default',
+                      onChanged: () => setState(() {}),
+                    ),
+                    const SizedBox(height: 14),
+                    BrandColorField(
+                      controller: _accentColor,
+                      label: 'Accent colour',
+                      defaultHex: _farmProfile?.brandAccentColor ?? _template.defaultAccentColor,
+                      defaultLabel: _farmProfile?.brandAccentColor != null ? 'farm colour' : 'template default',
+                      onChanged: () => setState(() {}),
+                    ),
+                  ],
+                  if (_editing) ...[
+                    const SizedBox(height: 8),
+                    hintLine('Saved invoice: primary ${widget.existing!.resolvedPrimaryColor ?? 'default'} (${colorSourceLabel(widget.existing!.primaryColorSource)}), '
+                        'accent ${widget.existing!.resolvedAccentColor ?? 'default'} (${colorSourceLabel(widget.existing!.accentColorSource)}).'),
+                  ],
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(minimumSize: const Size(44, 48), foregroundColor: AgroColors.leaf, side: const BorderSide(color: AgroColors.leaf)),
+                    onPressed: (_offline || _previewing || _saving) ? null : _preview,
+                    icon: _previewing
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AgroColors.palm))
+                        : const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                    label: Text(_previewing ? 'Preparing preview...' : 'Preview this template'),
+                  ),
+                  const SizedBox(height: 6),
+                  hintLine(_offline
+                      ? 'Preview needs a connection. Connect to see a sample in this template and these colours.'
+                      : 'Opens a sample invoice in this template and these colours. Nothing is saved.'),
+                  errorLine(_previewError),
                 ]),
               ),
               const SizedBox(height: 14),

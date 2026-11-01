@@ -602,6 +602,9 @@ export interface FarmBusinessProfile {
   bankAccountName: string | null
   bankAccountNumber: string | null
   bankName: string | null
+  /** Invoice brand colours as #RRGGBB; null = not set (the template default is used). */
+  brandPrimaryColor: string | null
+  brandAccentColor: string | null
 }
 
 export interface InvoiceTemplate {
@@ -609,7 +612,13 @@ export interface InvoiceTemplate {
   name: string
   description: string | null
   isDefault: boolean
+  defaultPrimaryColor?: string | null
+  defaultAccentColor?: string | null
+  previewUrl?: string | null
 }
+
+/** Where a resolved invoice colour comes from: the invoice itself, the farm brand colour, or the template default. */
+export type InvoiceColorSource = 'invoice' | 'farm' | 'default'
 
 export interface InvoiceSummary {
   id: string
@@ -653,6 +662,14 @@ export interface Invoice {
   termsAndNotes: string | null
   signatoryName: string | null
   templateKey: string
+  /** Colours stored on the invoice (null = inherit from the farm brand colour / template default). */
+  primaryColor?: string | null
+  accentColor?: string | null
+  /** What the PDF actually uses now, and where each colour comes from. */
+  resolvedPrimaryColor?: string | null
+  resolvedAccentColor?: string | null
+  primaryColorSource?: InvoiceColorSource
+  accentColorSource?: InvoiceColorSource
   createdAt: string
   updatedAt: string
 }
@@ -672,6 +689,9 @@ export interface InvoiceRequest {
   termsAndNotes: string | null
   signatoryName: string | null
   templateKey: string
+  /** #RRGGBB or null. A PUT without them clears the invoice colours. */
+  primaryColor: string | null
+  accentColor: string | null
 }
 
 export type VendorInvoiceStatus = 'Unpaid' | 'Paid'

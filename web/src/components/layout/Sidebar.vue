@@ -1,19 +1,9 @@
 <template>
   <aside class="sidebar">
-    <!-- Logo: the farm's own logo once it has one, the AgroMesh mark until then (or if it cannot be loaded) -->
+    <!-- Logo: always the AgroMesh brand; the farm's own logo is only used on invoices -->
     <div class="sidebar-logo">
-      <FarmLogo
-        :farm-id="store.farm?.id"
-        :has-logo="store.farm?.hasLogo"
-        :version="store.farm?.logoUpdatedAt"
-        :farm-name="store.farm?.name"
-        variant="sidebar"
-      >
-        <template #fallback>
-          <div class="logo-icon"><AgroMeshMark :size="26" /></div>
-          <span class="logo-text">Agro<span class="logo-accent">Mesh</span></span>
-        </template>
-      </FarmLogo>
+      <div class="logo-icon"><AgroMeshMark :size="26" /></div>
+      <span class="logo-text">Agro<span class="logo-accent">Mesh</span></span>
     </div>
 
     <!-- Farm Context / Switcher -->
@@ -116,12 +106,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAgroStore } from '@/stores/agro'
 import { useFeatureFlag } from '@/composables/useFeatureFlag'
 import AddFarmModal from '@/components/modal/AddFarmModal.vue'
-import FarmLogo from '@/components/ui/FarmLogo.vue'
 import AgroMeshMark from '@/components/ui/AgroMeshMark.vue'
 
 const store = useAgroStore()
@@ -148,10 +137,6 @@ function openAddFarm() {
   farmMenuOpen.value = false
   showAddFarmModal.value = true
 }
-
-// The farm record (with its logo fields) is otherwise only loaded by the dashboard; load it here so the
-// logo shows on whichever page the user lands on, and again when the active farm changes.
-watch(() => store.activeFarmId, id => { if (id && !store.farm) store.fetchFarm() }, { immediate: true })
 
 onMounted(() => {
   if (!store.farms.length) store.fetchFarms()

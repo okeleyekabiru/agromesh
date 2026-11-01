@@ -61,6 +61,22 @@
         </div>
       </fieldset>
 
+      <fieldset class="bp-fieldset" :disabled="!canEdit || saving">
+        <legend class="bp-legend">Invoice brand colours</legend>
+        <p class="bp-help bp-help--tight">
+          Used on invoices that have no colours of their own. Leave a colour blank to use the template's
+          default (green {{ defaults.primary }} and yellow {{ defaults.accent }} on the NGF template).
+        </p>
+        <div class="bp-grid">
+          <ColorField id="bp-brand-primary" v-model="form.brandPrimaryColor" label="Primary colour" :fallback="defaults.primary" :hint="`Default ${defaults.primary}`" :disabled="!canEdit || saving" />
+          <ColorField id="bp-brand-accent" v-model="form.brandAccentColor" label="Accent colour" :fallback="defaults.accent" :hint="`Default ${defaults.accent}`" :disabled="!canEdit || saving" />
+        </div>
+        <div v-if="canEdit" class="bp-reset">
+          <button type="button" class="btn btn-ghost btn-sm" :disabled="saving || (!form.brandPrimaryColor && !form.brandAccentColor)" @click="resetColors">Reset to default</button>
+          <span v-if="resetNote" class="bp-reset-note" role="status">{{ resetNote }}</span>
+        </div>
+      </fieldset>
+
       <div v-if="canEdit" class="bp-footer">
         <button type="submit" class="btn btn-primary" :disabled="saving">{{ saving ? 'Saving…' : 'Save business profile' }}</button>
         <span class="bp-status" role="status" aria-live="polite">
@@ -75,19 +91,22 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useAgroStore } from '@/stores/agro'
-import { businessProfileApi } from '@/services/api'
+import { businessProfileApi, invoiceApi } from '@/services/api'
 import { canManageFarm } from '@/utils/roles'
 import { extractProblemMessage } from '@/utils/http'
-import type { FarmBusinessProfile } from '@/types'
+import ColorField from '@/components/ui/ColorField.vue'
+import { DEFAULT_ACCENT_COLOR, DEFAULT_PRIMARY_COLOR } from '@/utils/brandColors'
+import { blankBusinessProfileForm, buildBusinessProfileRequest, profileToForm, validateBrandColors } from '@/utils/businessProfile'
+import type { FarmBusinessProfile, InvoiceTemplate } from '@/types'
 
 const store = useAgroStore()
 const farmId = computed(() => store.farm?.id ?? store.activeFarmId)
 const canEdit = computed(() => canManageFarm(store.currentUser?.role))
 
-const blank = (): Record<keyof FarmBusinessProfile, string> => ({
-  address: '', phone: '', email: '', website: '', bankAccountName: '', bankAccountNumber: '', bankName: ''
-})
-const form = reactive(blank())
+const form = reactive(blankBusinessProfileForm())
+// Template default colours (from the default template); the NGF colours until the list loads.
+const defaults = reactive({ primary: DEFAULT_PRIMARY_COLOR, accent: DEFAULT_ACCENT_COLOR })
+const resetNote = ref('')
 const loading = ref(true)
 const loadError = ref('')
 const saving = ref(false)
@@ -101,8 +120,7 @@ async function load() {
   loadError.value = ''
   try {
     const res = await businessProfileApi.get(farmId.value)
-    const p = res.data as Partial<FarmBusinessProfile>
-    for (const k of Object.keys(form) as (keyof FarmBusinessProfile)[]) form[k] = p[k] ?? ''
+    Object.assign(form, profileToForm(res.data as Partial<FarmBusinessProfile>))
   } catch (e) {
     loadError.value = extractProblemMessage(e, 'Could not load the business profile.')
   } finally {
@@ -110,7 +128,24 @@ async function load() {
   }
 }
 
-onMounted(load)
+async function loadDefaults() {
+  try {
+    const list = (await invoiceApi.templates()).data as InvoiceTemplate[]
+    const def = list.find(t => t.isDefault) ?? list[0]
+    if (def?.defaultPrimaryColor) defaults.primary = def.defaultPrimaryColor
+    if (def?.defaultAccentColor) defaults.accent = def.defaultAccentColor
+  } catch { /* keep the NGF colours */ }
+}
+
+onMounted(() => { load(); loadDefaults() })
+
+// Blank colours are sent as null on save, which puts the template defaults back.
+function resetColors() {
+  form.brandPrimaryColor = ''
+  form.brandAccentColor = ''
+  saved.value = false
+  resetNote.value = 'Colours cleared. Save the business profile to apply the defaults.'
+}
 // The active farm can finish loading after this card is shown, or change while it is open.
 watch(farmId, (n, o) => { if (n && n !== o) load() })
 
@@ -121,16 +156,20 @@ async function save() {
   saved.value = false
   saveError.value = ''
   emailError.value = ''
+  resetNote.value = ''
   if (form.email.trim() && !EMAIL_RE.test(form.email.trim())) {
     emailError.value = 'Enter a valid email address, for example accounts@yourfarm.com.'
     return
   }
+  const colorProblems = validateBrandColors(form)
+  if (colorProblems.primary || colorProblems.accent) {
+    saveError.value = [colorProblems.primary, colorProblems.accent].filter(Boolean).join(' ')
+    return
+  }
   saving.value = true
   try {
-    // PUT replaces the whole profile: a blank field clears it.
-    const body = Object.fromEntries(
-      (Object.keys(form) as (keyof FarmBusinessProfile)[]).map(k => [k, form[k].trim() || null])
-    )
+    // PUT replaces the whole profile: a blank field (or colour) is sent as null and clears it.
+    const body = buildBusinessProfileRequest(form)
     await businessProfileApi.update(farmId.value, body)
     saved.value = true
   } catch (e) {
@@ -146,6 +185,9 @@ async function save() {
 .bp-state--error { color: #B42323; }
 .bp-form { padding: 20px; }
 .bp-help { margin: 0 0 14px; font-size: 12.5px; line-height: 1.6; color: var(--stone); }
+.bp-help--tight { margin: 0 0 10px; }
+.bp-reset { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.bp-reset-note { font-size: 12px; color: var(--stone); }
 .bp-note { margin: 0 0 14px; font-size: 12.5px; color: var(--stone); font-weight: 600; }
 .bp-fieldset { border: none; padding: 0; margin: 0 0 18px; min-width: 0; }
 .bp-legend { font-family: var(--font-sans); font-size: 13px; font-weight: 700; color: var(--forest); padding: 0; margin-bottom: 10px; }

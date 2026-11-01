@@ -60,11 +60,12 @@ test('QA-TZ-1: a vendor invoice marked paid at 23:30 UTC shows the Lagos calenda
   await ctx.close()
 })
 
-test('QA-LOGO-1: an undecodable logo (200 OK but not a real image) falls back to the AgroMesh mark in the sidebar', async ({ page }) => {
+test('LOGO-SIDEBAR: the farm logo never replaces the AgroMesh logo in the sidebar (it is only used on invoices)', async ({ page }) => {
   await mockSession(page, { hasLogo: true, logoUpdatedAt: '2026-11-01T10:00:00Z' })
-  await page.route('**/api/farms/farm_001/logo', route => route.fulfill({ status: 200, contentType: 'image/png', body: 'not really a png' }))
+  let logoRequested = false
+  await page.route('**/api/farms/farm_001/logo', route => { logoRequested = true; return route.fulfill({ status: 200, contentType: 'image/png', body: 'x' }) })
   await page.goto('/')
-  await expect(page.locator('.sidebar-logo img')).toHaveCount(1) // the blob url is set...
-  // ...but it cannot be drawn. Expected: the sidebar swaps back to the AgroMesh mark. Actual: a blank white box and no brand.
   await expect(page.locator('.sidebar-logo .logo-text')).toBeVisible()
+  await expect(page.locator('.sidebar-logo img')).toHaveCount(0)
+  expect(logoRequested).toBe(false) // the sidebar does not even fetch the farm logo
 })

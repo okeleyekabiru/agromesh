@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { buildPreviewUrl, defaultPreviewPath, type PreviewColors } from '@/utils/brandColors'
 
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 // Start from the last active farm so a hard reload on any page (not just the dashboard) talks to the
@@ -240,7 +241,11 @@ export const invoiceApi = {
   update: (id: string, body: unknown) => api.put(`/api/farms/${FARM_ID}/invoices/${id}`, body),
   remove: (id: string) => api.delete(`/api/farms/${FARM_ID}/invoices/${id}`),
   // Bearer-token auth, so the PDF is fetched as a blob (see orderApi.downloadInvoice).
-  pdf: (id: string) => api.get(`/api/farms/${FARM_ID}/invoices/${id}/pdf`, { responseType: 'blob' })
+  pdf: (id: string) => api.get(`/api/farms/${FARM_ID}/invoices/${id}/pdf`, { responseType: 'blob' }),
+  // Sample-data PDF for a template, rendered with the given colours (or the farm brand colour /
+  // template default when omitted). Bearer-token auth, so it is fetched as a blob like the invoice PDF.
+  preview: (templateKey: string, colors: PreviewColors = {}, previewUrl?: string | null) =>
+    api.get(buildPreviewUrl(previewUrl || defaultPreviewPath(FARM_ID, templateKey), colors), { responseType: 'blob' })
 }
 
 // ── Vendor invoices (bills received from suppliers) ──

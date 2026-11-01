@@ -10,7 +10,7 @@
   />
   <!-- No logo, still loading, or it failed to load: the caller's fallback, AgroMesh by default. -->
   <slot v-if="!url || broken" name="fallback">
-    <AgroMeshMark :size="variant === 'preview' ? 56 : 26" />
+    <AgroMeshMark :size="56" />
   </slot>
 </template>
 
@@ -19,16 +19,17 @@ import { ref, watch } from 'vue'
 import { useFarmLogo } from '@/composables/useFarmLogo'
 import AgroMeshMark from '@/components/ui/AgroMeshMark.vue'
 
-// The one place a farm's logo is drawn (sidebar, settings preview). It fetches the bytes with the
-// bearer token and revokes its object URL when the logo changes or the component goes away.
+// The one place a farm's logo is drawn in the app (the settings preview; invoices print it server-side). It is never
+// used in place of the AgroMesh logo. It fetches the bytes with the bearer token and revokes its object URL when the
+// logo changes or the component goes away.
 const props = withDefaults(defineProps<{
   farmId?: string | null
   hasLogo?: boolean | null
   /** farm.logoUpdatedAt, used to bust the cache when the logo is replaced. */
   version?: string | null
   farmName?: string | null
-  variant?: 'sidebar' | 'preview'
-}>(), { variant: 'sidebar' })
+  variant?: 'preview'
+}>(), { variant: 'preview' })
 
 const { url } = useFarmLogo(() => ({ farmId: props.farmId, hasLogo: props.hasLogo, version: props.version }))
 
@@ -39,13 +40,6 @@ watch(url, () => { broken.value = false })
 
 <style scoped>
 .farm-logo { display: block; object-fit: contain; }
-.farm-logo--sidebar {
-  max-width: 100%;
-  max-height: 96px; /* roomy enough that a tall (portrait) logo stays legible; wide logos are limited by the width */
-  background: white;
-  border-radius: 8px;
-  padding: 4px 8px;
-}
 .farm-logo--preview {
   max-width: 100%;
   max-height: 120px;

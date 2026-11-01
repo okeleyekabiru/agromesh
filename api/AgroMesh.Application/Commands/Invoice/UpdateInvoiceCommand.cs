@@ -37,6 +37,6 @@ public class UpdateInvoiceCommandHandler : IRequestHandler<UpdateInvoiceCommand,
         invoice.Update(InvoiceMapping.ToDetails(r, date, dueDate, templateKey, r.PaymentAccountName, r.PaymentAccountNumber, r.PaymentBankName));
         await _invoiceRepo.UpdateAsync(invoice, ct);
 
-        return InvoiceMapping.ToDto(invoice);
+        return InvoiceMapping.ToDto(invoice, InvoiceMapping.ResolveTheme(invoice, farm, _templates));
     }
 }

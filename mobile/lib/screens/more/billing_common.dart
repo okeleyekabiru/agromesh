@@ -23,6 +23,16 @@ String failText(Object e) {
   return 'Could not reach the server. Check your connection and try again.';
 }
 
+/// [failText] for the template preview: 401 (signed out), 404 (unknown farm or template) and 422 (bad colour) get their own words.
+String previewFailText(Object e) {
+  if (e is ApiException) {
+    if (e.statusCode == 401) return 'Your session has expired. Sign in again to see the preview.';
+    if (e.statusCode == 404) return 'That template is not available for this farm. Pick another template.';
+    if (e.statusCode == 422) return e.message.startsWith('Request failed') ? 'The colours were not accepted. Use the form #RRGGBB.' : e.message;
+  }
+  return failText(e);
+}
+
 /// Writes [bytes] to a temporary file and opens it in another app (a PDF viewer, the gallery). Returns an error message,
 /// or null when it opened.
 Future<String?> saveAndOpen(List<int> bytes, String fileName) async {

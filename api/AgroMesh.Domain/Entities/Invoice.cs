@@ -9,6 +9,16 @@ public static class InvoiceTemplateKeys
     /// <summary>"NGF - Invoice", the Nature's Gold Farm layout.</summary>
     public const string Ngf = "ngf";
     public const string Default = Ngf;
+
+    public const string Band = "band";
+    public const string Sidebar = "sidebar";
+    public const string Callout = "callout";
+    public const string Minimal = "minimal";
+    public const string Cards = "cards";
+    public const string Ledger = "ledger";
+    public const string Angle = "angle";
+    public const string Anchor = "anchor";
+    public const string Duo = "duo";
 }
 
 /// <summary>Everything a user types into an invoice. Create and Update both take it so they cannot validate differently.</summary>
@@ -26,7 +36,9 @@ public record InvoiceDetails(
     string? PaymentBankName,
     string? TermsAndNotes,
     string? SignatoryName,
-    string TemplateKey);
+    string TemplateKey,
+    string? PrimaryColor = null,
+    string? AccentColor = null);
 
 /// <summary>
 /// An invoice the farm issues to a customer (the opposite direction to a VendorInvoice, which a supplier issues to the farm).
@@ -66,6 +78,10 @@ public class Invoice : BaseEntity
     public string? TermsAndNotes { get; private set; }
     public string? SignatoryName { get; private set; }
     public string TemplateKey { get; private set; } = InvoiceTemplateKeys.Default;
+
+    /// <summary>Colours chosen for this invoice ("#RRGGBB"). Null means not overridden: the farm brand colour applies, else the template's own.</summary>
+    public string? PrimaryColor { get; private set; }
+    public string? AccentColor { get; private set; }
     public string? CreatedByUserId { get; private set; }
 
     public decimal Subtotal => LineItems.Sum(l => l.Amount);
@@ -95,6 +111,8 @@ public class Invoice : BaseEntity
         var bankName = Clean(d.PaymentBankName, 100, "Payment bank name");
         var terms = Clean(d.TermsAndNotes, 2000, "Terms and notes");
         var signatory = Clean(d.SignatoryName, 150, "Signatory name");
+        var primary = Utilities.BrandColor.Normalise(d.PrimaryColor, "Invoice primary colour");
+        var accent = Utilities.BrandColor.Normalise(d.AccentColor, "Invoice accent colour");
 
         if (d.Date.Year is < MinYear or > MaxYear || d.DueDate.Year is < MinYear or > MaxYear)
             throw new DomainException($"Dates must be between {MinYear} and {MaxYear}.");
@@ -117,6 +135,8 @@ public class Invoice : BaseEntity
         TermsAndNotes = terms;
         SignatoryName = signatory;
         TemplateKey = d.TemplateKey.Trim().ToLowerInvariant();
+        PrimaryColor = primary;
+        AccentColor = accent;
         UpdatedAt = DateTime.UtcNow;
     }
 

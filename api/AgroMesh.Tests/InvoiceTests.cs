@@ -292,3 +292,61 @@ public class InvoiceLimitTests
         Assert.NotNull(Invoice.Create("f", 1, D([new InvoiceLineItem("x", 1m, 1m)], new DateOnly(2000, 1, 1), new DateOnly(2100, 12, 31)), null));
     }
 }
+
+public class InvoiceColourTests
+{
+    private static Invoice New(string? primary, string? accent) =>
+        Invoice.Create("f", 1, InvoiceTests.Details() with { PrimaryColor = primary, AccentColor = accent }, null);
+
+    [Fact]
+    public void Colours_DefaultToNull_MeaningFollowTheFarmThenTheTemplate()
+    {
+        var invoice = Invoice.Create("f", 1, InvoiceTests.Details(), null);
+        Assert.Null(invoice.PrimaryColor);
+        Assert.Null(invoice.AccentColor);
+    }
+
+    [Fact]
+    public void Colours_AreNormalisedToUpperCase()
+    {
+        var invoice = New(" #1b2a6b", "#e67e22 ");
+        Assert.Equal("#1B2A6B", invoice.PrimaryColor);
+        Assert.Equal("#E67E22", invoice.AccentColor);
+    }
+
+    [Theory]
+    [InlineData("", null)]
+    [InlineData("  ", "")]
+    public void BlankColours_MeanNone(string? p, string? a)
+    {
+        var invoice = New(p, a);
+        Assert.Null(invoice.PrimaryColor);
+        Assert.Null(invoice.AccentColor);
+    }
+
+    [Theory]
+    [InlineData("red")]
+    [InlineData("rgb(1,2,3)")]
+    [InlineData("#12345")]
+    [InlineData("#11223344")]
+    [InlineData("#FFFFFF")]
+    public void BadColours_AreRejected_NamingTheField(string bad)
+    {
+        var ex1 = Assert.Throws<DomainException>(() => New(bad, null));
+        Assert.Contains("rimary", ex1.Message);
+        var ex2 = Assert.Throws<DomainException>(() => New(null, bad));
+        Assert.Contains("ccent", ex2.Message);
+    }
+
+    [Fact]
+    public void Update_CanChangeAndClearColours_AndABadOneChangesNothing()
+    {
+        var invoice = New("#1B2A6B", null);
+        invoice.Update(InvoiceTests.Details() with { PrimaryColor = null, AccentColor = "#C0392B" });
+        Assert.Null(invoice.PrimaryColor);
+        Assert.Equal("#C0392B", invoice.AccentColor);
+
+        Assert.Throws<DomainException>(() => invoice.Update(InvoiceTests.Details() with { PrimaryColor = "#111111", AccentColor = "nope" }));
+        Assert.Null(invoice.PrimaryColor);
+    }
+}

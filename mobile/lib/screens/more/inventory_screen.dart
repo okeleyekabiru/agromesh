@@ -337,7 +337,6 @@ class _AddItemForm extends StatefulWidget {
 class _AddItemFormState extends State<_AddItemForm> {
   final _name = TextEditingController();
   final _unit = TextEditingController();
-  final _qty = TextEditingController();
   final _reorder = TextEditingController(text: '0');
   List<Map<String, dynamic>> _cats = [];
   String? _cat;
@@ -353,17 +352,16 @@ class _AddItemFormState extends State<_AddItemForm> {
   }
 
   Future<void> _submit() async {
-    final q = double.tryParse(_qty.text.trim());
     final r = double.tryParse(_reorder.text.trim()) ?? 0;
-    if (_name.text.trim().isEmpty || _unit.text.trim().isEmpty || _cat == null || q == null || q < 0) {
-      setState(() => _error = 'Fill in the name, unit, category and opening quantity.');
+    if (_name.text.trim().isEmpty || _unit.text.trim().isEmpty || _cat == null) {
+      setState(() => _error = 'Fill in the name, unit and category.');
       return;
     }
     setState(() { _busy = true; _error = null; });
     try {
       await ApiClient.post('/api/farms/${widget.farm}/inventory', {
         'name': _name.text.trim(), 'unit': _unit.text.trim(), 'categoryId': _cat,
-        'quantity': q, 'reorderThreshold': r, 'chemicalProductId': null,
+        'quantity': 0, 'reorderThreshold': r, 'chemicalProductId': null,
       });
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
@@ -373,7 +371,7 @@ class _AddItemFormState extends State<_AddItemForm> {
 
   @override
   Widget build(BuildContext context) => Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        sheetTitle('Add stock', 'A new item, or more of one that exists (same name).'),
+        sheetTitle('Add item', 'Adds the item with no stock. Stock arrives when you receive a purchase order.'),
         textField(_name, 'Item name'),
         textField(_unit, 'Unit', hint: 'kg, litres, bags'),
         DropdownButtonFormField<String>(
@@ -383,9 +381,8 @@ class _AddItemFormState extends State<_AddItemForm> {
           onChanged: (v) => setState(() => _cat = v),
         ),
         const SizedBox(height: 10),
-        numField(_qty, 'Quantity being added'),
         numField(_reorder, 'Reorder when stock falls to'),
         if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert))),
-        primaryButton('Add', _submit, busy: _busy),
+        primaryButton('Add item', _submit, busy: _busy),
       ]);
 }

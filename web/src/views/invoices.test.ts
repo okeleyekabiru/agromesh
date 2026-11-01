@@ -5,7 +5,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import type { InvoiceSummary } from '@/types'
 
 vi.mock('@/services/api', () => ({
-  invoiceApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), remove: vi.fn(), pdf: vi.fn(), templates: vi.fn() },
+  invoiceApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), remove: vi.fn(), pdf: vi.fn(), templates: vi.fn(), preview: vi.fn() },
   businessProfileApi: { get: vi.fn() },
   logoApi: {},
   setFarmId: vi.fn()
@@ -134,7 +134,7 @@ describe('InvoiceFormView', () => {
     expect((byLabel(w, 'Account name').element as HTMLInputElement).value).toBe('Farm Ltd')
     expect((byLabel(w, 'Account number').element as HTMLInputElement).value).toBe('0123456789')
     expect((byLabel(w, 'Bank name').element as HTMLInputElement).value).toBe('GTBank')
-    expect((byLabel(w, 'Template').element as HTMLSelectElement).value).toBe('ngf')
+    expect((w.find('input[name="invoice-template"]:checked').element as HTMLInputElement).value).toBe('ngf')
   })
 
   it('previews line amounts and totals live, with VAT', async () => {
@@ -227,5 +227,145 @@ describe('InvoiceFormView', () => {
     const { w } = await mountView(InvoiceFormView, 'Supervisor', '/invoices/new')
     expect(w.text()).toContain('Only farm owners and managers can create or edit invoices.')
     expect(w.find('form').exists()).toBe(false)
+  })
+
+  describe('template and colours', () => {
+    const tpls = ['ngf', 'band', 'cards'].map((key, i) => ({
+      key, name: key, description: `About ${key}`, isDefault: i === 0,
+      defaultPrimaryColor: i === 1 ? '#4F46E5' : '#138A44', defaultAccentColor: i === 1 ? '#F59E0B' : '#F5C90C',
+      previewUrl: `/api/farms/f1/invoice-templates/${key}/preview`
+    }))
+    const fill = async (w: ReturnType<typeof mount>) => {
+      await byLabel(w, 'Customer name').setValue('X')
+      await byLabel(w, 'Description, line 1').setValue('Item')
+      await byLabel(w, 'Rate, line 1').setValue(10)
+    }
+
+    beforeEach(() => {
+      inv.templates.mockResolvedValue({ data: tpls })
+      inv.create.mockResolvedValue({ data: { id: 'i9', reference: 'INV-0009' } })
+      inv.list.mockResolvedValue({ data: [] })
+    })
+
+    it('lists every template and saves the chosen key with null colours by default', async () => {
+      profile.mockResolvedValue({ data: { brandPrimaryColor: '#B91C1C' } })
+      const { w } = await mountView(InvoiceFormView, 'Admin', '/invoices/new')
+      expect(w.findAll('input[name="invoice-template"]')).toHaveLength(3)
+      await w.find('input[name="invoice-template"][value="band"]').setValue()
+      await fill(w)
+      await w.find('form').trigger('submit')
+      await flushPromises()
+      expect(inv.create.mock.calls[0][0]).toMatchObject({ templateKey: 'band', primaryColor: null, accentColor: null })
+      expect(w.find('.src-list').exists()).toBe(true)
+    })
+
+    it('shows the farm brand colour as the source, and sends custom colours when chosen', async () => {
+      profile.mockResolvedValue({ data: { brandPrimaryColor: '#b91c1c' } })
+      const { w } = await mountView(InvoiceFormView, 'Admin', '/invoices/new')
+      expect(w.find('.src-list').text()).toContain('Primary #B91C1C: your farm')
+      expect(w.find('.src-list').text()).toContain('Accent #F5C90C: the template default')
+      await w.find('input[name="color-mode"][value="custom"]').setValue()
+      expect((byLabel(w, 'Primary colour').element as HTMLInputElement).value).toBe('#B91C1C') // pickers start on the colours in use
+      await byLabel(w, 'Primary colour').setValue('#0a7b3e')
+      await byLabel(w, 'Accent colour').setValue('#F5C90C')
+      await fill(w)
+      await w.find('form').trigger('submit')
+      await flushPromises()
+      expect(inv.create.mock.calls[0][0]).toMatchObject({ primaryColor: '#0A7B3E', accentColor: '#F5C90C' })
+    })
+
+    it('blocks a bad custom colour with a clear message', async () => {
+      const { w } = await mountView(InvoiceFormView, 'Admin', '/invoices/new')
+      await w.find('input[name="color-mode"][value="custom"]').setValue()
+      await byLabel(w, 'Primary colour').setValue('#FFF')
+      await fill(w)
+      await w.find('form').trigger('submit')
+      await flushPromises()
+      expect(inv.create).not.toHaveBeenCalled()
+      expect(w.text()).toContain('Primary colour must be a colour in the form #RRGGBB')
+    })
+
+    it('on edit shows the server colour sources and sends the loaded colours back', async () => {
+      inv.get.mockResolvedValue({
+        data: {
+          id: 'i1', farmId: 'f1', number: 2, reference: 'INV-0002', date: '2026-03-01', dueDate: '2026-03-20',
+          billToName: 'Old', billToPhone: null, billToEmail: null, billToAddress: null,
+          lineItems: [{ serialNumber: 1, description: 'Eggs', rate: 100, quantity: 5, amount: 500 }],
+          subtotal: 500, vatPercent: 0, vatAmount: 0, total: 500, paymentAccountName: null, paymentAccountNumber: null, paymentBankName: null,
+          termsAndNotes: null, signatoryName: null, templateKey: 'band', createdAt: '', updatedAt: '',
+          primaryColor: '#B91C1C', accentColor: null, resolvedPrimaryColor: '#B91C1C', resolvedAccentColor: '#F5C90C',
+          primaryColorSource: 'invoice', accentColorSource: 'default'
+        }
+      })
+      inv.update.mockResolvedValue({ data: { id: 'i1', reference: 'INV-0002' } })
+      const { w } = await mountView(InvoiceFormView, 'Admin', '/invoices/i1/edit')
+      expect(w.find('.src-list').text()).toContain('Primary #B91C1C: set on this invoice')
+      expect(w.find('.src-list').text()).toContain('Accent #F5C90C: the template default')
+      await w.find('form').trigger('submit')
+      await flushPromises()
+      expect(inv.update).toHaveBeenCalledWith('i1', expect.objectContaining({ templateKey: 'band', primaryColor: '#B91C1C', accentColor: null }))
+    })
+
+    describe('Preview', () => {
+      const previewBtn = (w: ReturnType<typeof mount>) => w.findAll('button').find(b => b.text() === 'Preview')!
+      const fakeTab = { document: { title: '' }, location: { href: '' }, closed: false, close: vi.fn() }
+      beforeEach(() => {
+        fakeTab.close.mockReset()
+        fakeTab.location.href = ''
+        vi.stubGlobal('open', vi.fn(() => fakeTab))
+        URL.createObjectURL = vi.fn(() => 'blob:preview')
+        URL.revokeObjectURL = vi.fn()
+      })
+
+      it('fetches the PDF with the custom colours and opens it in the tab', async () => {
+        inv.preview.mockResolvedValue({ data: new Blob(['%PDF'], { type: 'application/pdf' }) })
+        const { w } = await mountView(InvoiceFormView, 'Admin', '/invoices/new')
+        await w.find('input[name="invoice-template"][value="band"]').setValue()
+        await w.find('input[name="color-mode"][value="custom"]').setValue()
+        await byLabel(w, 'Primary colour').setValue('#0A7B3E')
+        await previewBtn(w).trigger('click')
+        await flushPromises()
+        expect(inv.preview).toHaveBeenCalledWith('band', { primaryColor: '#0A7B3E', accentColor: '#F59E0B' }, '/api/farms/f1/invoice-templates/band/preview')
+        expect(fakeTab.location.href).toBe('blob:preview')
+      })
+
+      it('sends no colours in brand mode', async () => {
+        inv.preview.mockResolvedValue({ data: new Blob(['%PDF']) })
+        const { w } = await mountView(InvoiceFormView, 'Admin', '/invoices/new')
+        await previewBtn(w).trigger('click')
+        await flushPromises()
+        expect(inv.preview).toHaveBeenCalledWith('ngf', {}, '/api/farms/f1/invoice-templates/ngf/preview')
+      })
+
+      it('does not request a preview for an invalid colour', async () => {
+        const { w } = await mountView(InvoiceFormView, 'Admin', '/invoices/new')
+        await w.find('input[name="color-mode"][value="custom"]').setValue()
+        await byLabel(w, 'Accent colour').setValue('blue')
+        await previewBtn(w).trigger('click')
+        await flushPromises()
+        expect(inv.preview).not.toHaveBeenCalled()
+        expect(w.find('.preview-error').text()).toContain('Accent colour must be a colour')
+      })
+
+      it.each([
+        [401, /session has expired/],
+        [404, /could not be found/]
+      ])('shows a message and closes the tab on %i', async (status, msg) => {
+        inv.preview.mockRejectedValue({ response: { status, data: new Blob([JSON.stringify({ status })]) } })
+        const { w } = await mountView(InvoiceFormView, 'Admin', '/invoices/new')
+        await previewBtn(w).trigger('click')
+        await flushPromises()
+        expect(w.find('.preview-error').text()).toMatch(msg)
+        expect(fakeTab.close).toHaveBeenCalled()
+      })
+
+      it('shows the API detail on 422', async () => {
+        inv.preview.mockRejectedValue({ response: { status: 422, data: new Blob([JSON.stringify({ detail: 'primaryColor must be a colour in the form #RRGGBB (for example #138A44).' })]) } })
+        const { w } = await mountView(InvoiceFormView, 'Admin', '/invoices/new')
+        await previewBtn(w).trigger('click')
+        await flushPromises()
+        expect(w.find('.preview-error').text()).toContain('primaryColor must be a colour')
+      })
+    })
   })
 })

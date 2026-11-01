@@ -58,4 +58,17 @@ public class InvoicesController : ControllerBase
     [HttpGet("~/api/farms/{farmId}/invoice-templates")]
     public async Task<IActionResult> GetTemplates(string farmId, CancellationToken ct) =>
         Ok(await _mediator.Send(new GetInvoiceTemplatesQuery(farmId), ct));
+
+    /// <summary>
+    /// A sample invoice in the given template (with the farm logo and business profile) as an inline PDF, so a colour or layout can be
+    /// seen before saving. Optional primaryColor and accentColor are "#RRGGBB" (URL-encode the # as %23); without them the farm's
+    /// brand colours apply, else the template's own. Nothing is saved. Any user of the company may call it.
+    /// </summary>
+    [HttpGet("~/api/farms/{farmId}/invoice-templates/{key}/preview")]
+    public async Task<IActionResult> Preview(string farmId, string key, [FromQuery] string? primaryColor, [FromQuery] string? accentColor, CancellationToken ct)
+    {
+        var pdf = await _mediator.Send(new GenerateInvoicePreviewQuery(farmId, key, primaryColor, accentColor), ct);
+        Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.ContentDisposition] = "inline";
+        return File(pdf.Content, "application/pdf");
+    }
 }

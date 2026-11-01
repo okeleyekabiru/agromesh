@@ -124,7 +124,7 @@
           </div>
           <div class="form-group">
             <label class="form-label">New Quantity ({{ adjustTarget.unit }})</label>
-            <input type="number" class="form-input" v-model.number="adjustQty" min="0" :disabled="!!adjustSuccess" @wheel.prevent />
+            <input type="number" class="form-input" v-model.number="adjustQty" min="0":disabled="!!adjustSuccess" @wheel.prevent />
           </div>
           <div class="form-group">
             <label class="form-label">Reason</label>

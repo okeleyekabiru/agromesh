@@ -51,7 +51,7 @@
       <!-- Details -->
       <section class="card section" aria-labelledby="h-details">
         <h2 id="h-details" class="sec-title">Invoice details</h2>
-        <div class="grid grid-3">
+        <div class="grid">
           <div class="field">
             <label class="form-label" for="f-date">Invoice date <span class="req" aria-hidden="true">*</span></label>
             <input id="f-date" class="form-input" type="date" v-model="form.date" :min="MIN_DATE" :max="MAX_DATE" required aria-required="true" />
@@ -60,14 +60,53 @@
             <label class="form-label" for="f-due">Due date <span class="req" aria-hidden="true">*</span></label>
             <input id="f-due" class="form-input" type="date" v-model="form.dueDate" :min="dueMin" :max="MAX_DATE" required aria-required="true" @input="dueTouched = true" />
           </div>
-          <div class="field">
-            <label class="form-label" for="f-tpl">Template</label>
-            <select id="f-tpl" class="form-select" v-model="form.templateKey" aria-describedby="f-tpl-hint">
-              <option v-for="t in templateOptions" :key="t.key" :value="t.key">{{ t.name }}</option>
-            </select>
-            <div id="f-tpl-hint" class="form-hint">{{ templateHint }}</div>
-          </div>
         </div>
+      </section>
+
+      <!-- Template -->
+      <section class="card section" aria-labelledby="h-tpl">
+        <h2 id="h-tpl" class="sec-title">Template</h2>
+        <p class="sec-help">Pick how the invoice looks. You can change the colours below.</p>
+        <TemplatePicker v-model="form.templateKey" :templates="templateOptions" labelledby="h-tpl" />
+      </section>
+
+      <!-- Colours -->
+      <section class="card section" aria-labelledby="h-colors">
+        <h2 id="h-colors" class="sec-title">Colours</h2>
+        <div class="mode-group" role="radiogroup" aria-labelledby="h-colors">
+          <label class="mode-opt">
+            <input type="radio" name="color-mode" value="brand" :checked="form.colorMode === 'brand'" @change="setColorMode('brand')" />
+            <span>
+              <span class="mode-title">Use my farm's brand colours</span>
+              <span class="mode-sub">Set in Farm settings. The template's own colours are used if none are set there.</span>
+            </span>
+          </label>
+          <label class="mode-opt">
+            <input type="radio" name="color-mode" value="custom" :checked="form.colorMode === 'custom'" @change="setColorMode('custom')" />
+            <span>
+              <span class="mode-title">Custom colours</span>
+              <span class="mode-sub">Choose colours for this invoice only.</span>
+            </span>
+          </label>
+        </div>
+
+        <div v-if="form.colorMode === 'custom'" class="grid color-grid">
+          <ColorField id="f-primary" v-model="form.primaryColor" label="Primary colour" :fallback="inheritedPrimary" hint="Leave blank to use the farm or template colour." />
+          <ColorField id="f-accent" v-model="form.accentColor" label="Accent colour" :fallback="inheritedAccent" hint="Leave blank to use the farm or template colour." />
+        </div>
+
+        <ul class="src-list" aria-label="Where the current colours come from">
+          <li><span class="swatch" :style="{ background: colorSources.primary.color }" aria-hidden="true" />Primary {{ colorSources.primary.color }}: {{ colorSources.primary.text }}</li>
+          <li><span class="swatch" :style="{ background: colorSources.accent.color }" aria-hidden="true" />Accent {{ colorSources.accent.color }}: {{ colorSources.accent.text }}</li>
+        </ul>
+
+        <div class="preview-row">
+          <button type="button" class="btn btn-ghost btn-sm" :disabled="previewing" @click="openPreview">
+            {{ previewing ? 'Opening preview…' : 'Preview' }}
+          </button>
+          <span class="preview-note">Opens a sample PDF of this template in a new tab with the colours above.</span>
+        </div>
+        <div v-if="previewError" class="preview-error" role="alert">{{ previewError }}</div>
       </section>
 
       <!-- Line items -->
@@ -160,6 +199,11 @@ import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAgroStore } from '@/stores/agro'
 import { businessProfileApi, invoiceApi } from '@/services/api'
+import ColorField from '@/components/ui/ColorField.vue'
+import TemplatePicker from '@/components/ui/TemplatePicker.vue'
+import { openBlobTab } from '@/utils/download'
+import { DEFAULT_ACCENT_COLOR, DEFAULT_PRIMARY_COLOR, colorError, describeColorSource, isHexColor, normalizeColor, previewErrorMessage } from '@/utils/brandColors'
+import { normalizeBlobError } from '@/utils/http'
 import { canManageFarm } from '@/utils/roles'
 import { addDays, computeInvoiceTotals, formatNaira, isDateInRange, MAX_DATE, MIN_DATE, toDateInput } from '@/utils/money'
 import {
@@ -203,9 +247,78 @@ const overLimit = computed(() => {
 watch(() => form.date, d => { if (!dueTouched.value && d && isDateInRange(d)) form.dueDate = addDays(d, 14) })
 
 const templateOptions = computed(() =>
-  templates.value.length ? templates.value : [{ key: 'ngf', name: 'NGF - Invoice', description: null, isDefault: true }]
+  templates.value.length
+    ? templates.value
+    : [{ key: 'ngf', name: 'NGF - Invoice', description: null, isDefault: true, defaultPrimaryColor: DEFAULT_PRIMARY_COLOR, defaultAccentColor: DEFAULT_ACCENT_COLOR }]
 )
-const templateHint = computed(() => templates.value.find(t => t.key === form.templateKey)?.description ?? 'More templates will appear here as they are added.')
+const selectedTemplate = computed(() => templates.value.find(t => t.key === form.templateKey))
+
+// The invoice as loaded (edit only: it carries the resolved colours) and the farm's brand colours
+// (known from the business profile on a new invoice).
+const loadedInvoice = ref<Invoice | null>(null)
+const farmBrand = reactive<{ primary: string | null; accent: string | null }>({ primary: null, accent: null })
+
+// What a colour falls back to when this invoice sets none: farm brand colour, then the template default.
+const inheritedPrimary = computed(() => farmBrand.primary ?? selectedTemplate.value?.defaultPrimaryColor ?? DEFAULT_PRIMARY_COLOR)
+const inheritedAccent = computed(() => farmBrand.accent ?? selectedTemplate.value?.defaultAccentColor ?? DEFAULT_ACCENT_COLOR)
+
+type Source = 'invoice' | 'farm' | 'default'
+function colorLine(custom: string, farm: string | null, inherited: string) {
+  const own = form.colorMode === 'custom' && isHexColor(custom)
+  const source: Source = own ? 'invoice' : farm ? 'farm' : 'default'
+  return { color: own ? normalizeColor(custom)! : inherited, text: describeColorSource(source) }
+}
+// Where each colour comes from. Unchanged on an edited invoice: the server's answer. Otherwise it follows the form.
+const colorSources = computed(() => {
+  const inv = loadedInvoice.value
+  const unchanged = !!inv
+    && (form.colorMode === 'custom') === !!(inv.primaryColor || inv.accentColor)
+    && normalizeColor(form.primaryColor) === (inv.primaryColor ?? null)
+    && normalizeColor(form.accentColor) === (inv.accentColor ?? null)
+  if (inv && unchanged && inv.primaryColorSource && inv.accentColorSource) {
+    return {
+      primary: { color: inv.resolvedPrimaryColor ?? inheritedPrimary.value, text: describeColorSource(inv.primaryColorSource) },
+      accent: { color: inv.resolvedAccentColor ?? inheritedAccent.value, text: describeColorSource(inv.accentColorSource) }
+    }
+  }
+  return {
+    primary: colorLine(form.primaryColor, farmBrand.primary, inheritedPrimary.value),
+    accent: colorLine(form.accentColor, farmBrand.accent, inheritedAccent.value)
+  }
+})
+
+function setColorMode(mode: 'brand' | 'custom') {
+  form.colorMode = mode
+  // Start the pickers on the colours in use now, so "custom" is a tweak rather than a blank slate.
+  if (mode === 'custom' && !form.primaryColor && !form.accentColor) {
+    form.primaryColor = (loadedInvoice.value?.resolvedPrimaryColor ?? inheritedPrimary.value).toUpperCase()
+    form.accentColor = (loadedInvoice.value?.resolvedAccentColor ?? inheritedAccent.value).toUpperCase()
+  }
+}
+
+// Sample-PDF preview with the colours chosen in the form. In brand mode no colours are sent, so the
+// server uses the farm brand colour, then the template default.
+const previewing = ref(false)
+const previewError = ref('')
+async function openPreview() {
+  previewError.value = ''
+  if (form.colorMode === 'custom') {
+    const bad = colorError('Primary colour', form.primaryColor) || colorError('Accent colour', form.accentColor)
+    if (bad) { previewError.value = bad; return }
+  }
+  const tab = openBlobTab('Invoice preview') // opened now, while the click still counts as a user gesture
+  previewing.value = true
+  try {
+    const colors = form.colorMode === 'custom' ? { primaryColor: form.primaryColor, accentColor: form.accentColor } : {}
+    const res = await invoiceApi.preview(form.templateKey || 'ngf', colors, selectedTemplate.value?.previewUrl)
+    tab.show(res.data as Blob, `invoice-preview-${form.templateKey || 'ngf'}.pdf`)
+  } catch (e) {
+    tab.cancel()
+    previewError.value = previewErrorMessage(await normalizeBlobError(e))
+  } finally {
+    previewing.value = false
+  }
+}
 
 function blurOnWheel(e: Event) {
   // Scrolling over a focused number box should scroll the page, not change the figure.
@@ -234,12 +347,17 @@ async function init() {
     templates.value = tpl
     if (existing) {
       Object.assign(form, invoiceToForm(existing))
+      loadedInvoice.value = existing
+      if (existing.primaryColorSource === 'farm') farmBrand.primary = existing.resolvedPrimaryColor ?? null
+      if (existing.accentColorSource === 'farm') farmBrand.accent = existing.resolvedAccentColor ?? null
       reference.value = existing.reference
       dueTouched.value = true
     } else {
       const def = tpl.find(t => t.isDefault) ?? tpl[0]
       if (def) form.templateKey = def.key
       prefillPayment(form, profile)
+      farmBrand.primary = normalizeColor(profile?.brandPrimaryColor)
+      farmBrand.accent = normalizeColor(profile?.brandAccentColor)
     }
   } catch (e) {
     loadError.value = extractProblemMessage(e, 'Could not load this invoice.')
@@ -298,6 +416,21 @@ async function submit() {
 .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .field.wide { grid-column: 1 / -1; }
 .req { color: #B42323; }
+
+/* Colours */
+.mode-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.mode-opt { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1.5px solid var(--fog); border-radius: 10px; cursor: pointer; background: #fff; }
+.mode-opt:has(input:checked) { border-color: var(--leaf); background: #F7FBF8; }
+.mode-opt input { margin-top: 3px; accent-color: var(--leaf); }
+.mode-title { display: block; font-size: 13px; font-weight: 700; color: var(--forest); }
+.mode-sub { display: block; font-size: 12px; color: var(--stone); line-height: 1.45; }
+.color-grid { margin-bottom: 12px; }
+.src-list { list-style: none; margin: 0 0 12px; padding: 0; font-size: 12px; color: var(--stone); display: grid; gap: 4px; }
+.src-list li { display: flex; align-items: center; gap: 8px; }
+.swatch { width: 14px; height: 14px; border-radius: 4px; border: 1px solid rgba(10,26,16,0.2); flex: none; }
+.preview-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.preview-note { font-size: 12px; color: var(--stone); }
+.preview-error { margin-top: 8px; font-size: 12px; color: #B42323; line-height: 1.5; }
 .textarea { min-height: 64px; resize: vertical; }
 
 /* Line items */
@@ -328,7 +461,7 @@ async function submit() {
 .footer-bar .btn { text-decoration: none; }
 
 @media (max-width: 720px) {
-  .grid, .grid-3 { grid-template-columns: minmax(0, 1fr); }
+  .grid, .grid-3, .mode-group { grid-template-columns: minmax(0, 1fr); }
   .li-head { display: none; }
   .li-row {
     grid-template-columns: 24px minmax(0, 1fr) minmax(0, 1fr) 32px;

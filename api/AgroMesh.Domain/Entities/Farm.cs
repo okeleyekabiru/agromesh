@@ -30,6 +30,10 @@ public class Farm : BaseEntity
     public DateTime? LogoUpdatedAt { get; private set; }
     public bool HasLogo => LogoFileId is not null;
 
+    // Brand colours for invoices as "#RRGGBB". Null means "use each template's own colours".
+    public string? BrandPrimaryColor { get; private set; }
+    public string? BrandAccentColor { get; private set; }
+
     // How the farm presents itself to customers (printed on invoices). BankAccountName/Number/BankName are the account
     // customers pay into, not the Mono link above (BankAccountId).
     public string? Address { get; private set; }
@@ -146,7 +150,8 @@ public class Farm : BaseEntity
 
     /// <summary>Replaces the whole business profile. Blank values are cleared.</summary>
     public void SetBusinessProfile(string? address, string? phone, string? email, string? website,
-        string? bankAccountName, string? bankAccountNumber, string? bankName)
+        string? bankAccountName, string? bankAccountNumber, string? bankName,
+        string? brandPrimaryColor = null, string? brandAccentColor = null)
     {
         var newAddress = Clean(address, 300, "Address");
         var newPhone = Clean(phone, 60, "Phone");
@@ -155,6 +160,8 @@ public class Farm : BaseEntity
         var newAccountName = Clean(bankAccountName, 150, "Bank account name");
         var newAccountNumber = Clean(bankAccountNumber, 40, "Bank account number");
         var newBankName = Clean(bankName, 100, "Bank name");
+        var newPrimary = Utilities.BrandColor.Normalise(brandPrimaryColor, "Primary brand colour");
+        var newAccent = Utilities.BrandColor.Normalise(brandAccentColor, "Accent brand colour");
         if (newEmail is not null && !Utilities.EmailAddress.IsPlausible(newEmail))
             throw new Exceptions.DomainException("The email address is not valid.");
 
@@ -165,6 +172,8 @@ public class Farm : BaseEntity
         BankAccountName = newAccountName;
         BankAccountNumber = newAccountNumber;
         BankName = newBankName;
+        BrandPrimaryColor = newPrimary;
+        BrandAccentColor = newAccent;
         UpdatedAt = DateTime.UtcNow;
     }
 

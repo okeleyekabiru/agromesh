@@ -8,6 +8,7 @@ import '../../services/file_picking.dart';
 import '../../services/upload_rules.dart';
 import '../../stores/app_store.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/brand_color_field.dart';
 import '../../widgets/farm_mark.dart';
 import '../../widgets/widgets.dart';
 import 'billing_common.dart';
@@ -31,10 +32,17 @@ class _FarmBrandingScreenState extends State<FarmBrandingScreen> {
   final _bankAccountName = TextEditingController();
   final _bankAccountNumber = TextEditingController();
   final _bankName = TextEditingController();
+  final _brandPrimary = TextEditingController();
+  final _brandAccent = TextEditingController();
+
+  /// The profile as last loaded or saved. PUT is a full replace, so each save starts from this and changes only its own part.
+  BusinessProfile _saved = BusinessProfile.empty;
 
   bool _loading = true;
   bool _offline = false;
   bool _savingProfile = false;
+  bool _savingColors = false;
+  String? _colorsError;
   bool _logoBusy = false;
   String? _loadError;
   String? _logoError;
@@ -53,13 +61,24 @@ class _FarmBrandingScreenState extends State<FarmBrandingScreen> {
 
   @override
   void dispose() {
-    for (final c in [_address, _phone, _email, _website, _bankAccountName, _bankAccountNumber, _bankName]) {
+    for (final c in [_address, _phone, _email, _website, _bankAccountName, _bankAccountNumber, _bankName, _brandPrimary, _brandAccent]) {
       c.dispose();
     }
     super.dispose();
   }
 
+  void _fillColors(BusinessProfile p) {
+    _brandPrimary.text = p.brandPrimaryColor ?? '';
+    _brandAccent.text = p.brandAccentColor ?? '';
+  }
+
   void _fill(BusinessProfile p) {
+    _saved = p;
+    _fillColors(p);
+    _fillFields(p);
+  }
+
+  void _fillFields(BusinessProfile p) {
     _address.text = p.address ?? '';
     _phone.text = p.phone ?? '';
     _email.text = p.email ?? '';
@@ -117,7 +136,7 @@ class _FarmBrandingScreenState extends State<FarmBrandingScreen> {
   }
 
   Future<void> _removeLogo() async {
-    final ok = await confirmDialog(context, 'Remove the farm logo?', 'The AgroMesh logo will be shown instead, and invoices will print the farm name.', 'Remove');
+    final ok = await confirmDialog(context, 'Remove the farm logo?', 'New invoices will print the farm name instead of the logo.', 'Remove');
     if (!ok || !mounted) return;
     final store = context.read<AppStore>();
     setState(() { _logoBusy = true; _logoError = null; });
@@ -140,7 +159,8 @@ class _FarmBrandingScreenState extends State<FarmBrandingScreen> {
       setState(() => _profileError = 'That email address does not look right.');
       return;
     }
-    final profile = BusinessProfile(
+    // The brand colours sent are the last saved ones, so this save never changes them.
+    final profile = _saved.withFields(
       address: _address.text.trim(),
       phone: _phone.text.trim(),
       email: _email.text.trim(),
@@ -151,19 +171,47 @@ class _FarmBrandingScreenState extends State<FarmBrandingScreen> {
     );
     setState(() { _savingProfile = true; _profileError = null; });
     try {
-      final j = await ApiClient.put('/api/farms/$_farm/business-profile', {
-        for (final e in profile.toJson().entries) e.key: (e.value as String?)?.isEmpty == true ? null : e.value,
-      });
-      if (j is Map) {
-        final map = j.cast<String, dynamic>();
-        _fill(BusinessProfile.fromJson(map));
-        await DatabaseService.saveCache('bizprofile:$_farm', [map]);
-      }
+      final saved = await _putProfile(profile);
+      if (saved != null) _fillFields(saved);
       if (mounted) toast(context, 'Business profile saved.');
     } catch (e) {
       if (mounted) setState(() => _profileError = failText(e));
     }
     if (mounted) setState(() => _savingProfile = false);
+  }
+
+  /// PUT the whole profile (full replace; blank text becomes null), remember and cache the server's answer.
+  Future<BusinessProfile?> _putProfile(BusinessProfile profile) async {
+    final j = await ApiClient.put('/api/farms/$_farm/business-profile', {
+      for (final e in profile.toJson().entries) e.key: (e.value as String?)?.isEmpty == true ? null : e.value,
+    });
+    if (j is! Map) return null;
+    final map = j.cast<String, dynamic>();
+    final saved = BusinessProfile.fromJson(map);
+    _saved = saved;
+    await DatabaseService.saveCache('bizprofile:$_farm', [map]);
+    return saved;
+  }
+
+  /// Saves only the two brand colours; the other profile fields go back exactly as last saved. Blank = not set (null).
+  Future<void> _saveColors() async {
+    final problem = hexColorProblem('primary colour', _brandPrimary.text) ?? hexColorProblem('accent colour', _brandAccent.text);
+    if (problem != null) {
+      setState(() => _colorsError = problem);
+      return;
+    }
+    setState(() { _savingColors = true; _colorsError = null; });
+    try {
+      final saved = await _putProfile(_saved.withBrandColors(
+        primary: normalizeHexColor(_brandPrimary.text),
+        accent: normalizeHexColor(_brandAccent.text),
+      ));
+      if (saved != null) _fillColors(saved);
+      if (mounted) toast(context, 'Brand colours saved.');
+    } catch (e) {
+      if (mounted) setState(() => _colorsError = failText(e));
+    }
+    if (mounted) setState(() => _savingColors = false);
   }
 
   Widget _field(TextEditingController c, String label, int max, {TextInputType? type, int lines = 1}) => Padding(
@@ -223,8 +271,8 @@ class _FarmBrandingScreenState extends State<FarmBrandingScreen> {
                       Expanded(
                         child: Text(
                           bytes == null
-                              ? 'No logo yet. $farmName shows the AgroMesh logo until you add one.'
-                              : 'Shown in the app header and printed on invoices.',
+                              ? 'No logo yet. Add one to print it on $farmName invoices.'
+                              : 'Printed on your invoices. The app keeps showing the AgroMesh logo.',
                           style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink),
                         ),
                       ),
@@ -247,6 +295,35 @@ class _FarmBrandingScreenState extends State<FarmBrandingScreen> {
                         ),
                     ] else
                       hintLine('Only the farm owner or a farm manager can change the logo.'),
+                  ]),
+                ),
+                const SizedBox(height: 14),
+                AgroCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    sectionLabel('Invoice brand colours'),
+                    hintLine('Used by every invoice that has no colour of its own. Default: green $kDefaultPrimaryColor and yellow $kDefaultAccentColor. Reset clears a colour; save to apply.'),
+                    BrandColorField(
+                      controller: _brandPrimary,
+                      label: 'Primary colour',
+                      defaultHex: kDefaultPrimaryColor,
+                      enabled: _canEdit && !_offline,
+                      onChanged: () => setState(() {}),
+                    ),
+                    const SizedBox(height: 14),
+                    BrandColorField(
+                      controller: _brandAccent,
+                      label: 'Accent colour',
+                      defaultHex: kDefaultAccentColor,
+                      enabled: _canEdit && !_offline,
+                      onChanged: () => setState(() {}),
+                    ),
+                    const SizedBox(height: 6),
+                    errorLine(_colorsError),
+                    if (_canEdit)
+                      primaryButton('Save brand colours', _offline ? null : _saveColors, busy: _savingColors)
+                    else
+                      hintLine('Only the farm owner or a farm manager can change the brand colours.'),
                   ]),
                 ),
                 const SizedBox(height: 14),

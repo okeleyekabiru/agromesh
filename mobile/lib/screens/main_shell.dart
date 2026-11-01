@@ -43,7 +43,7 @@ class _MainShellState extends State<MainShell> {
         backgroundColor: AgroColors.forest,
         title: Row(
           children: [
-            const FarmMark(),
+            const AgroMark(size: 28), // always the AgroMesh logo; the farm's own logo is only used on invoices
             const SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,

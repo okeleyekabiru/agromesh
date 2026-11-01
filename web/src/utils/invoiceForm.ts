@@ -1,6 +1,7 @@
 // Form model, validation and request building for the sales-invoice editor. Kept free of Vue so it
 // can be unit tested. The API re-validates everything; these checks only save a round trip.
 import type { FarmBusinessProfile, Invoice, InvoiceRequest } from '@/types'
+import { colorError, normalizeColor } from '@/utils/brandColors'
 import { addDays, computeInvoiceTotals, isDateInRange, round2 } from '@/utils/money'
 
 export interface InvoiceFormLine { description: string; rate: number | ''; quantity: number | '' }
@@ -20,6 +21,11 @@ export interface InvoiceForm {
   termsAndNotes: string
   signatoryName: string
   templateKey: string
+  /** 'brand' = use the farm's brand colours (sends null); 'custom' = the two colours below. */
+  colorMode: 'brand' | 'custom'
+  /** #RRGGBB, or '' to inherit that one colour. Only sent when colorMode is 'custom'. */
+  primaryColor: string
+  accentColor: string
 }
 
 export const MAX_LINE_ITEMS = 200
@@ -44,7 +50,8 @@ export function emptyInvoiceForm(today: string, templateKey = 'ngf'): InvoiceFor
     vatPercent: 0,
     paymentAccountName: '', paymentAccountNumber: '', paymentBankName: '',
     termsAndNotes: '', signatoryName: '',
-    templateKey
+    templateKey,
+    colorMode: 'brand', primaryColor: '', accentColor: ''
   }
 }
 
@@ -73,7 +80,11 @@ export function invoiceToForm(inv: Invoice): InvoiceForm {
     paymentBankName: inv.paymentBankName ?? '',
     termsAndNotes: inv.termsAndNotes ?? '',
     signatoryName: inv.signatoryName ?? '',
-    templateKey: inv.templateKey || 'ngf'
+    templateKey: inv.templateKey || 'ngf',
+    // A PUT without colours clears them, so the colours that were loaded are sent back unchanged.
+    colorMode: inv.primaryColor || inv.accentColor ? 'custom' : 'brand',
+    primaryColor: inv.primaryColor ?? '',
+    accentColor: inv.accentColor ?? ''
   }
 }
 
@@ -112,6 +123,12 @@ export function validateInvoiceForm(f: InvoiceForm): string[] {
 
   const vat = f.vatPercent === '' ? 0 : Number(f.vatPercent)
   if (!(vat >= 0 && vat <= 100)) errors.push('VAT must be between 0 and 100 percent.')
+  if (f.colorMode === 'custom') {
+    const p = colorError('Primary colour', f.primaryColor)
+    const a = colorError('Accent colour', f.accentColor)
+    if (p) errors.push(p)
+    if (a) errors.push(a)
+  }
   if (f.termsAndNotes.length > 2000) errors.push('Terms and notes can be at most 2000 characters.')
   return errors
 }
@@ -137,6 +154,9 @@ export function buildInvoiceRequest(f: InvoiceForm): InvoiceRequest {
     paymentBankName: blankToNull(f.paymentBankName),
     termsAndNotes: blankToNull(f.termsAndNotes),
     signatoryName: blankToNull(f.signatoryName),
-    templateKey: f.templateKey || 'ngf'
+    templateKey: f.templateKey || 'ngf',
+    // null = inherit (farm brand colour, then template default); only a custom choice sends a colour.
+    primaryColor: f.colorMode === 'custom' ? normalizeColor(f.primaryColor) : null,
+    accentColor: f.colorMode === 'custom' ? normalizeColor(f.accentColor) : null
   }
 }

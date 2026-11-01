@@ -32,6 +32,8 @@ public class FarmConfiguration : IEntityTypeConfiguration<Farm>
         builder.Property(f => f.BankAccountName).HasMaxLength(150);
         builder.Property(f => f.BankAccountNumber).HasMaxLength(40);
         builder.Property(f => f.BankName).HasMaxLength(100);
+        builder.Property(f => f.BrandPrimaryColor).HasMaxLength(7);
+        builder.Property(f => f.BrandAccentColor).HasMaxLength(7);
         builder.Ignore(f => f.HasLogo);
 
         builder.HasMany(f => f.Blocks)

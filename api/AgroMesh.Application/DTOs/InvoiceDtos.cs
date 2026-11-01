@@ -26,7 +26,13 @@ public record InvoiceDto(
     string? SignatoryName,
     string TemplateKey,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    string? PrimaryColor = null,
+    string? AccentColor = null,
+    string ResolvedPrimaryColor = "",
+    string ResolvedAccentColor = "",
+    string PrimaryColorSource = "default",
+    string AccentColorSource = "default");
 
 /// <summary>A row of the invoice list: enough to show a table without sending every line item.</summary>
 public record InvoiceSummaryDto(
@@ -61,9 +67,12 @@ public record SaveInvoiceRequest(
     string? PaymentBankName,
     string? TermsAndNotes,
     string? SignatoryName,
-    string? TemplateKey);
+    string? TemplateKey,
+    string? PrimaryColor = null,
+    string? AccentColor = null);
 
-public record InvoiceTemplateDto(string Key, string Name, string Description, bool IsDefault);
+public record InvoiceTemplateDto(string Key, string Name, string Description, bool IsDefault,
+    string DefaultPrimaryColor = "", string DefaultAccentColor = "", string PreviewUrl = "");
 
 /// <summary>A rendered invoice ready to send as a download.</summary>
 public record InvoicePdfFile(byte[] Content, string FileName);

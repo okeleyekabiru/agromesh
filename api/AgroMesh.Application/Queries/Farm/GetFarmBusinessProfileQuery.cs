@@ -22,5 +22,5 @@ public class GetFarmBusinessProfileQueryHandler : IRequestHandler<GetFarmBusines
         ToDto(await FarmAccess.GetFarmAsync(_farmRepo, _currentUser, query.FarmId, ct));
 
     public static FarmBusinessProfileDto ToDto(Domain.Entities.Farm f) =>
-        new(f.Address, f.Phone, f.Email, f.Website, f.BankAccountName, f.BankAccountNumber, f.BankName);
+        new(f.Address, f.Phone, f.Email, f.Website, f.BankAccountName, f.BankAccountNumber, f.BankName, f.BrandPrimaryColor, f.BrandAccentColor);
 }

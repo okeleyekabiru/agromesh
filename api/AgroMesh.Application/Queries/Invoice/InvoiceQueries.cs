@@ -3,6 +3,7 @@ using AgroMesh.Application.Interfaces;
 using AgroMesh.Application.Mapping;
 using AgroMesh.Application.Services;
 using AgroMesh.Domain.Exceptions;
+using AgroMesh.Domain.Utilities;
 using MediatR;
 
 namespace AgroMesh.Application.Queries.Invoice;
@@ -35,12 +36,14 @@ public class GetInvoiceQueryHandler : IRequestHandler<GetInvoiceQuery, InvoiceDt
 {
     private readonly IFarmRepository _farmRepo;
     private readonly IInvoiceRepository _invoiceRepo;
+    private readonly IInvoiceTemplateRegistry _templates;
     private readonly ICurrentUserAccessor _currentUser;
 
-    public GetInvoiceQueryHandler(IFarmRepository farmRepo, IInvoiceRepository invoiceRepo, ICurrentUserAccessor currentUser)
+    public GetInvoiceQueryHandler(IFarmRepository farmRepo, IInvoiceRepository invoiceRepo, IInvoiceTemplateRegistry templates, ICurrentUserAccessor currentUser)
     {
         _farmRepo = farmRepo;
         _invoiceRepo = invoiceRepo;
+        _templates = templates;
         _currentUser = currentUser;
     }
 
@@ -48,7 +51,7 @@ public class GetInvoiceQueryHandler : IRequestHandler<GetInvoiceQuery, InvoiceDt
     {
         var farm = await FarmAccess.GetFarmAsync(_farmRepo, _currentUser, query.FarmId, ct);
         var invoice = InvoiceMapping.EnsureFarmScoped(await _invoiceRepo.GetByIdAsync(query.InvoiceId, ct), farm.Id, query.InvoiceId);
-        return InvoiceMapping.ToDto(invoice);
+        return InvoiceMapping.ToDto(invoice, InvoiceMapping.ResolveTheme(invoice, farm, _templates));
     }
 }
 
@@ -71,7 +74,8 @@ public class GetInvoiceTemplatesQueryHandler : IRequestHandler<GetInvoiceTemplat
     {
         await FarmAccess.GetFarmAsync(_farmRepo, _currentUser, query.FarmId, ct);
         return _templates.Templates
-            .Select(t => new InvoiceTemplateDto(t.Key, t.Name, t.Description, t.Key == Domain.Entities.InvoiceTemplateKeys.Default))
+            .Select(t => new InvoiceTemplateDto(t.Key, t.Name, t.Description, t.Key == Domain.Entities.InvoiceTemplateKeys.Default,
+                t.DefaultPrimaryColor, t.DefaultAccentColor, InvoiceMapping.PreviewUrl(query.FarmId, t.Key)))
             .ToList();
     }
 }
@@ -113,7 +117,53 @@ public class GenerateInvoicePdfQueryHandler : IRequestHandler<GenerateInvoicePdf
         }
 
         var issuer = new InvoiceIssuer(farm.Name, farm.Address, farm.Phone, farm.Email, farm.Website, logo);
-        var bytes = _templates.Render(invoice.TemplateKey, new InvoiceRenderModel(invoice, issuer));
+        var theme = InvoiceMapping.ResolveTheme(invoice, farm, _templates).Theme;
+        var bytes = _templates.Render(invoice.TemplateKey, new InvoiceRenderModel(invoice, issuer, theme));
         return new InvoicePdfFile(bytes, $"{invoice.Reference}.pdf");
+    }
+}
+
+/// <summary>
+/// Renders a template with sample data, the farm's logo and business profile, and the colours asked for (else the farm's brand
+/// colours, else the template's own). Nothing is saved. Any user of the company may preview.
+/// </summary>
+public record GenerateInvoicePreviewQuery(string FarmId, string TemplateKey, string? PrimaryColor, string? AccentColor) : IRequest<InvoicePdfFile>;
+
+public class GenerateInvoicePreviewQueryHandler : IRequestHandler<GenerateInvoicePreviewQuery, InvoicePdfFile>
+{
+    private readonly IFarmRepository _farmRepo;
+    private readonly IStoredFileRepository _files;
+    private readonly IInvoiceTemplateRegistry _templates;
+    private readonly ICurrentUserAccessor _currentUser;
+
+    public GenerateInvoicePreviewQueryHandler(IFarmRepository farmRepo, IStoredFileRepository files, IInvoiceTemplateRegistry templates, ICurrentUserAccessor currentUser)
+    {
+        _farmRepo = farmRepo;
+        _files = files;
+        _templates = templates;
+        _currentUser = currentUser;
+    }
+
+    public async Task<InvoicePdfFile> Handle(GenerateInvoicePreviewQuery query, CancellationToken ct)
+    {
+        var farm = await FarmAccess.GetFarmAsync(_farmRepo, _currentUser, query.FarmId, ct);
+        var key = query.TemplateKey.Trim().ToLowerInvariant();
+        var template = _templates.Find(key) ?? throw new NotFoundException("Invoice template", query.TemplateKey);
+
+        var primary = BrandColor.Normalise(query.PrimaryColor, "primaryColor");
+        var accent = BrandColor.Normalise(query.AccentColor, "accentColor");
+
+        byte[]? logo = null;
+        if (farm.LogoFileId is not null)
+        {
+            var file = await _files.GetByIdAsync(farm.LogoFileId, ct);
+            if (file is not null && file.FarmId == farm.Id) logo = file.Content;
+        }
+
+        var theme = InvoiceThemeResolver.Resolve(primary, accent, farm, template).Theme;
+        var invoice = InvoiceSampleData.Build(farm, key);
+        var issuer = new InvoiceIssuer(farm.Name, farm.Address, farm.Phone, farm.Email, farm.Website, logo);
+        var bytes = _templates.Render(key, new InvoiceRenderModel(invoice, issuer, theme));
+        return new InvoicePdfFile(bytes, $"{key}-preview.pdf");
     }
 }

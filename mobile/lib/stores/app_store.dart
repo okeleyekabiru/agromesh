@@ -172,7 +172,7 @@ class AppStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Removes the farm logo (the header goes back to the AgroMesh mark).
+  /// Removes the farm logo (invoices then print the farm name).
   Future<void> removeFarmLogo() async {
     await ApiClient.delete('/api/farms/$farmId/logo');
     await _logoService.clear(farmId);

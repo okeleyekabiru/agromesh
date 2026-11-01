@@ -1,5 +1,6 @@
 using AgroMesh.Application.DTOs;
 using AgroMesh.Application.Interfaces;
+using AgroMesh.Application.Services;
 using AgroMesh.Domain.Entities;
 using AgroMesh.Domain.Exceptions;
 using AgroMesh.Domain.ValueObjects;
@@ -32,7 +33,7 @@ public static class InvoiceMapping
             (r.LineItems ?? []).Select(l => new InvoiceLineItem(l.Description, l.Rate, l.Quantity)).ToList(),
             r.VatPercent ?? 0m,
             accountName, accountNumber, bankName,
-            r.TermsAndNotes, r.SignatoryName, templateKey);
+            r.TermsAndNotes, r.SignatoryName, templateKey, r.PrimaryColor, r.AccentColor);
 
     public static Invoice EnsureFarmScoped(Invoice? invoice, string farmId, string invoiceId)
     {
@@ -40,13 +41,19 @@ public static class InvoiceMapping
         return invoice;
     }
 
-    public static InvoiceDto ToDto(Invoice i) => new(
+    public static InvoiceDto ToDto(Invoice i, ThemeResolution theme) => new(
         i.Id, i.FarmId, i.Number, i.Reference, i.Date, i.DueDate,
         i.BillToName, i.BillToPhone, i.BillToEmail, i.BillToAddress,
         i.LineItems.Select((l, index) => new InvoiceLineItemDto(index + 1, l.Description, l.Rate, l.Quantity, l.Amount)).ToList(),
         i.Subtotal, i.VatPercent, i.VatAmount, i.Total,
         i.PaymentAccountName, i.PaymentAccountNumber, i.PaymentBankName,
-        i.TermsAndNotes, i.SignatoryName, i.TemplateKey, i.CreatedAt, i.UpdatedAt);
+        i.TermsAndNotes, i.SignatoryName, i.TemplateKey, i.CreatedAt, i.UpdatedAt,
+        i.PrimaryColor, i.AccentColor, theme.Theme.Primary, theme.Theme.Accent, theme.PrimarySource, theme.AccentSource);
+
+    public static string PreviewUrl(string farmId, string key) => $"/api/farms/{farmId}/invoice-templates/{key}/preview";
+
+    public static ThemeResolution ResolveTheme(Invoice i, Farm farm, IInvoiceTemplateRegistry templates) =>
+        InvoiceThemeResolver.Resolve(i.PrimaryColor, i.AccentColor, farm, templates.Find(i.TemplateKey));
 
     public static InvoiceSummaryDto ToSummary(Invoice i) =>
         new(i.Id, i.Number, i.Reference, i.Date, i.DueDate, i.BillToName, i.Total, i.TemplateKey, i.CreatedAt);

@@ -162,6 +162,34 @@ public class StockAdjustmentApprovalTests
             handler.Handle(new AdjustInventoryStockCommand("farm-1", "missing-item", 85, "Recount"), CancellationToken.None));
     }
 
+    [Fact]
+    public async Task Adjust_UpwardCorrection_IsAllowed_ForAnOrderMistake()
+    {
+        var item = CreateItem(stock: 100);
+        var requestRepo = new FakeStockAdjustmentRequestRepository();
+        var handler = new AdjustInventoryStockCommandHandler(new FakeInventoryRepository { Items = [item] }, requestRepo, new FakeCurrentUserAccessor());
+
+        var result = await handler.Handle(new AdjustInventoryStockCommand("farm-1", item.Id, 150, "Order was entered short"), CancellationToken.None);
+
+        Assert.Equal("Pending", result.Status);
+        Assert.Equal(100m, item.CurrentStock);
+    }
+
+    [Fact]
+    public async Task Approve_UpwardCorrection_AddsTheDifference()
+    {
+        var item = CreateItem(stock: 100);
+        var request = StockAdjustmentRequest.Create("farm-1", item.Id, 150, "Order was entered short", "requester-1");
+        var inventoryRepo = new FakeInventoryRepository { Items = [item] };
+        var handler = new ApproveStockAdjustmentCommandHandler(inventoryRepo,
+            new FakeStockAdjustmentRequestRepository { Requests = [request] }, new FakeCurrentUserAccessor("admin-1", UserRole.Admin));
+
+        await handler.Handle(new ApproveStockAdjustmentCommand("farm-1", request.Id, null), CancellationToken.None);
+
+        Assert.Equal(150m, item.CurrentStock);
+        Assert.Equal(50m, inventoryRepo.Movements.Single().Quantity);
+    }
+
     // ── ApproveStockAdjustmentCommand ─────────────────────────────────────────────────────────
 
     [Fact]

@@ -25,7 +25,9 @@ public class UpdateFarmBusinessProfileCommandHandler : IRequestHandler<UpdateFar
         FarmAccess.RequireManager(_currentUser, "change the farm business profile");
 
         var r = command.Request;
-        farm.SetBusinessProfile(r.Address, r.Phone, r.Email, r.Website, r.BankAccountName, r.BankAccountNumber, r.BankName);
+        // Omitted (null) colours keep what the farm has; "" resets to the template default.
+        farm.SetBusinessProfile(r.Address, r.Phone, r.Email, r.Website, r.BankAccountName, r.BankAccountNumber, r.BankName,
+            r.BrandPrimaryColor ?? farm.BrandPrimaryColor, r.BrandAccentColor ?? farm.BrandAccentColor);
         await _farmRepo.UpdateAsync(farm, ct);
 
         return GetFarmBusinessProfileQueryHandler.ToDto(farm);

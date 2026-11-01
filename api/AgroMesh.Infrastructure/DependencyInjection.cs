@@ -77,6 +77,15 @@ public static class DependencyInjection
         services.AddSingleton<IImageInspector, QuestPdfImageInspector>();
         // Every IInvoiceTemplateRenderer registered here is an invoice template the API offers; add a layout by adding a line.
         services.AddSingleton<IInvoiceTemplateRenderer, NgfInvoiceTemplate>();
+        services.AddSingleton<IInvoiceTemplateRenderer, BandInvoiceTemplate>();
+        services.AddSingleton<IInvoiceTemplateRenderer, SidebarInvoiceTemplate>();
+        services.AddSingleton<IInvoiceTemplateRenderer, MinimalInvoiceTemplate>();
+        services.AddSingleton<IInvoiceTemplateRenderer, CalloutInvoiceTemplate>();
+        services.AddSingleton<IInvoiceTemplateRenderer, CardsInvoiceTemplate>();
+        services.AddSingleton<IInvoiceTemplateRenderer, LedgerInvoiceTemplate>();
+        services.AddSingleton<IInvoiceTemplateRenderer, AngleInvoiceTemplate>();
+        services.AddSingleton<IInvoiceTemplateRenderer, AnchorInvoiceTemplate>();
+        services.AddSingleton<IInvoiceTemplateRenderer, DuoInvoiceTemplate>();
         services.AddSingleton<IInvoiceTemplateRegistry, InvoiceTemplateRegistry>();
         services.AddScoped<IFinancialCategorizationService, FinancialCategorizationService>();
         services.AddScoped<MonoApiService>();
@@ -98,7 +107,9 @@ public static class DependencyInjection
     private static ConfigurationOptions BuildRedisOptions(string connection)
     {
         ConfigurationOptions options;
-        if (Uri.TryCreate(connection, UriKind.Absolute, out var uri) && (uri.Scheme is "redis" or "rediss"))
+        // "redis:6379" (a host that happens to be called redis, as in docker-compose) also parses as an absolute URI
+        // with scheme "redis" and an empty host, so require a real host before treating it as a URL.
+        if (Uri.TryCreate(connection, UriKind.Absolute, out var uri) && (uri.Scheme is "redis" or "rediss") && uri.Host.Length > 0)
         {
             options = new ConfigurationOptions { Ssl = uri.Scheme == "rediss" };
             options.EndPoints.Add(uri.Host, uri.Port > 0 ? uri.Port : 6379);

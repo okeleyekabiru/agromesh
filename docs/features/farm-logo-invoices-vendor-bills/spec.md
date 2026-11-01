@@ -116,3 +116,31 @@ Each maps to automated tests in `api/AgroMesh.Tests` (xUnit, fakes; PDF tests us
 - QA-6/QA-7: invoice numbers come from a per-farm counter table (`InvoiceCounters`) advanced by one atomic upsert, seeded from each farm's existing maximum. A number is never handed out twice, even after the invoice is deleted; a rejected invoice does not spend a number; gaps are possible only if saving fails after the number was reserved. The old MAX+1 retry loop is gone. 32 parallel creates: 32 x 201, unique numbers.
 - QA-8 and limits: invoice and due dates must be in 2000..2100 (vendor bill dates too). Rate < 100,000,000; quantity < 1,000,000; line amount < 1,000,000,000; subtotal < 10,000,000,000 (all 422 otherwise).
 - Role is checked before file size/type/content in the handlers, so a caller who may not upload gets 403 (the controllers no longer pre-validate; only the Content-Length filter, 413 above 3 MB / 11 MB, runs first).
+
+## Third pass: brand colours, ten templates, preview
+
+### Goal
+A farm can make its invoices look like its brand and pick one of ten modern layouts. Default look is unchanged: `ngf` stays the default template with green `#138A44` and yellow `#F5C90C`.
+
+### Requirements (all API, all backward compatible)
+1. Colours are strict `#RRGGBB` (3-digit, names, alpha, missing `#` are 422), normalised to upper case (`BrandColor`, `Domain/Utilities/BrandColor.cs`).
+2. `GET/PUT /api/farms/{id}/business-profile` carry optional `brandPrimaryColor` / `brandAccentColor` (null or blank clears). Invoice create/update/response carry optional `primaryColor` / `accentColor`; the response also has `resolvedPrimaryColor`, `resolvedAccentColor` and `primaryColorSource` / `accentColorSource` (`invoice` | `farm` | `default`).
+3. Resolution per colour: invoice colour, else farm brand colour, else template default (`InvoiceThemeResolver`). A PUT of an invoice is a full replace, so omitting a colour clears it (back to farm/default).
+4. Text on a coloured area is black or white by WCAG luminance contrast; very light colours used as text/lines on white are darkened until legible (`InvoicePalette` / `BrandColor`).
+5. The registry holds at most 10 templates (startup fails above that, also on repeated keys or bad default colours). The app registers exactly 10: `ngf` plus `band`, `sidebar`, `minimal`, `callout`, `cards`, `ledger`, `angle`, `anchor`, `duo`. All embed Plus Jakarta Sans only. Existing invoices that use `ngf` keep rendering; unknown key on create/update stays 422 listing the valid keys.
+6. `GET /api/farms/{farmId}/invoice-templates` returns a stable order (ngf first, then by name) of `key, name, description, isDefault, defaultPrimaryColor, defaultAccentColor, previewUrl`.
+7. `GET /api/farms/{farmId}/invoice-templates/{key}/preview?primaryColor=%23RRGGBB&accentColor=%23RRGGBB` returns an inline `application/pdf` with sample data, the farm logo and business profile; any user of the company; other company 404; invalid colour 422; unknown key 422; nothing is persisted (no invoice number is spent). Without query colours the farm brand colours then template defaults apply.
+8. Migration `InvoiceBrandColours`: nullable `varchar(7)` `PrimaryColor`/`AccentColor` on `Invoices`, `BrandPrimaryColor`/`BrandAccentColor` on `Farms`; reversible.
+
+### Acceptance criteria (each backed by tests)
+- [x] Colour validation and normalisation: `BrandColorTests`, `InvoiceColourHandlerTests`.
+- [x] Luminance text colour and light-colour legibility: `BrandColorTests`, `InvoiceThemeResolverTests`.
+- [x] Resolution order invoice > farm > default: `InvoiceThemeResolverTests`, `InvoiceColourHandlerTests`.
+- [x] Registry cap of 10 and bad-registration failures; exactly the ten keys; stable order; ngf default colours unchanged: `InvoiceTemplateCatalogTests`.
+- [x] Every template renders (single page where expected) for no logo, landscape and portrait logo, 1/2/6 items, 200 items (multi page), max-length signatory and terms, max amounts with 100% VAT, long descriptions, no optional text, very light, very dark, mid, light-primary/dark-accent and saturated colours: `InvoiceTemplateCatalogTests.EveryTemplate_Renders_EveryScenario` (160 cases).
+- [x] Colours reach the PDF; Plus Jakarta Sans embedded; logo embedded only when present: `InvoiceTemplateCatalogTests`.
+- [x] Preview endpoint auth, tenancy, colour validation, unknown key, nothing persisted, inline PDF: `InvoicePreviewControllerTests`.
+- [x] Earlier QA regression tests (`InvoiceRendererTests`, `InvoiceHandlerTests`, `InvoiceTests`) still pass.
+
+### Notes
+- Verified visually: the real API on a throwaway Postgres rendered all ten templates (default colours, custom colours `#B91C1C`/`#FACC15`, and a stress invoice with max amounts, 100% VAT, 150-character signatory and 2000-character terms) and the pages were inspected as images.

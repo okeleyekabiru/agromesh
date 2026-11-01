@@ -185,7 +185,7 @@ void main() {
 
   group('form behaviour', () {
     testWidgets('InvoiceFormScreen: removing an item hides the remove button when one item is left; add button works', (t) async {
-      t.view.physicalSize = const Size(400, 2400);
+      t.view.physicalSize = const Size(400, 3600); // the form got longer (template + colours card)
       t.view.devicePixelRatio = 1.0;
       addTearDown(t.view.reset);
       final inv = Invoice.fromJson(_invoiceJson());
@@ -204,7 +204,7 @@ void main() {
     });
 
     testWidgets('InvoiceFormScreen: empty description is refused before any request', (t) async {
-      t.view.physicalSize = const Size(400, 2400);
+      t.view.physicalSize = const Size(400, 3600); // the form got longer (template + colours card)
       t.view.devicePixelRatio = 1.0;
       addTearDown(t.view.reset);
       var posts = 0;
@@ -227,13 +227,15 @@ void main() {
     });
 
     testWidgets('InvoiceFormScreen: save sends PUT with ISO dates and numeric (not string) money', (t) async {
-      t.view.physicalSize = const Size(400, 2400);
+      t.view.physicalSize = const Size(400, 3600); // the form got longer (template + colours card)
       t.view.devicePixelRatio = 1.0;
       addTearDown(t.view.reset);
       Map<String, dynamic>? sent;
       String? method;
       final client = MockClient((req) async {
         if (req.url.path.endsWith('/invoice-templates')) return http.Response('[]', 200);
+        // The form also reads the farm profile (for its brand colours); only the save is a non-GET.
+        if (req.method == 'GET') return http.Response('{}', 200);
         method = req.method;
         sent = jsonDecode(req.body) as Map<String, dynamic>;
         return http.Response(jsonEncode(_invoiceJson()), 200);

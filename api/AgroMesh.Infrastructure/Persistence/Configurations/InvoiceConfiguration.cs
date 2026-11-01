@@ -25,6 +25,8 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.Property(i => i.TermsAndNotes).HasMaxLength(2000);
         builder.Property(i => i.SignatoryName).HasMaxLength(150);
         builder.Property(i => i.TemplateKey).IsRequired().HasMaxLength(50);
+        builder.Property(i => i.PrimaryColor).HasMaxLength(7);
+        builder.Property(i => i.AccentColor).HasMaxLength(7);
         builder.Property(i => i.CreatedByUserId).HasMaxLength(100);
 
         builder.Ignore(i => i.Reference);
