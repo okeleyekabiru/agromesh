@@ -13,6 +13,10 @@ import OrdersView from '@/views/OrdersView.vue'
 import OnboardingView    from '@/views/OnboardingView.vue'
 import BlocksSetupView from '@/views/BlocksSetupView.vue'
 import ReviewConfirmView from '@/views/ReviewConfirmView.vue'
+import InvoicesView from '@/views/InvoicesView.vue'
+import InvoiceFormView from '@/views/InvoiceFormView.vue'
+import VendorInvoicesView from '@/views/VendorInvoicesView.vue'
+import FarmSettingsView from '@/views/FarmSettingsView.vue'
 
 const currentMonth = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }).toUpperCase()
 
@@ -38,6 +42,11 @@ const routes = [
   // enables every known flag by default), and ordering exists specifically to restock inventory, so
   // gating it on the same flag is both simplest and semantically correct.
   { path: '/orders', name: 'orders', component: OrdersView, meta: { title: 'Orders', sub: 'PURCHASING', feature: 'inventory' } },
+  { path: '/invoices', name: 'invoices', component: InvoicesView, meta: { title: 'Invoices', sub: 'SALES INVOICES' } },
+  { path: '/invoices/new', name: 'invoice-new', component: InvoiceFormView, meta: { title: 'New Invoice', sub: 'SALES INVOICES' } },
+  { path: '/invoices/:id/edit', name: 'invoice-edit', component: InvoiceFormView, meta: { title: 'Edit Invoice', sub: 'SALES INVOICES' } },
+  { path: '/vendor-invoices', name: 'vendor-invoices', component: VendorInvoicesView, meta: { title: 'Vendor Invoices', sub: 'BILLS FROM SUPPLIERS' } },
+  { path: '/settings', name: 'settings', component: FarmSettingsView, meta: { title: 'Farm Settings', sub: 'LOGO & BUSINESS PROFILE' } },
 ]
 
 const router = createRouter({

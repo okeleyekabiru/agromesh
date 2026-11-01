@@ -5,6 +5,7 @@ using AgroMesh.Infrastructure.Persistence.Repositories;
 using AgroMesh.Infrastructure.Services;
 using AgroMesh.Infrastructure.Services.Auth;
 using AgroMesh.Infrastructure.Services.Financial;
+using AgroMesh.Infrastructure.Services.Invoices;
 using AgroMesh.Infrastructure.Services.Scheduling;
 using AgroMesh.Infrastructure.Services.Weather;
 using Microsoft.EntityFrameworkCore;
@@ -59,6 +60,9 @@ public static class DependencyInjection
         services.AddScoped<ICoverageCompletionRepository, CoverageCompletionRepository>();
         services.AddScoped<ISupplierRepository, SupplierRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IStoredFileRepository, StoredFileRepository>();
+        services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+        services.AddScoped<IVendorInvoiceRepository, VendorInvoiceRepository>();
         services.AddScoped<ISchedulingPredictionRepository, SchedulingPredictionRepository>();
         services.AddScoped<ICropAllocationRuleRepository, CropAllocationRuleRepository>();
 
@@ -70,6 +74,10 @@ public static class DependencyInjection
         services.AddScoped<SatelliteRefresher>();
         services.AddScoped<IInventoryDeductionService, InventoryDeductionService>();
         services.AddScoped<IOrderInvoiceService, OrderInvoiceService>();
+        services.AddSingleton<IImageInspector, QuestPdfImageInspector>();
+        // Every IInvoiceTemplateRenderer registered here is an invoice template the API offers; add a layout by adding a line.
+        services.AddSingleton<IInvoiceTemplateRenderer, NgfInvoiceTemplate>();
+        services.AddSingleton<IInvoiceTemplateRegistry, InvoiceTemplateRegistry>();
         services.AddScoped<IFinancialCategorizationService, FinancialCategorizationService>();
         services.AddScoped<MonoApiService>();
         services.AddScoped<IMonoBankService, MonoApiService>();

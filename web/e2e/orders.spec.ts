@@ -36,7 +36,14 @@ async function mockApi(page: Page, overrides?: { orders?: unknown; suppliers?: u
   await intercept('**/api/farms/farm_001/suppliers',              overrides?.suppliers ?? SUPPLIERS)
   await intercept('**/api/farms/farm_001/orders',                 overrides?.orders ?? ORDERS)
   await intercept('**/api/chemicals',                             CHEMICALS)
-  await intercept('**/api/farms',                                 [{ id: FARM.id, name: FARM.name, setupStatus: 1 }])
+  // A Received order's dialog lists its vendor invoices; never let that leak to a real API.
+  await intercept('**/api/farms/farm_001/orders/*/vendor-invoices', [])
+  // The inventory page (opened by the receive spec) also asks for these; unmocked they reach a real
+  // API, get a 401 and the global interceptor wipes the session.
+  await intercept('**/api/farms/farm_001/inventory-price-changes**', [])
+  await intercept('**/api/farms/farm_001/inventory/outstanding',     [])
+  await intercept('**/api/farms/farm_001/blocks',                 [])
+  await intercept('**/api/farms',                               [{ id: FARM.id, name: FARM.name, setupStatus: 1 }])
   // Catch-all for /api/farms/farm_001 (must be last — most general)
   await intercept('**/api/farms/farm_001',                        FARM)
 }

@@ -24,6 +24,16 @@ public class FarmConfiguration : IEntityTypeConfiguration<Farm>
         builder.Property(f => f.BankAccountId).HasMaxLength(100);
         builder.HasIndex(f => f.BankAccountId);
 
+        builder.Property(f => f.LogoFileId).HasMaxLength(50);
+        builder.Property(f => f.Address).HasMaxLength(300);
+        builder.Property(f => f.Phone).HasMaxLength(60);
+        builder.Property(f => f.Email).HasMaxLength(200);
+        builder.Property(f => f.Website).HasMaxLength(200);
+        builder.Property(f => f.BankAccountName).HasMaxLength(150);
+        builder.Property(f => f.BankAccountNumber).HasMaxLength(40);
+        builder.Property(f => f.BankName).HasMaxLength(100);
+        builder.Ignore(f => f.HasLogo);
+
         builder.HasMany(f => f.Blocks)
                .WithOne()
                .HasForeignKey(s => s.FarmId)

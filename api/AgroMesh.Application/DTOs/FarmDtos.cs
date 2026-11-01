@@ -17,7 +17,9 @@ public record FarmDto(
     double? CentroidLat,
     double? CentroidLng,
     int BlockCount,
-    int WorkerCount);
+    int WorkerCount,
+    bool HasLogo = false,
+    DateTime? LogoUpdatedAt = null);
 
 public record CreateFarmRequest(string Name, string StateId, string? LgaFreetext);
 

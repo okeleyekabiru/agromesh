@@ -100,6 +100,8 @@ class AppUser {
 
   bool get isAdmin => role == 'Admin';
   bool get isManager => role == 'Admin' || role == 'FarmManager';
+  /// May attach a vendor's invoice to a received order (Admin, FarmManager or Supervisor; Member is read-only).
+  bool get canUploadVendorBill => isManager || role == 'Supervisor';
 
   factory AppUser.fromJson(Map<String, dynamic> j) => AppUser(
     id: j['id'] as String,
@@ -170,6 +172,9 @@ class Farm {
   final double? centroidLng;
   final int blockCount;
   final int workerCount;
+  /// Branding: whether the farm has an uploaded logo, and when it last changed (the cache-bust key for the logo bytes).
+  final bool hasLogo;
+  final String? logoUpdatedAt;
 
   const Farm({
     required this.id,
@@ -187,6 +192,8 @@ class Farm {
     this.centroidLng,
     this.blockCount = 0,
     this.workerCount = 0,
+    this.hasLogo = false,
+    this.logoUpdatedAt,
   });
 
   double get totalHectares => area.hectares;
@@ -214,6 +221,8 @@ class Farm {
     centroidLng: (j['centroidLng'] as num?)?.toDouble(),
     blockCount: (j['blockCount'] as num?)?.toInt() ?? 0,
     workerCount: (j['workerCount'] as num?)?.toInt() ?? 0,
+    hasLogo: j['hasLogo'] == true,
+    logoUpdatedAt: j['logoUpdatedAt'] as String?,
   );
 
   /// Thin shape returned inside `POST /api/auth/login`'s `farms` array — just
@@ -234,6 +243,7 @@ class Farm {
     'preferredAreaUnit': preferredAreaUnit,
     'centroidLat': centroidLat, 'centroidLng': centroidLng,
     'blockCount': blockCount, 'workerCount': workerCount,
+    'hasLogo': hasLogo, 'logoUpdatedAt': logoUpdatedAt,
   };
 }
 

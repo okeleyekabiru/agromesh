@@ -34,7 +34,6 @@
         </svg>
         <span>Agro<span class="logo-accent">Mesh</span></span>
       </div>
-      <a href="#auth" class="nav-signin-link" @click.prevent="scrollToAuth">Sign in</a>
     </nav>
 
     <!-- ── Main split layout ── -->
@@ -44,7 +43,7 @@
       <div class="hero-col">
         <div class="hero-badge" style="--i:0">
           <span class="badge-dot" />
-          Built for Nigeria · AI-Powered
+          AI-Powered
         </div>
 
         <h1 class="hero-h1" style="--i:1">
@@ -87,7 +86,7 @@
       </div>
 
       <!-- Right: Auth card -->
-      <div id="auth" class="auth-col" ref="authColRef">
+      <div id="auth" class="auth-col">
         <div class="auth-card">
           <div class="auth-card-head">
             <div class="auth-greeting">{{ mode === 'login' ? 'Welcome back' : 'Get started today' }}</div>
@@ -306,16 +305,11 @@ const mode      = ref<'login' | 'register'>('login')
 const showPw    = ref(false)
 const submitting = ref(false)
 const authError  = ref('')
-const authColRef = ref<HTMLElement | null>(null)
 
 const loginForm = ref({ email: '', password: '' })
 const regForm   = ref({
   fullName: '', email: '', password: '', farmName: '',
 })
-
-function scrollToAuth() {
-  authColRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-}
 
 // Password strength
 const pwStrengthScore = computed(() => {
@@ -550,21 +544,6 @@ onMounted(() => {
   letter-spacing: -0.04em;
 }
 .logo-accent { color: #3DAA6A; }
-.nav-signin-link {
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(255,255,255,0.65);
-  text-decoration: none;
-  padding: 7px 16px;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.12);
-  transition: background 150ms, color 150ms, border-color 150ms;
-}
-.nav-signin-link:hover {
-  background: rgba(255,255,255,0.07);
-  color: #fff;
-  border-color: rgba(255,255,255,0.22);
-}
 
 /* ── Main split ── */
 .land-main {

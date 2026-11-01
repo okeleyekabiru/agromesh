@@ -1,10 +1,10 @@
 <template>
-  <div class="modal-overlay" @click.self="$emit('close')">
+  <div class="modal-overlay" @click.self="$emit('close')" @keydown.esc="$emit('close')">
     <div class="modal-wrap">
-      <div class="modal">
+      <div ref="dialog" class="modal" role="dialog" aria-modal="true" aria-labelledby="order-modal-title" @keydown.tab="trapFocus">
         <div class="modal-header">
-          <div class="modal-title">Order — {{ localOrder.supplierName }}</div>
-          <button class="modal-close-inline" @click="$emit('close')">×</button>
+          <div id="order-modal-title" class="modal-title">Order — {{ localOrder.supplierName }}</div>
+          <button ref="closeBtn" class="modal-close-inline" aria-label="Close order details" @click="$emit('close')">×</button>
         </div>
         <div class="modal-body">
           <div class="status-row">
@@ -39,6 +39,9 @@
             <span class="order-total-value">₦{{ localOrder.total.toLocaleString() }}</span>
           </div>
 
+          <!-- Vendor invoices can only be attached once the order is completed (Received). -->
+          <VendorInvoicesPanel v-if="localOrder.status === 'Received'" :order="localOrder" />
+
           <div v-if="actionError" class="error-msg">{{ actionError }}</div>
         </div>
         <div class="modal-footer">
@@ -68,14 +71,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useAgroStore } from '@/stores/agro'
 import StatBadge from '@/components/ui/StatBadge.vue'
+import VendorInvoicesPanel from '@/components/vendor/VendorInvoicesPanel.vue'
 import { extractErrorMessage } from '@/utils/http'
 import type { Order, OrderStatus } from '@/types'
 
 const props = defineProps<{ order: Order }>()
 defineEmits<{ close: [] }>()
+
+const dialog = ref<HTMLElement | null>(null)
+const closeBtn = ref<HTMLButtonElement | null>(null)
+const opener = document.activeElement as HTMLElement | null
+onMounted(() => closeBtn.value?.focus())
+onBeforeUnmount(() => { if (opener && document.contains(opener)) opener.focus() })
+
+// Keep Tab / Shift+Tab inside the dialog while it is open.
+function trapFocus(e: KeyboardEvent) {
+  const els = [...(dialog.value?.querySelectorAll<HTMLElement>('button, input, select, textarea, a[href]') ?? [])]
+    .filter(el => !(el as HTMLButtonElement).disabled && el.offsetParent !== null)
+  if (!els.length) return
+  const first = els[0]
+  const last = els[els.length - 1]
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+}
 const store = useAgroStore()
 
 // "(10 bags)" next to a quantity in kg or litres, when the item is bought by the pack.
@@ -145,10 +166,10 @@ async function downloadInvoice() {
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(10,26,16,0.6); backdrop-filter: blur(4px);
   z-index: 200; display: flex; align-items: flex-start; justify-content: center;
-  padding: 48px 24px; overflow-y: auto;
+  padding: 48px 16px; overflow-y: auto;
 }
 .modal-wrap { position: relative; }
-.modal { background: white; border-radius: 16px; width: 460px; box-shadow: 0 24px 64px rgba(10,26,16,0.2); }
+.modal { background: white; border-radius: 16px; width: min(460px, calc(100vw - 32px)); box-shadow: 0 24px 64px rgba(10,26,16,0.2); }
 .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--fog); display: flex; align-items: center; justify-content: space-between; }
 .modal-title { font-family: var(--font-sans); font-weight: 700; font-size: 15px; color: var(--forest); }
 .modal-close-inline { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--fog); background: transparent; cursor: pointer; font-size: 18px; color: var(--stone); }

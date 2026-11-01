@@ -4,8 +4,11 @@ import '../../widgets/widgets.dart';
 import 'activities_screen.dart';
 import 'approvals_screen.dart';
 import 'common.dart';
+import 'farm_branding_screen.dart';
 import 'finance_screen.dart';
 import 'inventory_screen.dart';
+import 'invoices_screen.dart';
+import 'vendor_invoices_screen.dart';
 import 'orders_screen.dart';
 import 'reports_screen.dart';
 import 'satellite_screen.dart';
@@ -23,11 +26,14 @@ class MoreScreen extends StatelessWidget {
       _Item(Icons.list_alt_outlined, 'Activities', 'Every logged job, with details', () => const ActivitiesScreen()),
       _Item(Icons.inventory_2_outlined, 'Inventory', 'Stock levels, pick, adjust, set price', () => const InventoryScreen()),
       _Item(Icons.shopping_cart_outlined, 'Orders', 'Purchase orders: place, receive, pay', () => const OrdersScreen()),
+      _Item(Icons.receipt_long_outlined, 'Invoices', 'Invoices you send to customers, as PDF', () => const InvoicesScreen()),
+      _Item(Icons.request_quote_outlined, 'Vendor invoices', 'Bills from suppliers: paid, unpaid, overdue', () => const VendorInvoicesScreen()),
       _Item(Icons.satellite_alt_outlined, 'Satellite', 'Crop health: greenness and leaf water', () => const SatelliteScreen()),
       _Item(Icons.payments_outlined, 'Wage bands', 'Pay rates per worker role', () => const WageBandsScreen()),
       if (manager) _Item(Icons.account_balance_wallet_outlined, 'Finance', 'Bank transactions and review', () => const FinanceScreen()),
       if (manager) _Item(Icons.bar_chart_outlined, 'Reports', 'Monthly spend and cost breakdown', () => const ReportsScreen()),
       if (manager) _Item(Icons.fact_check_outlined, 'Approvals', 'Price changes and stock adjustments', () => const ApprovalsScreen()),
+      if (manager) _Item(Icons.image_outlined, 'Farm logo & profile', 'Logo, address and bank details for invoices', () => const FarmBrandingScreen()),
       if (manager) _Item(Icons.group_outlined, 'Team', 'Managers and supervisors, access', () => const TeamScreen()),
     ];
 

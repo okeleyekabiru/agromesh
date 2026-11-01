@@ -53,6 +53,25 @@ public class ExceptionMiddleware
             await context.Response.WriteAsync(JsonSerializer.Serialize(forbidden));
             return;
         }
+        catch (PayloadTooLargeException ex)
+        {
+            _logger.LogWarning(ex, "Payload too large: {Message}", ex.Message);
+            await WriteProblem(context, 413, "Payload Too Large", "https://tools.ietf.org/html/rfc9110#section-15.5.14", ex.Message);
+        }
+        catch (UnsupportedFileTypeException ex)
+        {
+            _logger.LogWarning(ex, "Unsupported file type: {Message}", ex.Message);
+            await WriteProblem(context, 415, "Unsupported Media Type", "https://tools.ietf.org/html/rfc9110#section-15.5.16", ex.Message);
+        }
+        catch (BadHttpRequestException ex) when (ex.StatusCode is 400 or 413)
+        {
+            // Kestrel rejects an oversized upload (or a malformed body) before any handler runs.
+            _logger.LogWarning(ex, "Bad request: {Message}", ex.Message);
+            if (ex.StatusCode == 413)
+                await WriteProblem(context, 413, "Payload Too Large", "https://tools.ietf.org/html/rfc9110#section-15.5.14", "The request is too large.");
+            else
+                await WriteProblem(context, 400, "Bad Request", "https://tools.ietf.org/html/rfc9110#section-15.5.1", "The request could not be read.");
+        }
         catch (DomainException ex)
         {
             _logger.LogWarning(ex, "Domain rule violation: {Message}", ex.Message);
@@ -83,5 +102,12 @@ public class ExceptionMiddleware
             };
             await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
         }
+    }
+
+    private static async Task WriteProblem(HttpContext context, int status, string title, string type, string detail)
+    {
+        context.Response.StatusCode = status;
+        context.Response.ContentType = "application/problem+json";
+        await context.Response.WriteAsync(JsonSerializer.Serialize(new { type, title, status, detail, traceId = context.TraceIdentifier }));
     }
 }

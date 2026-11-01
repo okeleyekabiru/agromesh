@@ -29,6 +29,10 @@ public class AgroMeshDbContext : DbContext
     public DbSet<SchedulingPrediction> SchedulingPredictions => Set<SchedulingPrediction>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<Order> Orders => Set<Order>();
+    public DbSet<StoredFile> StoredFiles => Set<StoredFile>();
+    public DbSet<Invoice> Invoices => Set<Invoice>();
+    public DbSet<VendorInvoice> VendorInvoices => Set<VendorInvoice>();
+    public DbSet<InvoiceCounter> InvoiceCounters => Set<InvoiceCounter>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

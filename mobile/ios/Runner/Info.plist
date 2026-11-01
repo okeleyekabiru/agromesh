@@ -45,6 +45,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>AgroMesh reads a photo from your library to use as the farm logo or to attach a supplier invoice.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>AgroMesh uses the camera to photograph a farm logo or a supplier invoice.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>AgroMesh uses your location to mark GPS corners when capturing a section's boundary in the field.</string>
 </dict>

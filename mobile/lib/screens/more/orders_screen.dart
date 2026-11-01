@@ -7,6 +7,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/widgets.dart';
 import 'common.dart';
 import 'ops_common.dart';
+import 'vendor_invoices_screen.dart';
 
 /// Purchase orders: view, place, receive, and create new ones.
 class OrdersScreen extends StatelessWidget {
@@ -143,6 +144,26 @@ class _OrderDetailState extends State<_OrderDetail> {
         label: Text(_invoicing ? 'Preparing…' : 'Download invoice'),
       ),
       const SizedBox(height: 8),
+      if (status == 'Received') ...[
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(minimumSize: const Size(44, 48)),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => VendorInvoicesScreen(
+                orderId: '${o['id']}',
+                orderLabel: '${o['reference'] ?? ''}'.isEmpty ? '${o['supplierName']}' : '${o['reference']}',
+                orderTotal: dbl(o['total']),
+                supplierName: '${o['supplierName'] ?? ''}',
+                canUpload: true,
+              ),
+            ),
+          ),
+          icon: const Icon(Icons.request_quote_outlined, size: 16),
+          label: const Text('Vendor invoices'),
+        ),
+        const SizedBox(height: 8),
+      ],
       if (status == 'Draft') primaryButton('Place order', () => _move('place', 'Order placed.'), busy: _busy),
       if (status == 'Placed') primaryButton('Mark received (adds to stock)', () => _move('receive', 'Order received. Stock updated.'), busy: _busy),
     ]);
