@@ -14,7 +14,7 @@
       </div>
     </div>
 
-    <div v-if="store.loading" style="padding:24px;text-align:center;color:var(--stone);font-size:12px;">Loading activities…</div>
+    <PageLoader v-if="store.loading" label="Loading activities…" />
     <ActivityRow v-for="a in filtered" :key="a.id" :activity="a" />
     <EmptyState
       v-if="!store.loading && filtered.length === 0"

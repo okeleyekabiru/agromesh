@@ -22,7 +22,7 @@
       <span v-if="satError" class="sat-err">{{ satError }}</span>
     </div>
 
-    <div v-if="store.loading" style="padding:40px;text-align:center;color:var(--stone);font-size:12px;">Loading blocks…</div>
+    <PageLoader v-if="store.loading" label="Loading blocks…" />
     <div v-else-if="!store.blocks.length" style="padding:60px;text-align:center;">
       <div style="font-size:32px;margin-bottom:12px;">🗺️</div>
       <div style="font-family: var(--font-sans);font-weight:700;font-size:16px;color:var(--forest);margin-bottom:4px;">No blocks yet</div>

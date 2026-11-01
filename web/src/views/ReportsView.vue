@@ -7,7 +7,7 @@
     </div>
 
     <div v-if="error" class="error-msg" style="margin-bottom:12px;">{{ error }}</div>
-    <div v-if="loading && !report" class="empty-state">Loading report…</div>
+    <PageLoader v-if="loading && !report" label="Loading report…" />
 
     <template v-if="report">
       <div class="grid-2">

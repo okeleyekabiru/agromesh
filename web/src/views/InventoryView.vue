@@ -44,7 +44,7 @@
     </div>
 
     <!-- Inventory table -->
-    <div v-if="store.loading" class="loading-state">Loading inventory…</div>
+    <PageLoader v-if="store.loading" label="Loading inventory…" />
     <div v-else-if="!filteredItems.length" class="card" style="padding:40px;text-align:center;">
       <div style="font-size:32px;margin-bottom:12px;">📦</div>
       <div style="font-family: var(--font-sans);font-weight:700;font-size:16px;color:var(--forest);margin-bottom:4px;">No inventory items</div>

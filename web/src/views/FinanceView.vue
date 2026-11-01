@@ -41,7 +41,7 @@
         </FilterPill>
       </div>
 
-      <div v-if="store.loading" style="padding:24px;text-align:center;color:var(--stone);font-size:12px;">Loading transactions…</div>
+      <PageLoader v-if="store.loading" label="Loading transactions…" />
       <TransactionRow v-for="t in filtered" :key="t.id" :txn="t" :showAlloc="true" :clickable="true" @open="selected = t" />
       <div v-if="hasMore" class="more-row">
         <button class="btn-secondary" :disabled="loadingMore" @click="loadMore">

@@ -11,7 +11,7 @@
             <div class="sub">{{ activeCount }} active · {{ team.length - activeCount }} disabled</div>
           </div>
         </div>
-        <div v-if="loading" class="empty">Loading…</div>
+        <PageLoader v-if="loading" label="Loading team…" compact />
         <div v-for="m in team" :key="m.id" class="member" :class="{ off: !m.isActive }">
           <div class="avatar" :class="{ off: !m.isActive }">{{ initials(m.fullName) }}</div>
           <div class="who">
