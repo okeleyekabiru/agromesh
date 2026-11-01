@@ -7,6 +7,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/widgets.dart';
 import 'common.dart';
 import 'ops_common.dart';
+import 'vendor_invoices_screen.dart';
 
 /// Purchase orders: view, place, receive, and create new ones.
 class OrdersScreen extends StatelessWidget {
@@ -143,6 +144,26 @@ class _OrderDetailState extends State<_OrderDetail> {
         label: Text(_invoicing ? 'Preparing…' : 'Download invoice'),
       ),
       const SizedBox(height: 8),
+      if (status == 'Received') ...[
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(minimumSize: const Size(44, 48)),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => VendorInvoicesScreen(
+                orderId: '${o['id']}',
+                orderLabel: '${o['reference'] ?? ''}'.isEmpty ? '${o['supplierName']}' : '${o['reference']}',
+                orderTotal: dbl(o['total']),
+                supplierName: '${o['supplierName'] ?? ''}',
+                canUpload: true,
+              ),
+            ),
+          ),
+          icon: const Icon(Icons.request_quote_outlined, size: 16),
+          label: const Text('Vendor invoices'),
+        ),
+        const SizedBox(height: 8),
+      ],
       if (status == 'Draft') primaryButton('Place order', () => _move('place', 'Order placed.'), busy: _busy),
       if (status == 'Placed') primaryButton('Mark received (adds to stock)', () => _move('receive', 'Order received. Stock updated.'), busy: _busy),
     ]);
@@ -184,6 +205,13 @@ class _NewOrderState extends State<_NewOrder> {
     ApiClient.get('/api/farms/${widget.farm}/inventory').then((j) { if (mounted) setState(() => _items = asList(j)); }).catchError((_) {});
   }
 
+  ({double size, String label, String unit}) _pack(_Line l) {
+    final item = _items.where((i) => '${i['id']}' == l.itemId).firstOrNull;
+    final size = item == null ? 1.0 : dbl(item['packSize']);
+    final label = '${item?['packLabel'] ?? ''}';
+    return (size: size > 0 ? size : 1.0, label: label.isEmpty ? 'unit' : label, unit: '${item?['unit'] ?? ''}');
+  }
+
   Future<void> _submit() async {
     setState(() { _busy = true; _error = null; });
     try {
@@ -199,7 +227,13 @@ class _NewOrderState extends State<_NewOrder> {
         if (l.itemId == null || q == null || q <= 0 || p == null || p < 0) {
           throw const ApiException('Each line needs an item, a quantity and a unit price.');
         }
-        lines.add({'inventoryItemId': l.itemId, 'quantity': q, 'unitPrice': p});
+        // Entered in packs (bags, drums...); the API takes the item's own unit (kg, L) and a price per unit.
+        final size = _pack(l).size;
+        lines.add({
+          'inventoryItemId': l.itemId,
+          'quantity': (q * size * 1000).round() / 1000,
+          'unitPrice': (p / size * 1e6).round() / 1e6,
+        });
       }
       if (supplierId == null) throw const ApiException('Choose a supplier or type a new one.');
       await ApiClient.post('/api/farms/${widget.farm}/orders', {'supplierId': supplierId, 'lineItems': lines});
@@ -230,10 +264,16 @@ class _NewOrderState extends State<_NewOrder> {
           onChanged: (v) => setState(() => _lines[n].itemId = v),
         ),
         const SizedBox(height: 8),
+        if (_lines[n].itemId != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text('1 ${_pack(_lines[n]).label} = ${qty(_pack(_lines[n]).size)} ${_pack(_lines[n]).unit}',
+                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12)),
+          ),
         Row(children: [
-          Expanded(child: numField(_lines[n].qty, 'Quantity')),
+          Expanded(child: numField(_lines[n].qty, 'No. of ${_pack(_lines[n]).label}s')),
           const SizedBox(width: 10),
-          Expanded(child: numField(_lines[n].price, 'Unit price (₦)')),
+          Expanded(child: numField(_lines[n].price, '₦ per ${_pack(_lines[n]).label}')),
         ]),
       ],
       TextButton.icon(onPressed: () => setState(() => _lines.add(_Line())), icon: const Icon(Icons.add), label: const Text('Add line')),

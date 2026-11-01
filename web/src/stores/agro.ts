@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import type {
   Farm, Block, Worker, WorkerRole, ActivityLog, Transaction,
   InventoryItem, OutstandingStock, InventoryCategory, ChemicalProduct, UpcomingTask, LowStockAlert, WeatherWidget, DashboardData,
-  AuthUser, AuthResponse, FeatureFlag, FarmSummary, State,
+  AuthUser, AuthResponse, FeatureFlag, FarmSummary, State, FarmLogoInfo,
   BoundarySubmissionResult, PickStockResponse, StockAdjustmentRequest, PriceChangeRequest, SatelliteOverview,
   Supplier, Order, CreateOrderLineItemRequest, Report
 } from '@/types'
@@ -11,10 +11,11 @@ import {
   farmApi, blockApi, activityApi, transactionApi,
   workerApi, workerRoleApi, inventoryApi, inventoryCategoryApi, inventoryAdjustmentsApi, inventoryPriceChangesApi, chemicalApi,
   authApi, featuresApi, referenceApi, supplierApi, orderApi, reportApi,
-  setFarmId,
+  setFarmId, logoApi,
   managersApi, satelliteApi
 } from '@/services/api'
 import { normalizeBlobError } from '@/utils/http'
+import { clearLogoCache } from '@/composables/useFarmLogo'
 import { normalizeActivity, normalizeTask, normalizeBlock, normalizeTransaction } from '@/utils/enums'
 
 const ACTIVE_FARM_KEY = 'agro_active_farm_id'
@@ -627,6 +628,7 @@ export const useAgroStore = defineStore('agro', () => {
     token.value = null
     currentUser.value = null
     enabledFeatures.value = []
+    clearLogoCache()
     farm.value = null
     companyId.value = null
     farms.value = []
@@ -698,6 +700,28 @@ export const useAgroStore = defineStore('agro', () => {
     lastSynced.value = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
   }
 
+  // ── FARM LOGO ──
+  /** Applies a logo change to the loaded farm and its summary so the sidebar (and anything keyed on logoUpdatedAt) updates at once. */
+  function applyLogoState(farmId: string, hasLogo: boolean, updatedAt: string | null) {
+    if (farm.value?.id === farmId) farm.value = { ...farm.value, hasLogo, logoUpdatedAt: updatedAt }
+    const idx = farms.value.findIndex(f => f.id === farmId)
+    if (idx !== -1) farms.value[idx] = { ...farms.value[idx], hasLogo, logoUpdatedAt: updatedAt }
+  }
+
+  async function uploadFarmLogo(farmId: string, file: File): Promise<FarmLogoInfo> {
+    const res = await logoApi.upload(farmId, file)
+    const info = res.data as FarmLogoInfo
+    clearLogoCache(farmId)
+    applyLogoState(farmId, true, info.updatedAt)
+    return info
+  }
+
+  async function removeFarmLogo(farmId: string): Promise<void> {
+    await logoApi.remove(farmId)
+    clearLogoCache(farmId)
+    applyLogoState(farmId, false, null)
+  }
+
   return {
     // state
     farm, blocks, workers, workerRoles, activities, transactions,
@@ -720,7 +744,7 @@ export const useAgroStore = defineStore('agro', () => {
     fetchPendingAdjustments, approveStockAdjustment, rejectStockAdjustment,
     pendingPriceChanges, fetchPendingPriceChanges, approvePriceChange, rejectPriceChange,
     fetchSuppliers, createSupplier, fetchOrders, createOrder, placeOrder, receiveOrder, downloadOrderInvoice,
-    discoverFarm, updateFarmProfile, initDashboard,
+    discoverFarm, updateFarmProfile, initDashboard, uploadFarmLogo, removeFarmLogo,
     // multi-farm actions
     fetchFarms, switchFarm, addFarm, setActiveFarm, fetchStates, setFarmLocation,
     completeFarmSetup, submitBoundaryPoints, uploadBoundaryFile, updateBlock,

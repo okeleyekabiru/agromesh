@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../stores/app_store.dart';
 import '../stores/auth_store.dart';
 import '../theme/app_theme.dart';
+import '../widgets/farm_mark.dart';
 import '../widgets/widgets.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'activity/log_activity_screen.dart';
@@ -42,7 +43,7 @@ class _MainShellState extends State<MainShell> {
         backgroundColor: AgroColors.forest,
         title: Row(
           children: [
-            _AgroLogo(),
+            const AgroMark(size: 28), // always the AgroMesh logo; the farm's own logo is only used on invoices
             const SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,19 +126,6 @@ class _MainShellState extends State<MainShell> {
               label: const Text('Log Activity', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
             ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-    );
-  }
-}
-
-class _AgroLogo extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 28, height: 28,
-      decoration: BoxDecoration(color: AgroColors.canopy, borderRadius: BorderRadius.circular(7)),
-      child: const Center(
-        child: Text('A', style: TextStyle(color: AgroColors.palm, fontWeight: FontWeight.w800, fontSize: 14)),
-      ),
     );
   }
 }

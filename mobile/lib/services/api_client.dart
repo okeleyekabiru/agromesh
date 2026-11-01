@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode, defaultTargetPlatform, TargetPlatform;
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart' show MediaType;
 import 'auth_service.dart';
 
 /// Thrown by [ApiClient] for any non-2xx response.
@@ -78,6 +79,44 @@ class ApiClient {
     return _handle(res);
   }
 
+  static Future<dynamic> put(String path, Map<String, dynamic> body) async {
+    final res = await http
+        .put(Uri.parse('$baseUrl$path'), headers: await _headers(), body: jsonEncode(body))
+        .timeout(_timeout);
+    return _handle(res);
+  }
+
+  /// Sends a `multipart/form-data` request (file uploads). Reuses the bearer token and timeout of the JSON calls; the
+  /// multipart Content-Type (with its boundary) is set by the request itself. [fileBytes] goes in the part named
+  /// [fileField]; [fields] are the plain form fields (null or blank values are left out). Throws [ApiException] on a
+  /// non-2xx reply, so a 413 / 415 / 422 `detail` reaches the caller.
+  static Future<dynamic> sendMultipart(
+    String method,
+    String path, {
+    required String fileField,
+    required List<int> fileBytes,
+    required String fileName,
+    required String contentType,
+    Map<String, String?> fields = const {},
+  }) async {
+    final request = http.MultipartRequest(method, Uri.parse('$baseUrl$path'));
+    final token = await AuthService.getToken();
+    if (token != null && token.isNotEmpty) request.headers['Authorization'] = 'Bearer $token';
+    request.fields.addAll({
+      for (final e in fields.entries)
+        if (e.value != null && e.value!.trim().isNotEmpty) e.key: e.value!,
+    });
+    request.files.add(http.MultipartFile.fromBytes(
+      fileField,
+      fileBytes,
+      filename: fileName,
+      contentType: MediaType.parse(contentType),
+    ));
+    final streamed = await request.send().timeout(_timeout);
+    final res = await http.Response.fromStream(streamed).timeout(_timeout);
+    return _handle(res);
+  }
+
   static Future<dynamic> delete(String path) async {
     final res = await http.delete(Uri.parse('$baseUrl$path'), headers: await _headers()).timeout(_timeout);
     return _handle(res);
@@ -91,6 +130,14 @@ class ApiClient {
     return const [];
   }
 
+  /// "InvoiceNumber" -> "Invoice number"; "$.lineItems[0].rate" -> "lineItems[0].rate".
+  static String _humanField(String f) {
+    final name = f.startsWith(r'$.') ? f.substring(2) : f;
+    if (name.contains('.') || name.contains('[')) return name;
+    final spaced = name.replaceAllMapped(RegExp(r'(?<=[a-z0-9])(?=[A-Z])'), (_) => ' ');
+    return spaced.isEmpty ? spaced : spaced[0].toUpperCase() + spaced.substring(1).toLowerCase();
+  }
+
   static dynamic _handle(http.Response res) {
     if (res.statusCode >= 200 && res.statusCode < 300) {
       if (res.body.isEmpty) return null;
@@ -102,7 +149,17 @@ class ApiClient {
     try {
       final body = jsonDecode(res.body);
       final detail = body is Map ? body['detail'] : null;
-      if (detail is String && detail.isNotEmpty) message = detail;
+      if (detail is String && detail.isNotEmpty) {
+        message = detail;
+      } else if (body is Map && body['errors'] is Map) {
+        // A 400 validation problem has no `detail`, only `errors: {Field: [messages]}`: show those instead of a bare code.
+        final parts = <String>[];
+        (body['errors'] as Map).forEach((field, msgs) {
+          final text = msgs is List ? msgs.whereType<String>().join(' ') : '$msgs';
+          if (text.isNotEmpty) parts.add('${_humanField('$field')}: $text');
+        });
+        if (parts.isNotEmpty) message = parts.join(' ');
+      }
     } catch (_) {/* not JSON — keep the generic message */}
     throw ApiException(message, res.statusCode);
   }

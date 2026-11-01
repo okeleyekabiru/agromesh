@@ -42,3 +42,19 @@ export async function normalizeBlobError(e: unknown): Promise<unknown> {
     return e
   }
 }
+
+/**
+ * Like extractErrorMessage but also understands the 400 validation shape
+ * `{ errors: { Field: ["msg", ...] } }` so a form can show something more useful than a generic line.
+ * 422 and 404 keep using `detail`.
+ */
+export function extractProblemMessage(e: unknown, fallback: string): string {
+  const err = e as { response?: { data?: { detail?: string; message?: string; title?: string; errors?: Record<string, string[] | string> } } }
+  const data = err?.response?.data
+  if (data?.detail) return data.detail
+  if (data?.errors && typeof data.errors === 'object') {
+    const msgs = Object.values(data.errors).flatMap(v => (Array.isArray(v) ? v : [v])).filter(Boolean)
+    if (msgs.length) return msgs.join(' ')
+  }
+  return data?.message ?? data?.title ?? fallback
+}

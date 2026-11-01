@@ -1,26 +1,8 @@
 <template>
   <aside class="sidebar">
-    <!-- Logo -->
+    <!-- Logo: always the AgroMesh brand; the farm's own logo is only used on invoices -->
     <div class="sidebar-logo">
-      <div class="logo-icon">
-        <svg width="26" height="26" viewBox="0 0 72 72" fill="none">
-          <rect width="72" height="72" rx="16" fill="#1A4A32"/>
-          <line x1="24" y1="14" x2="24" y2="58" stroke="#2D7A4F" stroke-width="1.5" stroke-dasharray="2 3"/>
-          <line x1="48" y1="14" x2="48" y2="58" stroke="#2D7A4F" stroke-width="1.5" stroke-dasharray="2 3"/>
-          <line x1="14" y1="24" x2="58" y2="24" stroke="#2D7A4F" stroke-width="1.5" stroke-dasharray="2 3"/>
-          <line x1="14" y1="48" x2="58" y2="48" stroke="#2D7A4F" stroke-width="1.5" stroke-dasharray="2 3"/>
-          <circle cx="24" cy="24" r="3.5" fill="#3DAA6A"/>
-          <circle cx="48" cy="24" r="3.5" fill="#3DAA6A"/>
-          <circle cx="24" cy="48" r="3.5" fill="#3DAA6A"/>
-          <circle cx="48" cy="48" r="3.5" fill="#3DAA6A"/>
-          <circle cx="36" cy="36" r="7" fill="#E8A838"/>
-          <circle cx="36" cy="36" r="3.5" fill="#0D2B1F"/>
-          <line x1="24" y1="24" x2="36" y2="36" stroke="#3DAA6A" stroke-width="1.5"/>
-          <line x1="48" y1="24" x2="36" y2="36" stroke="#3DAA6A" stroke-width="1.5"/>
-          <line x1="24" y1="48" x2="36" y2="36" stroke="#3DAA6A" stroke-width="1.5"/>
-          <line x1="48" y1="48" x2="36" y2="36" stroke="#3DAA6A" stroke-width="1.5"/>
-        </svg>
-      </div>
+      <div class="logo-icon"><AgroMeshMark :size="26" /></div>
       <span class="logo-text">Agro<span class="logo-accent">Mesh</span></span>
     </div>
 
@@ -129,6 +111,7 @@ import { useRouter } from 'vue-router'
 import { useAgroStore } from '@/stores/agro'
 import { useFeatureFlag } from '@/composables/useFeatureFlag'
 import AddFarmModal from '@/components/modal/AddFarmModal.vue'
+import AgroMeshMark from '@/components/ui/AgroMeshMark.vue'
 
 const store = useAgroStore()
 const router = useRouter()
@@ -220,6 +203,22 @@ const ALL_NAV = [
     badgeFn: () => null
   },
   {
+    id: 'invoices',
+    path: '/invoices',
+    label: 'Invoices',
+    icon: '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+    feature: null as string | null,
+    badgeFn: () => null as number | null
+  },
+  {
+    id: 'vendor-invoices',
+    path: '/vendor-invoices',
+    label: 'Vendor Bills',
+    icon: '<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>',
+    feature: null,
+    badgeFn: () => null
+  },
+  {
     id: 'reports',
     path: '/reports',
     label: 'Reports',
@@ -242,6 +241,14 @@ const ALL_NAV = [
     icon: '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>',
     feature: null as string | null,
     adminOnly: true,
+    badgeFn: () => null as number | null
+  },
+  {
+    id: 'settings',
+    path: '/settings',
+    label: 'Farm Settings',
+    icon: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/>',
+    feature: null as string | null,
     badgeFn: () => null as number | null
   },
 ]

@@ -86,6 +86,10 @@ export interface Farm {
   centroidLng: number | null
   blockCount: number
   workerCount: number
+  /** True when the farm has an uploaded logo (GET /api/farms/{id}/logo). */
+  hasLogo?: boolean
+  /** ISO timestamp of the last logo change; used to cache-bust the logo image. */
+  logoUpdatedAt?: string | null
 }
 
 /** Lightweight farm summary returned inline from login/register (Farms[]) and GET /api/farms. */
@@ -93,6 +97,8 @@ export interface FarmSummary {
   id: string
   name: string
   setupStatus: FarmSetupStatus
+  hasLogo?: boolean
+  logoUpdatedAt?: string | null
 }
 
 /** A Nigerian state (or FCT) from GET /api/reference/states. */
@@ -575,4 +581,141 @@ export type FeatureName =
 export interface FeatureFlag {
   name: FeatureName
   enabled: boolean
+}
+
+// ── FARM LOGO, BUSINESS PROFILE, INVOICES, VENDOR INVOICES ──
+
+/** PUT /api/farms/{id}/logo response. */
+export interface FarmLogoInfo {
+  hasLogo: boolean
+  contentType: string
+  size: number
+  updatedAt: string
+}
+
+/** GET/PUT /api/farms/{id}/business-profile. Every field is optional; blank clears it on the server. */
+export interface FarmBusinessProfile {
+  address: string | null
+  phone: string | null
+  email: string | null
+  website: string | null
+  bankAccountName: string | null
+  bankAccountNumber: string | null
+  bankName: string | null
+  /** Invoice brand colours as #RRGGBB; null = not set (the template default is used). */
+  brandPrimaryColor: string | null
+  brandAccentColor: string | null
+}
+
+export interface InvoiceTemplate {
+  key: string
+  name: string
+  description: string | null
+  isDefault: boolean
+  defaultPrimaryColor?: string | null
+  defaultAccentColor?: string | null
+  previewUrl?: string | null
+}
+
+/** Where a resolved invoice colour comes from: the invoice itself, the farm brand colour, or the template default. */
+export type InvoiceColorSource = 'invoice' | 'farm' | 'default'
+
+export interface InvoiceSummary {
+  id: string
+  number: number
+  reference: string
+  date: string
+  dueDate: string
+  billToName: string
+  total: number
+  templateKey: string
+  createdAt: string
+}
+
+export interface InvoiceLineItem {
+  serialNumber: number
+  description: string
+  rate: number
+  quantity: number
+  amount: number
+}
+
+export interface Invoice {
+  id: string
+  farmId: string
+  number: number
+  reference: string
+  date: string
+  dueDate: string
+  billToName: string
+  billToPhone: string | null
+  billToEmail: string | null
+  billToAddress: string | null
+  lineItems: InvoiceLineItem[]
+  subtotal: number
+  vatPercent: number
+  vatAmount: number
+  total: number
+  paymentAccountName: string | null
+  paymentAccountNumber: string | null
+  paymentBankName: string | null
+  termsAndNotes: string | null
+  signatoryName: string | null
+  templateKey: string
+  /** Colours stored on the invoice (null = inherit from the farm brand colour / template default). */
+  primaryColor?: string | null
+  accentColor?: string | null
+  /** What the PDF actually uses now, and where each colour comes from. */
+  resolvedPrimaryColor?: string | null
+  resolvedAccentColor?: string | null
+  primaryColorSource?: InvoiceColorSource
+  accentColorSource?: InvoiceColorSource
+  createdAt: string
+  updatedAt: string
+}
+
+export interface InvoiceRequest {
+  date: string
+  dueDate: string
+  billToName: string
+  billToPhone: string | null
+  billToEmail: string | null
+  billToAddress: string | null
+  lineItems: { description: string; rate: number; quantity: number }[]
+  vatPercent: number
+  paymentAccountName: string | null
+  paymentAccountNumber: string | null
+  paymentBankName: string | null
+  termsAndNotes: string | null
+  signatoryName: string | null
+  templateKey: string
+  /** #RRGGBB or null. A PUT without them clears the invoice colours. */
+  primaryColor: string | null
+  accentColor: string | null
+}
+
+export type VendorInvoiceStatus = 'Unpaid' | 'Paid'
+
+export interface VendorInvoice {
+  id: string
+  farmId: string
+  orderId: string
+  orderReference: string | null
+  orderTotal: number
+  orderIsPaid: boolean
+  supplierId: string
+  vendorName: string
+  invoiceNumber: string
+  amount: number
+  invoiceDate: string
+  dueDate: string | null
+  status: VendorInvoiceStatus
+  paidAt: string | null
+  isOverdue: boolean
+  notes: string | null
+  fileName: string
+  contentType: string
+  fileSize: number
+  uploadedByUserId: string
+  createdAt: string
 }

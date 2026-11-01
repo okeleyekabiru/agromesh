@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { buildPreviewUrl, defaultPreviewPath, type PreviewColors } from '@/utils/brandColors'
 
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 // Start from the last active farm so a hard reload on any page (not just the dashboard) talks to the
@@ -210,4 +211,58 @@ export const managersApi = {
 // ── Feature Flags ──
 export const featuresApi = {
   getForFarm: (farmId: string) => api.get(`/api/farms/${farmId}/features`),
+}
+
+// ── Farm logo (bearer-protected: fetch bytes as a blob, never via <img src>) ──
+export const logoApi = {
+  // axios would turn a FormData body into JSON because of the default JSON content type, so the
+  // multipart type is stated here; the browser then adds the boundary itself.
+  upload: (farmId: string, file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return api.put(`/api/farms/${farmId}/logo`, form, { headers: { 'Content-Type': 'multipart/form-data' } })
+  },
+  get: (farmId: string) => api.get(`/api/farms/${farmId}/logo`, { responseType: 'blob' }),
+  remove: (farmId: string) => api.delete(`/api/farms/${farmId}/logo`)
+}
+
+// ── Farm business profile (printed on invoices) ──
+export const businessProfileApi = {
+  get: (farmId: string) => api.get(`/api/farms/${farmId}/business-profile`),
+  update: (farmId: string, body: unknown) => api.put(`/api/farms/${farmId}/business-profile`, body)
+}
+
+// ── Sales invoices ──
+export const invoiceApi = {
+  templates: () => api.get(`/api/farms/${FARM_ID}/invoice-templates`),
+  list: () => api.get(`/api/farms/${FARM_ID}/invoices`),
+  get: (id: string) => api.get(`/api/farms/${FARM_ID}/invoices/${id}`),
+  create: (body: unknown) => api.post(`/api/farms/${FARM_ID}/invoices`, body),
+  update: (id: string, body: unknown) => api.put(`/api/farms/${FARM_ID}/invoices/${id}`, body),
+  remove: (id: string) => api.delete(`/api/farms/${FARM_ID}/invoices/${id}`),
+  // Bearer-token auth, so the PDF is fetched as a blob (see orderApi.downloadInvoice).
+  pdf: (id: string) => api.get(`/api/farms/${FARM_ID}/invoices/${id}/pdf`, { responseType: 'blob' }),
+  // Sample-data PDF for a template, rendered with the given colours (or the farm brand colour /
+  // template default when omitted). Bearer-token auth, so it is fetched as a blob like the invoice PDF.
+  preview: (templateKey: string, colors: PreviewColors = {}, previewUrl?: string | null) =>
+    api.get(buildPreviewUrl(previewUrl || defaultPreviewPath(FARM_ID, templateKey), colors), { responseType: 'blob' })
+}
+
+// ── Vendor invoices (bills received from suppliers) ──
+export const vendorInvoiceApi = {
+  list: (opts: { status?: 'Paid' | 'Unpaid'; orderId?: string } = {}) => {
+    const q = [opts.status ? `status=${opts.status}` : '', opts.orderId ? `orderId=${encodeURIComponent(opts.orderId)}` : '']
+      .filter(Boolean).join('&')
+    return api.get(`/api/farms/${FARM_ID}/vendor-invoices${q ? '?' + q : ''}`)
+  },
+  listForOrder: (orderId: string) => api.get(`/api/farms/${FARM_ID}/orders/${orderId}/vendor-invoices`),
+  upload: (orderId: string, form: FormData) =>
+    api.post(`/api/farms/${FARM_ID}/orders/${orderId}/vendor-invoices`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+  file: (id: string, inline = false) =>
+    api.get(`/api/farms/${FARM_ID}/vendor-invoices/${id}/file${inline ? '?inline=true' : ''}`, { responseType: 'blob' }),
+  setStatus: (id: string, status: 'Paid' | 'Unpaid', paidAt?: string) =>
+    api.patch(`/api/farms/${FARM_ID}/vendor-invoices/${id}/status`, paidAt ? { status, paidAt } : { status }),
+  remove: (id: string) => api.delete(`/api/farms/${FARM_ID}/vendor-invoices/${id}`)
 }

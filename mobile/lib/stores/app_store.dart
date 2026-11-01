@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../models/models.dart';
 import '../services/api_client.dart';
 import '../services/database_service.dart';
+import '../services/farm_logo_service.dart';
 import '../services/sync_service.dart';
 
 class AppStore extends ChangeNotifier {
@@ -26,6 +27,11 @@ class AppStore extends ChangeNotifier {
   // Stock — cached from the server so inputs can be chosen (and checked) offline.
   List<StockItem> stockItems = [];
   List<OutstandingStock> outstanding = [];
+
+  // Farm logo (shown in place of the AgroMesh mark after login). Bytes come from disk first, then the server.
+  final FarmLogoService _logoService = FarmLogoService();
+  Uint8List? farmLogoBytes;
+  bool farmHasLogo = false;
 
   // Weather forecast for the farm — cached so the last one still shows offline.
   WeatherInfo? weather;
@@ -52,6 +58,17 @@ class AppStore extends ChangeNotifier {
     this.farmId = farmId;
     if (farmName != null) this.farmName = farmName;
     if (farmLocation != null) this.farmLocation = farmLocation;
+
+    // A different farm must never show the previous farm's logo: start from this farm's disk copy (works offline).
+    farmLogoBytes = null;
+    farmHasLogo = false;
+    final initFarm = farmId;
+    _logoService.loadCached(initFarm).then((bytes) {
+      if (this.farmId == initFarm && farmLogoBytes == null && bytes != null) {
+        farmLogoBytes = bytes;
+        notifyListeners();
+      }
+    });
 
     isLoading = true;
     notifyListeners();
@@ -124,10 +141,44 @@ class AppStore extends ChangeNotifier {
         farmName = farm.name;
         farmLocation = farm.location;
         setupDraft = farm.setupStatus == FarmSetupStatus.draft || farm.blockCount == 0;
+        farmHasLogo = farm.hasLogo;
+        unawaited(_syncLogo(farm));
       }
     } catch (_) {
       // Offline or server error — non-fatal, keep existing farmName/location.
     }
+  }
+
+  /// Brings the on-screen logo in line with the server (fetched with the bearer token, cached on disk, refetched only
+  /// when `logoUpdatedAt` changes). If that fails the logo already on screen stays, and the header falls back to the mark.
+  Future<void> _syncLogo(Farm farm) async {
+    final bytes = await _logoService.resolve(farm.id, hasLogo: farm.hasLogo, updatedAt: farm.logoUpdatedAt);
+    if (farm.id != farmId) return; // the user switched farm while this was loading
+    farmLogoBytes = bytes;
+    notifyListeners();
+  }
+
+  /// Uploads (or replaces) the farm logo and shows it right away. Throws [ApiException] with the server's reason
+  /// (415 wrong type, 413 too large, 422 bad image, 403 not allowed).
+  Future<void> uploadFarmLogo(List<int> bytes, String fileName, String contentType) async {
+    final res = await ApiClient.sendMultipart(
+      'PUT', '/api/farms/$farmId/logo',
+      fileField: 'file', fileBytes: bytes, fileName: fileName, contentType: contentType,
+    );
+    final updatedAt = res is Map ? res['updatedAt'] as String? : null;
+    await _logoService.store(farmId, bytes, updatedAt);
+    farmLogoBytes = Uint8List.fromList(bytes);
+    farmHasLogo = true;
+    notifyListeners();
+  }
+
+  /// Removes the farm logo (invoices then print the farm name).
+  Future<void> removeFarmLogo() async {
+    await ApiClient.delete('/api/farms/$farmId/logo');
+    await _logoService.clear(farmId);
+    farmLogoBytes = null;
+    farmHasLogo = false;
+    notifyListeners();
   }
 
   // ── BLOCKS ──
