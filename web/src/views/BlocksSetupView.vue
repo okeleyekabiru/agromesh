@@ -13,7 +13,7 @@
           <line x1="24" y1="48" x2="36" y2="36" stroke="#3DAA6A" stroke-width="1.5"/>
           <line x1="48" y1="48" x2="36" y2="36" stroke="#3DAA6A" stroke-width="1.5"/>
         </svg>
-        <span class="brand-name">Agro<span class="brand-accent">Mesh</span></span>
+        <span class="brand-name">Ilevora</span>
       </div>
 
       <div class="panel-content">
