@@ -21,10 +21,10 @@
       <div class="land-logo">
         <svg width="22" height="22" viewBox="0 0 72 72" fill="none">
           <rect width="72" height="72" rx="16" fill="#1A4A32"/>
-          <line x1="24" y1="14" x2="24" y2="58" stroke="#2D7A4F" stroke-width="1.5" stroke-dasharray="2 3"/>
-          <line x1="48" y1="14" x2="48" y2="58" stroke="#2D7A4F" stroke-width="1.5" stroke-dasharray="2 3"/>
-          <line x1="14" y1="24" x2="58" y2="24" stroke="#2D7A4F" stroke-width="1.5" stroke-dasharray="2 3"/>
-          <line x1="14" y1="48" x2="58" y2="48" stroke="#2D7A4F" stroke-width="1.5" stroke-dasharray="2 3"/>
+          <line x1="24" y1="14" x2="24" y2="58" stroke="#0F7A3A" stroke-width="1.5" stroke-dasharray="2 3"/>
+          <line x1="48" y1="14" x2="48" y2="58" stroke="#0F7A3A" stroke-width="1.5" stroke-dasharray="2 3"/>
+          <line x1="14" y1="24" x2="58" y2="24" stroke="#0F7A3A" stroke-width="1.5" stroke-dasharray="2 3"/>
+          <line x1="14" y1="48" x2="58" y2="48" stroke="#0F7A3A" stroke-width="1.5" stroke-dasharray="2 3"/>
           <circle cx="36" cy="36" r="7" fill="#E8A838"/>
           <circle cx="36" cy="36" r="3.5" fill="#0D2B1F"/>
           <line x1="24" y1="24" x2="36" y2="36" stroke="#3DAA6A" stroke-width="1.5"/>
@@ -90,7 +90,7 @@
         <div class="auth-card">
           <div class="auth-card-head">
             <div class="auth-greeting">{{ mode === 'login' ? 'Welcome back' : 'Get started today' }}</div>
-            <div class="auth-sub">{{ mode === 'login' ? 'Sign in to your AgroMesh account' : 'Create your free AgroMesh account' }}</div>
+            <div class="auth-sub">{{ mode === 'login' ? 'Sign in to your Ilevora account' : 'Create your free Ilevora account' }}</div>
           </div>
 
           <!-- Tabs -->
@@ -285,7 +285,7 @@
         </svg>
         <span>Agro<span class="logo-accent">Mesh</span></span>
       </div>
-      <p class="foot-copy">© {{ new Date().getFullYear() }} AgroMesh. Purpose-built for Nigerian agriculture.</p>
+      <p class="foot-copy">© {{ new Date().getFullYear() }} Ilevora. Purpose-built for Nigerian agriculture.</p>
     </footer>
 
   </div>
@@ -394,8 +394,8 @@ const features = [
     name: 'Field Activity Logging',
     desc: 'Log weeding, spraying, fertilizer application and more. Capture the worked area on a map, inputs used, workers present, and labour cost in one tap.',
     icon: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>',
-    iconBg: 'rgba(45,122,79,0.12)',
-    iconColor: '#2D7A4F',
+    iconBg: 'rgba(15,122,58,0.12)',
+    iconColor: '#0F7A3A',
     flagged: false,
   },
   {
@@ -495,7 +495,7 @@ onMounted(() => {
   height: 500px;
   bottom: -100px;
   left: -120px;
-  background: radial-gradient(circle, rgba(45,122,79,0.4) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(15,122,58,0.4) 0%, transparent 70%);
   animation: orb-drift-2 18s ease-in-out infinite;
 }
 .bg-orb-3 {
@@ -960,7 +960,7 @@ onMounted(() => {
   box-shadow: 0 4px 16px rgba(61,170,106,0.35);
 }
 .auth-submit:hover:not(:disabled) {
-  background: #2D7A4F;
+  background: #0F7A3A;
   box-shadow: 0 6px 24px rgba(61,170,106,0.45);
   transform: translateY(-1px);
 }

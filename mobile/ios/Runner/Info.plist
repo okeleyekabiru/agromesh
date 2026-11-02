@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Mobile</string>
+	<string>Ilevora</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>mobile</string>
+	<string>Ilevora</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -46,10 +46,10 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>AgroMesh reads a photo from your library to use as the farm logo or to attach a supplier invoice.</string>
+	<string>Ilevora needs access to your photos so you can pick a farm logo or attach a supplier invoice.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>AgroMesh uses the camera to photograph a farm logo or a supplier invoice.</string>
+	<string>Ilevora needs the camera so you can photograph a farm logo or a supplier invoice.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>AgroMesh uses your location to mark GPS corners when capturing a section's boundary in the field.</string>
+	<string>Ilevora needs your location to mark GPS corners when capturing a section's boundary in the field.</string>
 </dict>
 </plist>

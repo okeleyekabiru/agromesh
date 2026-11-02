@@ -1,9 +1,9 @@
 // QA (independent): the invoice form refuses NaN / Infinity / over-limit input before any request is sent.
 import 'dart:convert';
 
-import 'package:agromesh_mobile/models/billing_models.dart';
-import 'package:agromesh_mobile/screens/more/invoice_form_screen.dart';
-import 'package:agromesh_mobile/theme/app_theme.dart';
+import 'package:ilevora_mobile/models/billing_models.dart';
+import 'package:ilevora_mobile/screens/more/invoice_form_screen.dart';
+import 'package:ilevora_mobile/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -35,7 +35,7 @@ void main() {
       return http.Response(jsonEncode({'id': 'i1', 'billToName': 'x', 'lineItems': []}), 200);
     });
     await http.runWithClient(() async {
-      await t.pumpWidget(MaterialApp(theme: AgroTheme.theme, home: InvoiceFormScreen(farmId: 'f1', existing: inv)));
+      await t.pumpWidget(MaterialApp(theme: IlevoraTheme.theme, home: InvoiceFormScreen(farmId: 'f1', existing: inv)));
       await t.pump();
       await t.pump(const Duration(milliseconds: 100));
       if (rate != null) await t.enterText(find.widgetWithText(TextField, 'Rate (₦)'), rate);

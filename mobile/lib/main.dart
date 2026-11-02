@@ -12,11 +12,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // In a browser there is no native sqlite: use the WebAssembly one (stored in the browser's IndexedDB).
   if (kIsWeb) databaseFactory = databaseFactoryFfiWebNoWebWorker;
-  runApp(const AgroMeshApp());
+  runApp(const IlevoraApp());
 }
 
-class AgroMeshApp extends StatelessWidget {
-  const AgroMeshApp({super.key});
+class IlevoraApp extends StatelessWidget {
+  const IlevoraApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,8 +26,8 @@ class AgroMeshApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AppStore()),
       ],
       child: MaterialApp(
-        title: 'AgroMesh',
-        theme: AgroTheme.theme,
+        title: 'Ilevora',
+        theme: IlevoraTheme.theme,
         debugShowCheckedModeBanner: false,
         home: const AppGate(),
       ),

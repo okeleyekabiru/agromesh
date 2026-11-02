@@ -1,4 +1,4 @@
-# AgroMesh Web — Farm Operating System
+# Ilevora Web — Farm Operating System
 
 Vue 3 + Vite + TypeScript + Pinia + Vue Router
 
@@ -25,7 +25,7 @@ npm run build
 ```
 src/
 ├── assets/
-│   └── main.css          # Global styles + AgroMesh design tokens
+│   └── main.css          # Global styles + Ilevora design tokens
 ├── components/
 │   ├── ui/               # Reusable UI components
 │   │   ├── KpiCard.vue
@@ -68,14 +68,14 @@ src/
 |---------|-----------|--------------------------------|
 | Forest  | #0D2B1F   | Primary dark, sidebar          |
 | Canopy  | #1A4A32   | Surface dark                   |
-| Leaf    | #2D7A4F   | Primary action, buttons        |
+| Leaf    | #0F7A3A   | Ilevora Green, UI primary      |
 | Palm    | #3DAA6A   | Accent, highlights             |
 | Harvest | #E8A838   | Alerts, attention              |
 | Mist    | #F0F4F1   | Page background                |
 | Fog     | #E2EBE5   | Borders, dividers              |
-| Stone   | #6B7C72   | Secondary text                 |
+| Stone   | #4F5F56   | Secondary text                 |
 
-Fonts: Syne 800 (display) · Inter (body) · JetBrains Mono (data/labels)
+Typeface: Plus Jakarta Sans (via @fontsource-variable). Logo: "Rising rows" mark in `IlevoraMark.vue`. Invoice default green stays `#138A44`.
 
 ## Tech Stack
 

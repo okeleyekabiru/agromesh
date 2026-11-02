@@ -25,7 +25,7 @@ class ApiClient {
   ///   flutter run --dart-define=API_BASE_URL=http://10.0.2.2:5000
   ///
   /// Notes on the defaults (`http://10.0.2.2:5000` on Android, `http://localhost:5000` elsewhere; 5000 is the Docker API port;
-  /// documented local dev port — see api/AgroMesh.API/Properties/launchSettings.json
+  /// documented local dev port — see api/Ilevora.API/Properties/launchSettings.json
   /// and web/.env.development):
   ///   - Android emulators can't reach the host machine via `localhost` — it
   ///     resolves to the emulator itself. Use `10.0.2.2` instead.
@@ -34,6 +34,7 @@ class ApiClient {
   static const String _override = String.fromEnvironment('API_BASE_URL');
 
   /// Hosted API that release builds talk to unless API_BASE_URL says otherwise.
+  // TODO: switch to https://api.ilevora.com once the custom domain is live (the Render service keeps its ilevora-api name until then).
   static const String _productionUrl = 'https://agromesh-api.onrender.com';
 
   /// Release builds use the hosted API. Debug runs with no override assume the emulator on Android (host PC at

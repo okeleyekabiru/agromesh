@@ -7,7 +7,7 @@
     /* ── Brand tokens ── */
     --forest:  #0D2B1F;
     --canopy:  #1A4A32;
-    --leaf:    #2D7A4F;
+    --leaf:    #0F7A3A;
     --palm:    #3DAA6A;
     --harvest: #E8A838;
     --mist:    #F0F4F1;
@@ -151,7 +151,7 @@
   .btn-primary  { background: var(--leaf); color: white; box-shadow: var(--shadow-xs); }
   .btn-primary:hover  {
     background: #266844;
-    box-shadow: 0 4px 14px rgba(45,122,79,0.35);
+    box-shadow: 0 4px 14px rgba(15,122,58,0.35);
   }
   .btn-secondary { background: var(--forest); color: white; box-shadow: var(--shadow-xs); }
   .btn-secondary:hover { background: var(--canopy); box-shadow: var(--shadow-sm); }
@@ -174,7 +174,7 @@
     display: inline-block;
   }
 
-  .badge-green   { background: rgba(45,122,79,0.1);   color: var(--leaf); }
+  .badge-green   { background: rgba(15,122,58,0.1);   color: var(--leaf); }
   .badge-harvest { background: rgba(232,168,56,0.12); color: #8A6000; }
   .badge-red     { background: rgba(220,60,60,0.08);  color: var(--alert); }
   .badge-stone   { background: var(--fog);             color: var(--stone); }
@@ -201,7 +201,7 @@
   .card-interactive:hover {
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
-    border-color: rgba(45,122,79,0.2);
+    border-color: rgba(15,122,58,0.2);
   }
   .card-interactive:active {
     transform: translateY(0);
@@ -260,7 +260,7 @@
   .form-input:focus,
   .form-select:focus {
     border-color: var(--leaf);
-    box-shadow: 0 0 0 3px rgba(45,122,79,0.10);
+    box-shadow: 0 0 0 3px rgba(15,122,58,0.10);
   }
 
   .form-input:hover:not(:focus),
@@ -359,7 +359,7 @@
   }
 
   /* ── CROP CARDS ── */
-  .crop-card-palm  { background: rgba(13,43,31,0.04);  border: 1px solid rgba(45,122,79,0.2); }
+  .crop-card-palm  { background: rgba(13,43,31,0.04);  border: 1px solid rgba(15,122,58,0.2); }
   .crop-card-maize { background: rgba(232,168,56,0.05); border: 1px solid rgba(232,168,56,0.2); }
 
   /* ── ALERT BANNER ── */

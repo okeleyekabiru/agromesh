@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-// ── AGROMESH COLOR SYSTEM ──
-class AgroColors {
-  AgroColors._();
+// ── ILEVORA COLOR SYSTEM ──
+class IlevoraColors {
+  IlevoraColors._();
 
   static const Color forest  = Color(0xFF0D2B1F);
   static const Color canopy  = Color(0xFF1A4A32);
-  static const Color leaf    = Color(0xFF2D7A4F);
+  static const Color leaf    = Color(0xFF0F7A3A);
   static const Color palm    = Color(0xFF3DAA6A);
   static const Color harvest = Color(0xFFE8A838);
   static const Color mist    = Color(0xFFF0F4F1);
@@ -34,52 +34,52 @@ class AgroColors {
   static const Color online  = data;
 }
 
-// ── AGROMESH THEME ──
-class AgroTheme {
-  AgroTheme._();
+// ── ILEVORA THEME ──
+class IlevoraTheme {
+  IlevoraTheme._();
 
   static ThemeData get theme => ThemeData(
     useMaterial3: true,
-    scaffoldBackgroundColor: AgroColors.mist,
+    scaffoldBackgroundColor: IlevoraColors.mist,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: AgroColors.leaf,
-      primary:   AgroColors.leaf,
-      secondary: AgroColors.palm,
-      surface:   AgroColors.white,
-      error:     AgroColors.alert,
+      seedColor: IlevoraColors.leaf,
+      primary:   IlevoraColors.leaf,
+      secondary: IlevoraColors.palm,
+      surface:   IlevoraColors.white,
+      error:     IlevoraColors.alert,
       brightness: Brightness.light,
     ),
     textTheme: ThemeData.light().textTheme.apply(fontFamily: 'PlusJakartaSans').copyWith(
-      displayLarge:  const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w800, fontSize: 32, color: AgroColors.forest, letterSpacing: -1),
-      displayMedium: const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w800, fontSize: 24, color: AgroColors.forest, letterSpacing: -0.5),
-      displaySmall:  const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w700, fontSize: 20, color: AgroColors.forest, letterSpacing: -0.5),
-      headlineMedium:const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w700, fontSize: 18, color: AgroColors.forest),
-      headlineSmall: const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w700, fontSize: 15, color: AgroColors.forest),
-      titleLarge:    const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w600, fontSize: 14, color: AgroColors.forest),
-      titleMedium:   const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w600, fontSize: 14, color: AgroColors.forest),
-      bodyLarge:     const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w400, fontSize: 16, color: AgroColors.ink),
-      bodyMedium:    const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w400, fontSize: 16, color: AgroColors.ink),
-      bodySmall:     const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w400, fontSize: 14, color: AgroColors.stone),
-      labelLarge:    const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w500, fontSize: 14, color: AgroColors.stone),
-      labelMedium:   const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w500, fontSize: 13, color: AgroColors.stone, letterSpacing: 0.5),
-      labelSmall:    const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w400, fontSize: 12,  color: AgroColors.stone, letterSpacing: 1),
+      displayLarge:  const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w800, fontSize: 32, color: IlevoraColors.forest, letterSpacing: -1),
+      displayMedium: const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w800, fontSize: 24, color: IlevoraColors.forest, letterSpacing: -0.5),
+      displaySmall:  const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w700, fontSize: 20, color: IlevoraColors.forest, letterSpacing: -0.5),
+      headlineMedium:const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w700, fontSize: 18, color: IlevoraColors.forest),
+      headlineSmall: const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w700, fontSize: 15, color: IlevoraColors.forest),
+      titleLarge:    const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w600, fontSize: 14, color: IlevoraColors.forest),
+      titleMedium:   const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w600, fontSize: 14, color: IlevoraColors.forest),
+      bodyLarge:     const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w400, fontSize: 16, color: IlevoraColors.ink),
+      bodyMedium:    const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w400, fontSize: 16, color: IlevoraColors.ink),
+      bodySmall:     const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w400, fontSize: 14, color: IlevoraColors.stone),
+      labelLarge:    const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w500, fontSize: 14, color: IlevoraColors.stone),
+      labelMedium:   const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w500, fontSize: 13, color: IlevoraColors.stone, letterSpacing: 0.5),
+      labelSmall:    const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w400, fontSize: 12,  color: IlevoraColors.stone, letterSpacing: 1),
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: AgroColors.forest,
-      foregroundColor: AgroColors.white,
+      backgroundColor: IlevoraColors.forest,
+      foregroundColor: IlevoraColors.white,
       elevation: 0,
       centerTitle: false,
       titleTextStyle: TextStyle(fontFamily: 'PlusJakartaSans', 
         fontWeight: FontWeight.w800,
         fontSize: 18,
-        color: AgroColors.white,
+        color: IlevoraColors.white,
         letterSpacing: -0.5,
       ),
     ),
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-      backgroundColor: AgroColors.forest,
-      selectedItemColor: AgroColors.palm,
-      unselectedItemColor: AgroColors.stoneOnDark,
+      backgroundColor: IlevoraColors.forest,
+      selectedItemColor: IlevoraColors.palm,
+      unselectedItemColor: IlevoraColors.stoneOnDark,
       showSelectedLabels: true,
       showUnselectedLabels: true,
       type: BottomNavigationBarType.fixed,
@@ -87,8 +87,8 @@ class AgroTheme {
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: AgroColors.leaf,
-        foregroundColor: AgroColors.white,
+        backgroundColor: IlevoraColors.leaf,
+        foregroundColor: IlevoraColors.white,
         minimumSize: const Size(double.infinity, 48),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         textStyle: const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w600, fontSize: 14),
@@ -96,8 +96,8 @@ class AgroTheme {
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: AgroColors.forest,
-        side: const BorderSide(color: AgroColors.fog),
+        foregroundColor: IlevoraColors.forest,
+        side: const BorderSide(color: IlevoraColors.fog),
         minimumSize: const Size(double.infinity, 48),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         textStyle: const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w600, fontSize: 14),
@@ -112,44 +112,44 @@ class AgroTheme {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AgroColors.white,
+      fillColor: IlevoraColors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: AgroColors.fog),
+        borderSide: const BorderSide(color: IlevoraColors.fog),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: AgroColors.fog),
+        borderSide: const BorderSide(color: IlevoraColors.fog),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: AgroColors.leaf, width: 1.5),
+        borderSide: const BorderSide(color: IlevoraColors.leaf, width: 1.5),
       ),
-      hintStyle: const TextStyle(fontFamily: 'PlusJakartaSans', color: AgroColors.stone, fontSize: 14),
+      hintStyle: const TextStyle(fontFamily: 'PlusJakartaSans', color: IlevoraColors.stone, fontSize: 14),
       labelStyle: const TextStyle(fontFamily: 'PlusJakartaSans', 
-        color: AgroColors.stone, fontSize: 12,
+        color: IlevoraColors.stone, fontSize: 12,
         letterSpacing: 1, fontWeight: FontWeight.w500,
       ),
     ),
     cardTheme: CardThemeData(
-      color: AgroColors.white,
+      color: IlevoraColors.white,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AgroColors.fog),
+        side: const BorderSide(color: IlevoraColors.fog),
       ),
       margin: EdgeInsets.zero,
     ),
     dividerTheme: const DividerThemeData(
-      color: AgroColors.fog,
+      color: IlevoraColors.fog,
       thickness: 1,
       space: 0,
     ),
     chipTheme: ChipThemeData(
-      backgroundColor: AgroColors.mist,
-      labelStyle: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w500, color: AgroColors.forest),
-      side: const BorderSide(color: AgroColors.fog),
+      backgroundColor: IlevoraColors.mist,
+      labelStyle: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w500, color: IlevoraColors.forest),
+      side: const BorderSide(color: IlevoraColors.fog),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
     ),

@@ -67,10 +67,10 @@ class TemplateCard extends StatelessWidget {
       excludeSemantics: true,
       onTap: onTap,
       child: Material(
-        color: selected ? AgroColors.mist : Colors.white,
+        color: selected ? IlevoraColors.mist : Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: selected ? AgroColors.leaf : AgroColors.fog, width: selected ? 2 : 1),
+          side: BorderSide(color: selected ? IlevoraColors.leaf : IlevoraColors.fog, width: selected ? 2 : 1),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -87,16 +87,16 @@ class TemplateCard extends StatelessWidget {
                     child: Text(template.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w800, color: AgroColors.forest)),
+                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w800, color: IlevoraColors.forest)),
                   ),
-                  if (selected) const Icon(Icons.check_circle, size: 16, color: AgroColors.leaf),
+                  if (selected) const Icon(Icons.check_circle, size: 16, color: IlevoraColors.leaf),
                 ]),
                 if (desc != null)
                   Expanded(
                     child: Text(desc,
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 11.5, color: AgroColors.stone)),
+                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 11.5, color: IlevoraColors.stone)),
                   ),
               ]),
             ),
@@ -115,10 +115,10 @@ class _PageSketch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget row(double w) => Container(height: 4, width: w, margin: const EdgeInsets.only(bottom: 4), decoration: BoxDecoration(color: AgroColors.fog, borderRadius: BorderRadius.circular(2)));
+    Widget row(double w) => Container(height: 4, width: w, margin: const EdgeInsets.only(bottom: 4), decoration: BoxDecoration(color: IlevoraColors.fog, borderRadius: BorderRadius.circular(2)));
     return ExcludeSemantics(
       child: DecoratedBox(
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6), border: Border.all(color: AgroColors.fog)),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6), border: Border.all(color: IlevoraColors.fog)),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(6),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [

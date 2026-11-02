@@ -13,12 +13,12 @@ class AgroBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (variant) {
-      AgroBadgeVariant.green   => (AgroColors.palm.withValues(alpha: 0.12),   AgroColors.leaf),
-      AgroBadgeVariant.harvest => (AgroColors.harvest.withValues(alpha: 0.12), const Color(0xFF8A6000)),
-      AgroBadgeVariant.red     => (AgroColors.alert.withValues(alpha: 0.1),   AgroColors.alert),
-      AgroBadgeVariant.stone   => (AgroColors.fog,                       AgroColors.stone),
+      AgroBadgeVariant.green   => (IlevoraColors.palm.withValues(alpha: 0.12),   IlevoraColors.leaf),
+      AgroBadgeVariant.harvest => (IlevoraColors.harvest.withValues(alpha: 0.12), const Color(0xFF8A6000)),
+      AgroBadgeVariant.red     => (IlevoraColors.alert.withValues(alpha: 0.1),   IlevoraColors.alert),
+      AgroBadgeVariant.stone   => (IlevoraColors.fog,                       IlevoraColors.stone),
       AgroBadgeVariant.blue    => (const Color(0x193B82F6),              const Color(0xFF2563EB)),
-      AgroBadgeVariant.data    => (AgroColors.data.withValues(alpha: 0.1),    const Color(0xFF007A5E)),
+      AgroBadgeVariant.data    => (IlevoraColors.data.withValues(alpha: 0.1),    const Color(0xFF007A5E)),
     };
 
     return Container(
@@ -46,9 +46,9 @@ class AgroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: color ?? AgroColors.white,
+        color: color ?? IlevoraColors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AgroColors.fog),
+        border: Border.all(color: IlevoraColors.fog),
       ),
       clipBehavior: Clip.antiAlias,
       child: padding != null ? Padding(padding: padding!, child: child) : child,
@@ -68,7 +68,7 @@ class AgroCardHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: IlevoraColors.fog))),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -101,14 +101,14 @@ class KpiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = dark ? AgroColors.forest : AgroColors.white;
-    final labelColor = dark ? AgroColors.stoneOnDark : AgroColors.stone;
-    final valueColor = dark ? AgroColors.white : AgroColors.forest;
+    final bg = dark ? IlevoraColors.forest : IlevoraColors.white;
+    final labelColor = dark ? IlevoraColors.stoneOnDark : IlevoraColors.stone;
+    final valueColor = dark ? IlevoraColors.white : IlevoraColors.forest;
     final deltaColor = switch (deltaType) {
-      KpiDeltaType.up   => AgroColors.palm,
-      KpiDeltaType.down => AgroColors.alert,
-      KpiDeltaType.warn => AgroColors.harvest,
-      KpiDeltaType.mute => dark ? AgroColors.stoneOnDark : AgroColors.stone,
+      KpiDeltaType.up   => IlevoraColors.palm,
+      KpiDeltaType.down => IlevoraColors.alert,
+      KpiDeltaType.warn => IlevoraColors.harvest,
+      KpiDeltaType.mute => dark ? IlevoraColors.stoneOnDark : IlevoraColors.stone,
     };
 
     return Container(
@@ -116,7 +116,7 @@ class KpiCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: dark ? AgroColors.canopy : AgroColors.fog),
+        border: Border.all(color: dark ? IlevoraColors.canopy : IlevoraColors.fog),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,9 +148,9 @@ class BlockTile extends StatelessWidget {
 
   Color get _statusColor {
     return switch (block.status) {
-      BlockStatus.active      => AgroColors.palm,
-      BlockStatus.harvestSoon => AgroColors.harvest,
-      BlockStatus.idle        => AgroColors.stone,
+      BlockStatus.active      => IlevoraColors.palm,
+      BlockStatus.harvestSoon => IlevoraColors.harvest,
+      BlockStatus.idle        => IlevoraColors.stone,
     };
   }
 
@@ -164,8 +164,8 @@ class BlockTile extends StatelessWidget {
 
   Widget _cycleLine(String label, WorkCycle c) {
     final color = c.status == 'Overdue'
-        ? AgroColors.alert
-        : c.needsAttention ? AgroColors.harvest : AgroColors.stone;
+        ? IlevoraColors.alert
+        : c.needsAttention ? IlevoraColors.harvest : IlevoraColors.stone;
     return Padding(
       padding: const EdgeInsets.only(top: 2),
       child: Text('$label: ${c.shortText}',
@@ -179,7 +179,7 @@ class BlockTile extends StatelessWidget {
       onTap: onTap ?? (work == null ? null : () => showBlockWorkSheet(context, block, work!)),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
+        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: IlevoraColors.fog))),
         child: Row(
           children: [
             Container(
@@ -205,7 +205,7 @@ class BlockTile extends StatelessWidget {
                 AgroBadge(label: block.status.label, variant: _badgeVariant),
                 const SizedBox(height: 4),
                 Text('${block.hectares.toStringAsFixed(0)} ha',
-                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
               ],
             ),
           ],
@@ -225,14 +225,14 @@ class ActivityTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: IlevoraColors.fog))),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 36, height: 36,
             decoration: BoxDecoration(
-              color: AgroColors.palm.withValues(alpha: 0.1),
+              color: IlevoraColors.palm.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(child: Text(activity.activityType.icon, style: const TextStyle(fontSize: 16))),
@@ -246,13 +246,13 @@ class ActivityTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${activity.blockName} · ${activity.workers.length} workers',
-                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone),
+                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone),
                 ),
                 if (activity.inputs.isNotEmpty) ...[
                   const SizedBox(height: 1),
                   Text(
                     activity.inputs.map((i) => i.toString()).join(', '),
-                    style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone),
+                    style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -267,7 +267,7 @@ class ActivityTile extends StatelessWidget {
               if (activity.totalCost > 0)
                 Text(
                   '₦${activity.totalCost.toStringAsFixed(0)}',
-                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest),
+                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: IlevoraColors.forest),
                 ),
               const SizedBox(height: 4),
               _SyncIndicator(status: activity.syncStatus),
@@ -286,9 +286,9 @@ class _SyncIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (icon, color) = switch (status) {
-      SyncStatus.synced  => (Icons.cloud_done_outlined, AgroColors.data),
-      SyncStatus.pending => (Icons.cloud_upload_outlined, AgroColors.harvest),
-      SyncStatus.failed  => (Icons.cloud_off_outlined, AgroColors.alert),
+      SyncStatus.synced  => (Icons.cloud_done_outlined, IlevoraColors.data),
+      SyncStatus.pending => (Icons.cloud_upload_outlined, IlevoraColors.harvest),
+      SyncStatus.failed  => (Icons.cloud_off_outlined, IlevoraColors.alert),
     };
     return Icon(icon, size: 14, color: color);
   }
@@ -306,21 +306,21 @@ class WorkerChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: AgroColors.mist,
+        color: IlevoraColors.mist,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AgroColors.fog),
+        border: Border.all(color: IlevoraColors.fog),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text('👤', style: TextStyle(fontSize: 12)),
           const SizedBox(width: 5),
-          Text(label, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w500, color: AgroColors.forest)),
+          Text(label, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w500, color: IlevoraColors.forest)),
           if (onRemove != null) ...[
             const SizedBox(width: 4),
             GestureDetector(
               onTap: onRemove,
-              child: const Icon(Icons.close, size: 13, color: AgroColors.stone),
+              child: const Icon(Icons.close, size: 13, color: IlevoraColors.stone),
             ),
           ],
         ],
@@ -339,17 +339,17 @@ class OfflineBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: AgroColors.harvest.withValues(alpha: 0.1),
+      color: IlevoraColors.harvest.withValues(alpha: 0.1),
       child: Row(
         children: [
-          const Icon(Icons.cloud_off_outlined, size: 14, color: AgroColors.harvest),
+          const Icon(Icons.cloud_off_outlined, size: 14, color: IlevoraColors.harvest),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               pendingCount > 0
                 ? 'Offline · $pendingCount activities queued for sync'
                 : 'Offline · Activities saved locally',
-              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink),
+              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.ink),
             ),
           ),
         ],
@@ -371,7 +371,7 @@ class MonoLabel extends StatelessWidget {
       text.toUpperCase(),
       style: TextStyle(fontFamily: 'PlusJakartaSans', 
         fontSize: 12, fontWeight: FontWeight.w500,
-        color: color ?? AgroColors.stone, letterSpacing: 1,
+        color: color ?? IlevoraColors.stone, letterSpacing: 1,
       ),
     );
   }
@@ -419,7 +419,7 @@ class AgroTextField extends StatelessWidget {
           onTap: onTap,
           validator: validator,
           onChanged: onChanged,
-          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.forest),
+          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: IlevoraColors.forest),
           decoration: InputDecoration(hintText: hint, suffixIcon: suffixIcon),
         ),
       ],
@@ -437,17 +437,17 @@ void showBlockWorkSheet(BuildContext context, Block block, BlockWork work) {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('$title — ${c.shortText}',
-            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
           const SizedBox(height: 4),
-          Text(c.headline, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
+          Text(c.headline, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone)),
           const SizedBox(height: 6),
           ...c.factors.map((f) => Padding(
             padding: const EdgeInsets.only(bottom: 3),
-            child: Text('• $f', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink, height: 1.4)),
+            child: Text('• $f', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.ink, height: 1.4)),
           )),
           if (c.recommendedSprayDate != null)
             Text('💧 Best spray day: ${c.recommendedSprayDate!.day}/${c.recommendedSprayDate!.month}',
-              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
+              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w600, color: IlevoraColors.leaf)),
         ],
       ),
     );
@@ -456,7 +456,7 @@ void showBlockWorkSheet(BuildContext context, Block block, BlockWork work) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: AgroColors.white,
+    backgroundColor: IlevoraColors.white,
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
     builder: (_) => SafeArea(
       child: Padding(
@@ -466,7 +466,7 @@ void showBlockWorkSheet(BuildContext context, Block block, BlockWork work) {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(block.name, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 18, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+              Text(block.name, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 18, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
               const SizedBox(height: 12),
               section('Weeding', work.weeding),
               section('Spraying', work.spraying),

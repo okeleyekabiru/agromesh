@@ -124,7 +124,7 @@ import { BLOCK_BOUNDARY_SOURCE_LABELS, type Block, type UpcomingTask } from '@/t
 
 const store = useAgroStore()
 
-const COLORS = ['#3DAA6A','#E8A838','#2D7A4F','#5B8DB8','#A0783C','#8D6B94']
+const COLORS = ['#3DAA6A','#E8A838','#0F7A3A','#5B8DB8','#A0783C','#8D6B94']
 
 function dotColor(id: string) {
   const idx = id.charCodeAt(id.length - 1) % COLORS.length
@@ -237,9 +237,9 @@ onMounted(() => { store.fetchBlocks(); loadProgress(); store.fetchSatellite() })
   background: transparent; cursor: pointer; font-size: 11px; color: var(--stone);
   display: flex; align-items: center; justify-content: center; transition: border-color 0.15s, color 0.15s;
 }
-.btn-edit:hover { border-color: var(--palm); color: var(--leaf, #2d7a4f); }
+.btn-edit:hover { border-color: var(--palm); color: var(--leaf, #0F7A3A); }
 .crop-pills { display: flex; gap: 6px; padding: 10px 16px 0; flex-wrap: wrap; }
-.crop-pill { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.08em; padding: 3px 8px; background: rgba(45,122,79,0.08); border: 1px solid rgba(45,122,79,0.15); border-radius: 4px; color: var(--leaf); }
+.crop-pill { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.08em; padding: 3px 8px; background: rgba(15,122,58,0.08); border: 1px solid rgba(15,122,58,0.15); border-radius: 4px; color: var(--leaf); }
 .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--fog); }
 .stat-row:last-child { border-bottom: none; }
 .stat-key { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.08em; color: var(--stone); text-transform: uppercase; }
@@ -250,7 +250,7 @@ onMounted(() => { store.fetchBlocks(); loadProgress(); store.fetchSatellite() })
 .stat-row.clickable { cursor: pointer; }
 .ai-chip { margin-left: 6px; font-size: 11px; letter-spacing: 0; color: var(--leaf); text-transform: none; }
 .why { margin-left: 6px; font-size: 11px; color: var(--stone); }
-.why-box { background: rgba(45,122,79,0.05); border-radius: 6px; padding: 8px 10px; margin: 2px 0 6px; }
+.why-box { background: rgba(15,122,58,0.05); border-radius: 6px; padding: 8px 10px; margin: 2px 0 6px; }
 .why-line { font-size: 11px; line-height: 1.5; color: var(--ink); }
 .why-line.best { color: var(--leaf); font-weight: 600; margin-top: 2px; }
 .sat-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--stone); margin-bottom: 14px; }

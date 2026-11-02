@@ -4,10 +4,10 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:agromesh_mobile/models/billing_models.dart';
-import 'package:agromesh_mobile/screens/more/billing_common.dart';
-import 'package:agromesh_mobile/services/api_client.dart';
-import 'package:agromesh_mobile/widgets/farm_mark.dart';
+import 'package:ilevora_mobile/models/billing_models.dart';
+import 'package:ilevora_mobile/screens/more/billing_common.dart';
+import 'package:ilevora_mobile/services/api_client.dart';
+import 'package:ilevora_mobile/widgets/farm_mark.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -250,7 +250,7 @@ void main() {
         await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 300)));
         await t.pump();
         await t.pump();
-        expect(find.text('A'), findsOneWidget);
+        expect(find.byType(IlevoraMark), findsOneWidget);
         expect(t.takeException(), isNull);
       }
     });

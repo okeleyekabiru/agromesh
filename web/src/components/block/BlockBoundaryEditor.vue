@@ -134,8 +134,8 @@
           <div class="schematic-wrap">
             <div class="schematic-label">Schematic preview</div>
             <svg viewBox="0 0 200 200" class="schematic-svg">
-              <polygon v-if="corners.length >= 3" :points="schematicPoints" fill="rgba(61,170,106,0.18)" stroke="#2d7a4f" stroke-width="2" />
-              <polyline v-else-if="corners.length === 2" :points="schematicPoints" fill="none" stroke="#2d7a4f" stroke-width="2" />
+              <polygon v-if="corners.length >= 3" :points="schematicPoints" fill="rgba(61,170,106,0.18)" stroke="#0F7A3A" stroke-width="2" />
+              <polyline v-else-if="corners.length === 2" :points="schematicPoints" fill="none" stroke="#0F7A3A" stroke-width="2" />
               <circle
                 v-for="(pt, i) in schematicDots" :key="i"
                 :cx="pt.x" :cy="pt.y" r="4"
@@ -623,7 +623,7 @@ async function finishUpload(confirmImplausible: boolean) {
   transition: all 0.15s;
 }
 .btab:hover { color: #374151; }
-.btab--active { color: #2d7a4f; border-bottom-color: #2d7a4f; background: #fff; font-weight: 600; }
+.btab--active { color: #0F7A3A; border-bottom-color: #0F7A3A; background: #fff; font-weight: 600; }
 
 .method-body { padding: 16px 4px 4px; }
 
@@ -631,7 +631,7 @@ async function finishUpload(confirmImplausible: boolean) {
 .btn-mark-corner {
   display: flex; align-items: center; gap: 7px;
   padding: 10px 16px;
-  background: #2d7a4f; color: #fff; border: none;
+  background: #0F7A3A; color: #fff; border: none;
   border-radius: 10px; font-size: 12px; font-weight: 600;
   cursor: pointer; transition: background 0.15s;
 }
@@ -654,7 +654,7 @@ async function finishUpload(confirmImplausible: boolean) {
 .corner-list-row { display: flex; align-items: center; gap: 8px; padding: 5px 8px; background: #f9fafb; border-radius: 6px; }
 .corner-list-idx {
   width: 18px; height: 18px; border-radius: 50%;
-  background: #2d7a4f; color: #fff;
+  background: #0F7A3A; color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-sans); font-size: 11px; font-weight: 700; flex-shrink: 0;
 }
@@ -690,11 +690,11 @@ async function finishUpload(confirmImplausible: boolean) {
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
-.file-drop:hover { border-color: #2d7a4f; background: rgba(45,122,79,0.03); }
+.file-drop:hover { border-color: #0F7A3A; background: rgba(15,122,58,0.03); }
 .file-drop input[type="file"] { display: none; }
 .upload-preview {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-  font-size: 11px; color: #2d7a4f; font-weight: 600;
+  font-size: 11px; color: #0F7A3A; font-weight: 600;
   margin-top: 10px;
 }
 .upload-preview-note { font-weight: 400; color: #9ca3af; }
@@ -711,7 +711,7 @@ async function finishUpload(confirmImplausible: boolean) {
   outline: none; transition: border-color 0.15s;
   font-family: var(--font-sans);
 }
-.form-input:focus { border-color: #2d7a4f; }
+.form-input:focus { border-color: #0F7A3A; }
 .form-select {
   padding: 7px 10px;
   border: 1px solid #e5e7eb;
@@ -725,7 +725,7 @@ async function finishUpload(confirmImplausible: boolean) {
 .kind-toggle button.on { background: var(--forest); color: #fff; }
 .crop-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
 .crop-chip { border: 1.5px solid var(--fog); background: transparent; border-radius: 20px; padding: 5px 12px; font-size: 12px; cursor: pointer; color: var(--stone); }
-.crop-chip.on { border-color: var(--palm); background: rgba(45,122,79,0.1); color: var(--forest); font-weight: 600; }
+.crop-chip.on { border-color: var(--palm); background: rgba(15,122,58,0.1); color: var(--forest); font-weight: 600; }
 .crop-name { flex: 1; font-size: 13px; color: var(--forest); font-weight: 600; }
 .crop-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
 .btn-icon { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 12px; padding: 4px; }
@@ -737,7 +737,7 @@ async function finishUpload(confirmImplausible: boolean) {
   border-radius: 8px; font-size: 11px; color: #9ca3af;
   cursor: pointer; text-align: center;
 }
-.btn-add-crop:hover { border-color: #2d7a4f; color: #2d7a4f; }
+.btn-add-crop:hover { border-color: #0F7A3A; color: #0F7A3A; }
 .crop-warning { font-size: 11px; color: #e64a19; margin-top: 4px; font-family: var(--font-sans); }
 
 .form-error { font-size: 11px; color: #dc2626; margin: 6px 0; line-height: 1.5; }
@@ -750,7 +750,7 @@ async function finishUpload(confirmImplausible: boolean) {
 .btn-add-block {
   display: flex; align-items: center; gap: 7px;
   padding: 10px 20px;
-  background: #2d7a4f; color: #fff; border: none;
+  background: #0F7A3A; color: #fff; border: none;
   border-radius: 10px; font-size: 12px; font-weight: 600;
   cursor: pointer; transition: background 0.15s;
 }

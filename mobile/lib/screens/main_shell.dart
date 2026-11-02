@@ -38,23 +38,23 @@ class _MainShellState extends State<MainShell> {
     final store = context.watch<AppStore>();
 
     return Scaffold(
-      backgroundColor: AgroColors.mist,
+      backgroundColor: IlevoraColors.mist,
       appBar: AppBar(
-        backgroundColor: AgroColors.forest,
+        backgroundColor: IlevoraColors.forest,
         title: Row(
           children: [
-            const AgroMark(size: 28), // always the AgroMesh logo; the farm's own logo is only used on invoices
+            const IlevoraMark(size: 28), // always the Ilevora logo; the farm's own logo is only used on invoices
             const SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(_titles[_currentIndex],
-                  style: const TextStyle(color: AgroColors.white, fontSize: 16, fontWeight: FontWeight.w800)),
+                  style: const TextStyle(color: IlevoraColors.white, fontSize: 16, fontWeight: FontWeight.w800)),
                 Text(
                   store.farmName.isEmpty
-                    ? 'AgroMesh'
+                    ? 'Ilevora'
                     : (store.farmLocation.isEmpty ? store.farmName : '${store.farmName} · ${store.farmLocation}'),
-                  style: const TextStyle(color: AgroColors.stoneOnDark, fontSize: 12),
+                  style: const TextStyle(color: IlevoraColors.stoneOnDark, fontSize: 12),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -66,21 +66,21 @@ class _MainShellState extends State<MainShell> {
           if (store.isSyncing)
             const Padding(
               padding: EdgeInsets.only(right: 8),
-              child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: AgroColors.palm, strokeWidth: 2)),
+              child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: IlevoraColors.palm, strokeWidth: 2)),
             )
           else if (!store.isOnline)
             const Padding(
               padding: EdgeInsets.only(right: 12),
-              child: Icon(Icons.cloud_off_outlined, color: AgroColors.harvest, size: 20),
+              child: Icon(Icons.cloud_off_outlined, color: IlevoraColors.harvest, size: 20),
             )
           else
             Padding(
               padding: const EdgeInsets.only(right: 12),
               child: Row(
                 children: [
-                  Container(width: 7, height: 7, decoration: const BoxDecoration(color: AgroColors.data, shape: BoxShape.circle)),
+                  Container(width: 7, height: 7, decoration: const BoxDecoration(color: IlevoraColors.data, shape: BoxShape.circle)),
                   const SizedBox(width: 5),
-                  const Text('ONLINE', style: TextStyle(color: AgroColors.data, fontSize: 12, fontFamily: 'PlusJakartaSans')),
+                  const Text('ONLINE', style: TextStyle(color: IlevoraColors.data, fontSize: 12, fontFamily: 'PlusJakartaSans')),
                 ],
               ),
             ),
@@ -101,9 +101,9 @@ class _MainShellState extends State<MainShell> {
         type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),
-        backgroundColor: AgroColors.forest,
-        selectedItemColor: AgroColors.palm,
-        unselectedItemColor: AgroColors.stone,
+        backgroundColor: IlevoraColors.forest,
+        selectedItemColor: IlevoraColors.palm,
+        unselectedItemColor: IlevoraColors.stone,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: 'Dashboard'),
           BottomNavigationBarItem(icon: Icon(Icons.map_outlined), label: 'Blocks'),
@@ -120,8 +120,8 @@ class _MainShellState extends State<MainShell> {
                 context,
                 MaterialPageRoute(builder: (_) => const LogActivityScreen()),
               ),
-              backgroundColor: AgroColors.leaf,
-              foregroundColor: AgroColors.white,
+              backgroundColor: IlevoraColors.leaf,
+              foregroundColor: IlevoraColors.white,
               icon: const Icon(Icons.add),
               label: const Text('Log Activity', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
             ),
@@ -140,7 +140,7 @@ class _AccountMenu extends StatelessWidget {
     final auth = context.watch<AuthStore>();
 
     return PopupMenuButton<String>(
-      icon: const Icon(Icons.account_circle_outlined, color: AgroColors.white),
+      icon: const Icon(Icons.account_circle_outlined, color: IlevoraColors.white),
       onSelected: (value) {
         final authStore = context.read<AuthStore>();
         if (value == 'logout') {
@@ -154,7 +154,7 @@ class _AccountMenu extends StatelessWidget {
           enabled: false,
           child: Text(
             auth.user?.email ?? '',
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AgroColors.stone),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: IlevoraColors.stone),
           ),
         ),
         if (auth.farms.length > 1)

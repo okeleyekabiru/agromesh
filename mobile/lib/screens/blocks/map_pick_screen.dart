@@ -98,7 +98,7 @@ class _MapPickScreenState extends State<MapPickScreen> {
     final enough = _points.length >= widget.minPoints && problem == null;
 
     return Scaffold(
-      backgroundColor: AgroColors.mist,
+      backgroundColor: IlevoraColors.mist,
       appBar: AppBar(title: Text(widget.title)),
       body: Column(
         children: [
@@ -122,7 +122,7 @@ class _MapPickScreenState extends State<MapPickScreen> {
                       urlTemplate: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                       maxNativeZoom: 19,
                       maxZoom: 22,
-                      userAgentPackageName: 'com.agromesh.mobile',
+                      userAgentPackageName: 'com.ilevora.app',
                     ),
                     PolygonLayer(polygons: [
                       for (final r in _remaining)
@@ -132,7 +132,7 @@ class _MapPickScreenState extends State<MapPickScreen> {
                       for (final r in _block)
                         Polygon(points: r, color: Colors.transparent, borderColor: Colors.white, borderStrokeWidth: 2),
                       if (_points.length >= 3)
-                        Polygon(points: _points, color: AgroColors.palm.withValues(alpha: 0.3), borderColor: const Color(0xFF00E5A0), borderStrokeWidth: 2.5),
+                        Polygon(points: _points, color: IlevoraColors.palm.withValues(alpha: 0.3), borderColor: const Color(0xFF00E5A0), borderStrokeWidth: 2.5),
                     ]),
                     if (_points.length == 2)
                       PolylineLayer(polylines: [Polyline(points: _points, color: const Color(0xFF00E5A0), strokeWidth: 2.5)]),
@@ -157,7 +157,7 @@ class _MapPickScreenState extends State<MapPickScreen> {
                           height: 26,
                           child: Container(
                             decoration: BoxDecoration(
-                              color: AgroColors.forest,
+                              color: IlevoraColors.forest,
                               shape: BoxShape.circle,
                               border: Border.all(color: Colors.white, width: 2),
                             ),
@@ -181,7 +181,7 @@ class _MapPickScreenState extends State<MapPickScreen> {
                     decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.92), borderRadius: BorderRadius.circular(8)),
                     child: Text(
                       'Tap the map at each corner, in order around the edge. Zoom in for accuracy. At least ${widget.minPoints} points.',
-                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.ink),
+                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.ink),
                     ),
                   ),
                 ),
@@ -191,16 +191,16 @@ class _MapPickScreenState extends State<MapPickScreen> {
           if (problem != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Text(problem, style: const TextStyle(color: AgroColors.alert, fontSize: 12, fontWeight: FontWeight.w600)),
+              child: Text(problem, style: const TextStyle(color: IlevoraColors.alert, fontSize: 12, fontWeight: FontWeight.w600)),
             ),
           if (_error != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Text(_error!, style: const TextStyle(color: AgroColors.alert, fontSize: 12)),
+              child: Text(_error!, style: const TextStyle(color: IlevoraColors.alert, fontSize: 12)),
             ),
           Container(
             padding: EdgeInsets.fromLTRB(16, 10, 16, MediaQuery.of(context).padding.bottom + 10),
-            decoration: const BoxDecoration(color: AgroColors.white, border: Border(top: BorderSide(color: AgroColors.fog))),
+            decoration: const BoxDecoration(color: IlevoraColors.white, border: Border(top: BorderSide(color: IlevoraColors.fog))),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -209,7 +209,7 @@ class _MapPickScreenState extends State<MapPickScreen> {
                     Expanded(
                       child: Text(
                         '${_points.length} / ${widget.minPoints} points${enough ? ' ✓' : ''}',
-                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w600, fontSize: 13, color: AgroColors.forest),
+                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w600, fontSize: 13, color: IlevoraColors.forest),
                       ),
                     ),
                     TextButton(

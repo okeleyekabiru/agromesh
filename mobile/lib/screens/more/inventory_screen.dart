@@ -25,7 +25,7 @@ class InventoryScreen extends StatelessWidget {
       // The FAB lives outside the builder, so it asks the body to reload via the route.
       fab: embedded ? null : Builder(
         builder: (ctx) => FloatingActionButton.extended(
-          backgroundColor: AgroColors.leaf,
+          backgroundColor: IlevoraColors.leaf,
           foregroundColor: Colors.white,
           onPressed: () async {
             final added = await showSheet<bool>(ctx, _AddItemForm(farm: farm));
@@ -58,12 +58,12 @@ class _Body extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: AgroColors.harvest.withValues(alpha: 0.08),
+              color: IlevoraColors.harvest.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AgroColors.harvest.withValues(alpha: 0.25)),
+              border: Border.all(color: IlevoraColors.harvest.withValues(alpha: 0.25)),
             ),
             child: Text('$low item${low > 1 ? 's' : ''} below the reorder level.',
-                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink)),
+                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.ink)),
           ),
         AgroCard(
           child: Column(children: [
@@ -72,20 +72,20 @@ class _Body extends StatelessWidget {
                 onTap: () => showSheet(context, _ItemActions(item: i, reload: reload)),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: IlevoraColors.fog))),
                   child: Row(children: [
                     Expanded(
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('${i['name']}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13.5, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+                        Text('${i['name']}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13.5, fontWeight: FontWeight.w600, color: IlevoraColors.ink)),
                         const SizedBox(height: 2),
                         Text('${i['categoryName'] ?? ''}${dbl(i['unitCost']) > 0 ? ' · ${naira(dbl(i['unitCost']))}/${i['unit']}' : ' · no price'}',
-                            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
+                            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.stone)),
                       ]),
                     ),
                     Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                       Text('${qty(i['currentStock'])} ${i['unit']}',
                           style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, fontWeight: FontWeight.w600,
-                              color: i['isLowStock'] == true ? AgroColors.alert : AgroColors.forest)),
+                              color: i['isLowStock'] == true ? IlevoraColors.alert : IlevoraColors.forest)),
                       if (i['isLowStock'] == true) const AgroBadge(label: 'Low', variant: AgroBadgeVariant.red),
                     ]),
                   ]),
@@ -142,7 +142,7 @@ class _ItemActions extends StatelessWidget {
 
   Widget _act(IconData icon, String label, VoidCallback onTap) => ListTile(
         contentPadding: EdgeInsets.zero,
-        leading: Icon(icon, color: AgroColors.leaf),
+        leading: Icon(icon, color: IlevoraColors.leaf),
         title: Text(label, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w500)),
         trailing: const Icon(Icons.chevron_right, size: 18),
         onTap: onTap,
@@ -195,7 +195,7 @@ class _PickFormState extends State<_PickForm> {
       ),
       const SizedBox(height: 10),
       textField(_purpose, 'Purpose', hint: 'e.g. Spraying block A'),
-      if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert))),
+      if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.alert))),
       primaryButton('Pick', _submit, busy: _busy),
     ]);
   }
@@ -236,7 +236,7 @@ class _AdjustFormState extends State<_AdjustForm> {
         sheetTitle('Adjust ${widget.item['name']}', 'Now ${qty(widget.item['currentStock'])} ${widget.item['unit']}. An admin approves the new count.'),
         numField(_qty, 'Counted quantity (${widget.item['unit']})'),
         textField(_notes, 'Reason', hint: 'e.g. stock count', lines: 2),
-        if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert))),
+        if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.alert))),
         primaryButton('Send for approval', _submit, busy: _busy),
       ]);
 }
@@ -286,7 +286,7 @@ class _PriceFormState extends State<_PriceForm> {
           onChanged: (v) => setState(() => _backfill = v),
           title: const Text('Also cost past activities that used this item', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5)),
         ),
-        if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert))),
+        if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.alert))),
         primaryButton('Send for approval', _submit, busy: _busy),
       ]);
 }
@@ -306,7 +306,7 @@ class _Movements extends StatelessWidget {
       builder: (context, snap) {
         Widget body;
         if (snap.connectionState != ConnectionState.done) {
-          body = const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator(color: AgroColors.palm)));
+          body = const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator(color: IlevoraColors.palm)));
         } else if (snap.hasError) {
           body = emptyNote(errText(snap.error!));
         } else {
@@ -382,7 +382,7 @@ class _AddItemFormState extends State<_AddItemForm> {
         ),
         const SizedBox(height: 10),
         numField(_reorder, 'Reorder when stock falls to'),
-        if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert))),
+        if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.alert))),
         primaryButton('Add item', _submit, busy: _busy),
       ]);
 }

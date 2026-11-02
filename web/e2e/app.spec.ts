@@ -48,7 +48,7 @@ test('app shell — sidebar logo visible', async ({ page }) => {
   await page.goto('/')
   // Use class selector to avoid strict mode on nested span text
   await expect(page.locator('.logo-text')).toBeVisible()
-  await expect(page.locator('.logo-text')).toContainText('AgroMesh')
+  await expect(page.locator('.logo-text')).toContainText('Ilevora')
 })
 
 test('app shell — all nav items present', async ({ page }) => {

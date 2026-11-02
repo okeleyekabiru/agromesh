@@ -1,4 +1,4 @@
-# AgroMesh Mobile — Flutter
+# Ilevora Mobile — Flutter
 
 Offline-first activity logging app for field supervisors.
 Runs on Android and iOS from a single codebase.
@@ -31,7 +31,7 @@ flutter build ios --release
 lib/
 ├── main.dart                    # App entry point
 ├── theme/
-│   └── app_theme.dart           # AgroMesh design tokens (colors, fonts)
+│   └── app_theme.dart           # Ilevora design tokens (IlevoraColors, IlevoraTheme) (colors, fonts)
 ├── models/
 │   └── models.dart              # Domain models + enums
 ├── stores/
@@ -76,9 +76,9 @@ Field Supervisor taps Submit
 
 ## Design System
 
-Matches AgroMesh web exactly:
-- Colors: Forest #0D2B1F, Palm #3DAA6A, Harvest #E8A838
-- Fonts: Syne (display), Inter (body), JetBrains Mono (data)
+Matches the Ilevora web app:
+- Colors: Forest #0D2B1F, Ilevora Green #0F7A3A (primary), Palm #3DAA6A, Harvest #E8A838
+- Font: Plus Jakarta Sans (bundled as `PlusJakartaSans`)
 - All tokens in `lib/theme/app_theme.dart`
 
 ## Next Steps

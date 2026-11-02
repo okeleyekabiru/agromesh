@@ -12,16 +12,16 @@ existing ones — always leaving a proper `In` movement behind so stock history 
 
 ## Context / existing code (reuse, don't rebuild)
 
-- **Domain**: `api/AgroMesh.Domain/Entities/InventoryItem.cs` (`AddStock`/`DeductStock`/`AdjustStock`,
-  static `Create`), `api/AgroMesh.Domain/Entities/StockMovement.cs` (`CreateIn`/`CreateOut`/`CreateAdjustment`),
-  `api/AgroMesh.Domain/Enums/InventoryCategory.cs` (the enum being replaced).
-- **Application**: `api/AgroMesh.Application/Commands/Inventory/CreateInventoryItemCommand.cs` (create,
+- **Domain**: `api/Ilevora.Domain/Entities/InventoryItem.cs` (`AddStock`/`DeductStock`/`AdjustStock`,
+  static `Create`), `api/Ilevora.Domain/Entities/StockMovement.cs` (`CreateIn`/`CreateOut`/`CreateAdjustment`),
+  `api/Ilevora.Domain/Enums/InventoryCategory.cs` (the enum being replaced).
+- **Application**: `api/Ilevora.Application/Commands/Inventory/CreateInventoryItemCommand.cs` (create,
   currently no movement recorded), `.../AdjustInventoryStockCommand.cs` (absolute-quantity correction,
   unchanged by this phase), `.../Transaction/RecordInventoryReceiptCommand.cs` (reference
   `AddStock` + `StockMovement.CreateIn` shape), `Queries/Inventory/GetInventoryQuery.cs`,
   `Interfaces/IInventoryRepository.cs` (`FindByNameAsync`, `AddMovementAsync` already exist and are
   reused as-is), `DTOs/InventoryDtos.cs`.
-- **API**: `api/AgroMesh.API/Controllers/InventoryController.cs` — `api/farms/{farmId}/inventory`
+- **API**: `api/Ilevora.API/Controllers/InventoryController.cs` — `api/farms/{farmId}/inventory`
   (`GET /`, `POST /`, `GET /low-stock`, `GET /{itemId}/movements`, `PATCH /{itemId}/adjust`). No
   `[Authorize]` today (pre-existing gap on this controller, explicitly left alone — see Non-goals).
 - **Sibling entity to mirror for the new Category entity**: `WorkerRole` is the closest existing
@@ -37,14 +37,14 @@ existing ones — always leaving a proper `In` movement behind so stock history 
 - **Infrastructure**: `Persistence/Configurations/InventoryItemConfiguration.cs`, `WorkerRoleConfiguration.cs`,
   `Persistence/Repositories/InventoryRepository.cs`, `WorkerRoleRepository.cs`, `DependencyInjection.cs:36-61`,
   migrations in `Persistence/Migrations/` (latest `20260712190057_AddWorkerPayFrequency.cs`). Local
-  Postgres reachable at `localhost:5433` (docker-compose `agromesh_db`, healthy) — migrations are
+  Postgres reachable at `localhost:5433` (docker-compose `ilevora_db`, healthy) — migrations are
   generated **and applied** against it in this run; see Test plan.
 - **Consumer that breaks on the type change**: `Services/Scheduling/ClaudeSchedulingService.cs:155`
   (`inventory.Where(i => i.Category == InventoryCategory.Chemical ...)`) — fixed to compare
   `i.Category.Name == "Chemical"`. Repo-wide grep for `InventoryCategory` confirms exactly 7
   reference sites before this change (`InventoryDtos.cs` x2, `InventoryItem.cs` x2, the enum file
   itself, `ClaudeSchedulingService.cs`, `InventoryTests.cs`) — all updated; no other consumer exists.
-- **Tests**: `api/AgroMesh.Tests/InventoryTests.cs` (domain-only, no mocking framework, no in-memory
+- **Tests**: `api/Ilevora.Tests/InventoryTests.cs` (domain-only, no mocking framework, no in-memory
   EF — the only test style in this repo; there are **no** handler/controller-level tests anywhere
   today, e.g. `RegisterCommand`/`CreateFarmCommand`/`CreateWorkerRoleCommand` have none either — see
   Test plan for how Phase 1 stays consistent with that).
@@ -61,7 +61,7 @@ existing ones — always leaving a proper `In` movement behind so stock history 
 
 ## Requirements
 
-1. Replace `AgroMesh.Domain.Enums.InventoryCategory` (enum) with `AgroMesh.Domain.Entities.InventoryCategory`
+1. Replace `Ilevora.Domain.Enums.InventoryCategory` (enum) with `Ilevora.Domain.Entities.InventoryCategory`
    (entity: `Id`, `FarmId`, `Name`, `IsDefault`, `CreatedAt`/`UpdatedAt` via `BaseEntity`).
 2. `InventoryItem.Category` becomes a required nav property backed by `CategoryId` (FK), replacing
    the enum property. `InventoryItem.Create(...)` takes a `categoryId` string instead of an enum value.
@@ -233,7 +233,7 @@ this did and did not fix).
 
 ## Test plan
 
-- **Domain unit tests** (`api/AgroMesh.Tests/`, xUnit, plain `Assert.*`, no mocks/no in-memory EF —
+- **Domain unit tests** (`api/Ilevora.Tests/`, xUnit, plain `Assert.*`, no mocks/no in-memory EF —
   matching `InventoryTests.cs`/`PolygonValidatorTests.cs`/`FarmSectionCreationRuleTests.cs`):
   new `InventoryCategoryTests.cs` covering AC1/AC2 (including negative case: blank/whitespace name
   throws `DomainException`), plus the updated `InventoryTests.cs` call site for AC3.

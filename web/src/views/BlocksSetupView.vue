@@ -84,7 +84,7 @@ import { BLOCK_BOUNDARY_SOURCE_LABELS, type Block } from '@/types'
 const router = useRouter()
 const store  = useAgroStore()
 
-const COLORS = ['#2d7a4f', '#3daa6a', '#e8a838', '#e64a19', '#5b4fcf', '#c2185b', '#0288d1', '#00796b']
+const COLORS = ['#0F7A3A', '#3daa6a', '#e8a838', '#e64a19', '#5b4fcf', '#c2185b', '#0288d1', '#00796b']
 const BOUNDARY_SRC_CLASS = ['gps', 'upload', 'manual']
 
 function boundarySrcClass(source: number | null) {
@@ -174,7 +174,7 @@ function goToReview() {
   cursor: pointer;
   transition: background 0.15s;
 }
-.btn-finish:hover:not(:disabled) { background: #2d7a4f; }
+.btn-finish:hover:not(:disabled) { background: #0F7A3A; }
 .btn-finish:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── Right: main work area ── */

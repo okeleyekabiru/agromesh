@@ -3,14 +3,14 @@
 import 'dart:convert';
 import 'dart:ui' as ui;
 
-import 'package:agromesh_mobile/models/billing_models.dart';
-import 'package:agromesh_mobile/screens/more/billing_common.dart';
-import 'package:agromesh_mobile/screens/more/invoice_form_screen.dart';
-import 'package:agromesh_mobile/screens/more/invoices_screen.dart';
-import 'package:agromesh_mobile/screens/more/vendor_invoice_upload_screen.dart';
-import 'package:agromesh_mobile/screens/more/vendor_invoices_screen.dart';
-import 'package:agromesh_mobile/theme/app_theme.dart';
-import 'package:agromesh_mobile/widgets/farm_mark.dart';
+import 'package:ilevora_mobile/models/billing_models.dart';
+import 'package:ilevora_mobile/screens/more/billing_common.dart';
+import 'package:ilevora_mobile/screens/more/invoice_form_screen.dart';
+import 'package:ilevora_mobile/screens/more/invoices_screen.dart';
+import 'package:ilevora_mobile/screens/more/vendor_invoice_upload_screen.dart';
+import 'package:ilevora_mobile/screens/more/vendor_invoices_screen.dart';
+import 'package:ilevora_mobile/theme/app_theme.dart';
+import 'package:ilevora_mobile/widgets/farm_mark.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -39,7 +39,7 @@ Future<void> _small(WidgetTester t) async {
 }
 
 Widget _app(Widget home, {double scale = 1.0}) => MaterialApp(
-      theme: AgroTheme.theme,
+      theme: IlevoraTheme.theme,
       builder: (c, child) => MediaQuery(data: MediaQuery.of(c).copyWith(textScaler: TextScaler.linear(scale)), child: child!),
       home: home,
     );

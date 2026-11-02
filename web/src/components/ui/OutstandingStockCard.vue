@@ -139,7 +139,7 @@ function formatDate(iso: string) {
 .modal-footer { padding: 16px 24px; border-top: 1px solid var(--fog); display: flex; justify-content: space-between; }
 .form-group { margin-bottom: 16px; }
 .info { font-size: 12px; color: var(--forest); background: var(--mist); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; line-height: 1.5; }
-.link-btn { background: none; border: none; padding: 0; margin-top: 6px; font-size: 11px; color: var(--leaf, #2d7a4f); cursor: pointer; text-decoration: underline; }
+.link-btn { background: none; border: none; padding: 0; margin-top: 6px; font-size: 11px; color: var(--leaf, #0F7A3A); cursor: pointer; text-decoration: underline; }
 .opt { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--stone); }
 .error-msg { font-size: 11.5px; color: var(--alert); line-height: 1.5; }
 </style>

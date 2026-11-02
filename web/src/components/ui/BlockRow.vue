@@ -29,7 +29,7 @@ const props = defineProps<{
 }>()
 defineEmits(['click'])
 
-const COLORS = ['#3DAA6A','#E8A838','#2D7A4F','#5B8DB8','#A0783C','#8D6B94']
+const COLORS = ['#3DAA6A','#E8A838','#0F7A3A','#5B8DB8','#A0783C','#8D6B94']
 
 const dotColor = computed(() => {
   const id = props.block.id ?? ''

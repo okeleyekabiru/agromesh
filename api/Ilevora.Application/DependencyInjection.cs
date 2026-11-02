@@ -1,0 +1,22 @@
+using FluentValidation;
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Ilevora.Application;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection AddApplication(this IServiceCollection services)
+    {
+        services.AddMediatR(cfg =>
+            cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+
+        services.AddScoped<Services.FarmWeatherProvider>();
+        services.AddScoped<Services.BlockCycleService>();
+        services.AddScoped<Services.PaymentReconciler>();
+
+        services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
+
+        return services;
+    }
+}

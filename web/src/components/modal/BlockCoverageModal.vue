@@ -200,7 +200,7 @@ function draw() {
 
   const group = L.featureGroup().addTo(map)
   addGeo(cov.value.remainingGeoJson, { color: '#f5a623', weight: 1, fillColor: '#f5a623', fillOpacity: 0.45 }, group)
-  addGeo(cov.value.coveredGeoJson, { color: '#2d7a4f', weight: 1, fillColor: '#3fb56d', fillOpacity: 0.55 }, group)
+  addGeo(cov.value.coveredGeoJson, { color: '#0F7A3A', weight: 1, fillColor: '#3fb56d', fillOpacity: 0.55 }, group)
   addGeo(cov.value.blockGeoJson, { color: '#ffffff', weight: 2.5, fill: false }, group)
   for (const s of cov.value.sections) drawSection(s, group)
   const b = group.getBounds()
@@ -228,7 +228,7 @@ watch(type, load)
 .modal-body { padding: 16px 24px 22px; }
 .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
 .tab { border: 1.5px solid var(--fog); background: transparent; border-radius: 20px; padding: 5px 14px; font-size: 12px; cursor: pointer; color: var(--stone); }
-.tab.on { border-color: var(--palm); background: rgba(45,122,79,0.1); color: var(--forest); font-weight: 600; }
+.tab.on { border-color: var(--palm); background: rgba(15,122,58,0.1); color: var(--forest); font-weight: 600; }
 .summary { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
 .pct { font-family: var(--font-sans); font-size: 30px; font-weight: 600; color: var(--forest); min-width: 84px; }
 .sum-text { font-size: 12.5px; color: var(--forest); line-height: 1.6; }
@@ -246,7 +246,7 @@ watch(type, load)
 .sections { margin-top: 12px; }
 .sections-title { font-size: 11.5px; color: var(--stone); margin-bottom: 6px; }
 .section-row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 1px solid var(--fog); background: transparent; border-radius: 8px; padding: 6px 10px; margin-bottom: 4px; font-size: 12.5px; color: var(--forest); cursor: pointer; }
-.section-row.on { border-color: var(--palm); background: rgba(45,122,79,0.08); }
+.section-row.on { border-color: var(--palm); background: rgba(15,122,58,0.08); }
 .num { width: 20px; height: 20px; border-radius: 50%; color: #fff; font: 700 11px var(--font-sans); display: inline-flex; align-items: center; justify-content: center; }
 .ha { margin-left: auto; font-family: var(--font-sans); color: var(--stone); }
 .note { font-size: 12.5px; color: var(--stone); padding: 8px 0; }

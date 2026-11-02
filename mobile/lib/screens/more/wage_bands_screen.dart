@@ -36,12 +36,12 @@ class _WageBandsScreenState extends State<WageBandsScreen> {
               await showAddWorkerSheet(context);
               if (mounted) setState(() => _version++);
             },
-            child: const Text('Add worker', style: TextStyle(color: AgroColors.white)),
+            child: const Text('Add worker', style: TextStyle(color: IlevoraColors.white)),
           ),
       ],
       fab: manager
           ? FloatingActionButton.extended(
-              backgroundColor: AgroColors.leaf,
+              backgroundColor: IlevoraColors.leaf,
               onPressed: () async {
                 final saved = await showSheet<bool>(context, const _BandForm());
                 if (saved == true && mounted) setState(() => _version++);
@@ -62,7 +62,7 @@ class _WageBandsScreenState extends State<WageBandsScreen> {
                   for (final r in roles)
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
+                      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: IlevoraColors.fog))),
                       child: Row(
                         children: [
                           Expanded(
@@ -71,7 +71,7 @@ class _WageBandsScreenState extends State<WageBandsScreen> {
                               children: [
                                 Text('${r['title']}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600)),
                                 Text('${r['workerCount'] ?? 0} worker(s) · ${(r['defaultType'] ?? 0) == 1 ? 'Contractor' : 'Employee'}',
-                                    style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+                                    style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
                               ],
                             ),
                           ),
@@ -80,12 +80,12 @@ class _WageBandsScreenState extends State<WageBandsScreen> {
                             children: [
                               Text(naira(r['payRate'] as num?), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600)),
                               Text(_freq[((r['payFrequency'] as num?)?.toInt() ?? 0).clamp(0, 2)],
-                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
                             ],
                           ),
                           if (manager)
                             IconButton(
-                              icon: const Icon(Icons.edit_outlined, size: 18, color: AgroColors.leaf),
+                              icon: const Icon(Icons.edit_outlined, size: 18, color: IlevoraColors.leaf),
                               onPressed: () async {
                                 final saved = await showSheet<bool>(ctx, _BandForm(role: r));
                                 if (saved == true) await reload();
@@ -149,7 +149,7 @@ class _BandFormState extends State<_BandForm> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(widget.role == null ? 'Add a wage band' : 'Edit rate · ${widget.role!['title']}',
-            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 15, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 15, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
         const SizedBox(height: 12),
         if (widget.role == null) ...[
           TextField(controller: _title, decoration: const InputDecoration(labelText: 'Role title (e.g. Harvester)')),
@@ -170,7 +170,7 @@ class _BandFormState extends State<_BandForm> {
           items: [for (var i = 0; i < 3; i++) DropdownMenuItem(value: i, child: Text(_freq[i]))],
           onChanged: (v) => setState(() => _frequency = v ?? 0),
         ),
-        if (_error != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_error!, style: const TextStyle(color: AgroColors.alert, fontSize: 12))),
+        if (_error != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_error!, style: const TextStyle(color: IlevoraColors.alert, fontSize: 12))),
         const SizedBox(height: 14),
         SizedBox(
           width: double.infinity,
@@ -248,12 +248,12 @@ class _WorkerFormState extends State<_WorkerForm> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Add worker', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 15, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+        const Text('Add worker', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 15, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
         const SizedBox(height: 12),
         if (_loading)
-          const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator(color: AgroColors.palm)))
+          const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator(color: IlevoraColors.palm)))
         else if (_roles.isEmpty)
-          const Text('Add a wage band first (Wage bands, then Add band).', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone))
+          const Text('Add a wage band first (Wage bands, then Add band).', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.stone))
         else ...[
           TextField(controller: _name, textCapitalization: TextCapitalization.words, decoration: const InputDecoration(labelText: 'Full name')),
           const SizedBox(height: 10),
@@ -274,7 +274,7 @@ class _WorkerFormState extends State<_WorkerForm> {
             onChanged: (v) => setState(() => _type = v ?? 0),
           ),
         ],
-        if (_error != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_error!, style: const TextStyle(color: AgroColors.alert, fontSize: 12))),
+        if (_error != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_error!, style: const TextStyle(color: IlevoraColors.alert, fontSize: 12))),
         const SizedBox(height: 14),
         SizedBox(
           width: double.infinity,

@@ -109,19 +109,19 @@ class _DashboardExtrasState extends State<DashboardExtras> {
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AgroColors.alert.withValues(alpha: 0.07),
+              color: IlevoraColors.alert.withValues(alpha: 0.07),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AgroColors.alert.withValues(alpha: 0.25)),
+              border: Border.all(color: IlevoraColors.alert.withValues(alpha: 0.25)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('${low.length} item${low.length == 1 ? '' : 's'} below reorder level',
-                    style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w700, color: AgroColors.alert)),
+                    style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w700, color: IlevoraColors.alert)),
                 const SizedBox(height: 4),
                 for (final a in low)
                   Text('${a['inventoryItemName']}: ${num1(a['currentStock'] as num?)} ${a['unit']} left (reorder at ${num1(a['reorderThreshold'] as num?)})',
-                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.ink)),
+                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.ink)),
               ],
             ),
           ),
@@ -154,7 +154,7 @@ class _DashboardExtrasState extends State<DashboardExtras> {
                             children: [
                               Text('${b['blockName']}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600)),
                               Text('${b['activityCount'] ?? 0} activities',
-                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
                             ],
                           ),
                         ),
@@ -179,13 +179,13 @@ class _DashboardExtrasState extends State<DashboardExtras> {
                       children: [
                         Expanded(child: Text('${c['cropType']}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600))),
                         Text('${naira(c['revenue'] as num?)} in · ${naira(c['cost'] as num?)} out',
-                            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+                            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
                         const SizedBox(width: 10),
                         Text(naira(c['netProfit'] as num?),
                             style: TextStyle(fontFamily: 'PlusJakartaSans', 
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: ((c['netProfit'] as num?) ?? 0) < 0 ? AgroColors.alert : AgroColors.leaf,
+                              color: ((c['netProfit'] as num?) ?? 0) < 0 ? IlevoraColors.alert : IlevoraColors.leaf,
                             )),
                       ],
                     ),
@@ -213,7 +213,7 @@ class _TaskTile extends StatelessWidget {
     final chem = task['recommendedChemical'];
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: IlevoraColors.fog))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -230,12 +230,12 @@ class _TaskTile extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 3),
               child: Text('${task['reasoning']}',
-                  maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone, height: 1.35)),
+                  maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone, height: 1.35)),
             ),
           if (chem != null && '$chem'.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 3),
-              child: Text('Suggested chemical: $chem', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.leaf, fontWeight: FontWeight.w600)),
+              child: Text('Suggested chemical: $chem', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.leaf, fontWeight: FontWeight.w600)),
             ),
         ],
       ),
@@ -271,11 +271,11 @@ class _TrendCard extends StatelessWidget {
                           children: [
                             Container(
                               height: max == 0 ? 2 : 80 * (((p['amount'] as num?)?.toDouble() ?? 0) / max) + 2,
-                              decoration: BoxDecoration(color: AgroColors.palm, borderRadius: BorderRadius.circular(3)),
+                              decoration: BoxDecoration(color: IlevoraColors.palm, borderRadius: BorderRadius.circular(3)),
                             ),
                             const SizedBox(height: 4),
                             Text(_monthNames[(((p['month'] as num?)?.toInt() ?? 1) - 1).clamp(0, 11)],
-                                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 8.5, color: AgroColors.stone)),
+                                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 8.5, color: IlevoraColors.stone)),
                           ],
                         ),
                       ),

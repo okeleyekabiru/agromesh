@@ -1,0 +1,37 @@
+using Ilevora.Application.DTOs;
+using Ilevora.Application.Interfaces;
+using Ilevora.Application.Queries.Farm;
+using Ilevora.Domain.Exceptions;
+using MediatR;
+
+namespace Ilevora.Application.Commands.Farm;
+
+/// <summary>Flow A2 "Add New Farm" — for genuinely independent/distant land, not a Block under an existing Farm.</summary>
+public record CreateFarmCommand(CreateFarmRequest Request) : IRequest<FarmDto>;
+
+public class CreateFarmCommandHandler : IRequestHandler<CreateFarmCommand, FarmDto>
+{
+    private readonly IFarmRepository _farmRepo;
+    private readonly IInventoryCategoryRepository _categoryRepo;
+    private readonly ICurrentUserAccessor _currentUser;
+
+    public CreateFarmCommandHandler(IFarmRepository farmRepo, IInventoryCategoryRepository categoryRepo, ICurrentUserAccessor currentUser)
+    {
+        _farmRepo = farmRepo;
+        _categoryRepo = categoryRepo;
+        _currentUser = currentUser;
+    }
+
+    public async Task<FarmDto> Handle(CreateFarmCommand command, CancellationToken ct)
+    {
+        var req = command.Request;
+        var companyId = _currentUser.CompanyId
+            ?? throw new DomainException("You must belong to a company to add a farm.");
+
+        var farm = Domain.Entities.Farm.Create(req.Name, companyId, _currentUser.UserId ?? string.Empty, req.StateId, req.LgaFreetext);
+        await _farmRepo.AddAsync(farm, ct);
+        await _categoryRepo.AddRangeAsync(Domain.Entities.InventoryCategory.CreateDefaults(farm.Id), ct);
+
+        return GetFarmsQueryHandler.MapToDto(farm);
+    }
+}

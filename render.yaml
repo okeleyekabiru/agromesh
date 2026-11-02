@@ -27,7 +27,7 @@ services:
       - key: Jwt__Key
         sync: false
       - key: Jwt__Issuer
-        value: AgroMesh
+        value: Ilevora
       - key: Anthropic__ApiKey
         sync: false
       - key: Copernicus__ClientId

@@ -6,16 +6,16 @@ separately and diffed against post-change runs (see Step 10).
 
 ## Step 1 — Domain: `UserRole` + `User.Role` (red → green)
 
-- **Red**: new `api/AgroMesh.Tests/UserTests.cs` — `Create_DefaultsRoleToAdmin`. Run `dotnet test` →
+- **Red**: new `api/Ilevora.Tests/UserTests.cs` — `Create_DefaultsRoleToAdmin`. Run `dotnet test` →
   fails to compile (no `Role` member yet).
-- **Green**: `api/AgroMesh.Domain/Enums/UserRole.cs` — `public enum UserRole { Admin, Member }`.
-  `api/AgroMesh.Domain/Entities/User.cs` — add `public UserRole Role { get; private set; } =
+- **Green**: `api/Ilevora.Domain/Enums/UserRole.cs` — `public enum UserRole { Admin, Member }`.
+  `api/Ilevora.Domain/Entities/User.cs` — add `public UserRole Role { get; private set; } =
   UserRole.Admin;`, explicit `Role = UserRole.Admin` in `Create(...)` for clarity.
 - Run `dotnet test` → green.
 
 ## Step 2 — Domain: `StockAdjustmentStatus` + `StockAdjustmentRequest` (red → green)
 
-- **Red**: new `api/AgroMesh.Tests/StockAdjustmentRequestTests.cs`:
+- **Red**: new `api/Ilevora.Tests/StockAdjustmentRequestTests.cs`:
   - `Create_SetsStatusToPending`
   - `Create_BlankNotes_ThrowsDomainException`
   - `Create_NegativeRequestedQuantity_ThrowsDomainException`
@@ -24,41 +24,41 @@ separately and diffed against post-change runs (see Step 10).
   - `Reject_SetsStatusAndReviewFields`
   - `Reject_AlreadyReviewed_ThrowsDomainException`
   Run `dotnet test` → fails (no entity yet).
-- **Green**: `api/AgroMesh.Domain/Enums/StockAdjustmentStatus.cs` — `{ Pending, Approved, Rejected }`.
-  `api/AgroMesh.Domain/Entities/StockAdjustmentRequest.cs` — entity + `Create`/`Approve`/`Reject` per
+- **Green**: `api/Ilevora.Domain/Enums/StockAdjustmentStatus.cs` — `{ Pending, Approved, Rejected }`.
+  `api/Ilevora.Domain/Entities/StockAdjustmentRequest.cs` — entity + `Create`/`Approve`/`Reject` per
   spec Requirement 1.
 - Run `dotnet test` → green.
 
 ## Step 3 — Application: `ICurrentUserAccessor.Role` + JWT claim
 
-- `api/AgroMesh.Application/Interfaces/ICurrentUserAccessor.cs` — add `UserRole Role { get; }` and
+- `api/Ilevora.Application/Interfaces/ICurrentUserAccessor.cs` — add `UserRole Role { get; }` and
   `bool IsAdmin { get; }` (default-interface-method `=> Role == UserRole.Admin` so every
   implementer — including test fakes — gets it for free unless they override it).
-- `api/AgroMesh.Infrastructure/Services/Auth/JwtService.cs` — add
+- `api/Ilevora.Infrastructure/Services/Auth/JwtService.cs` — add
   `new Claim("role", user.Role.ToString())` alongside the existing `companyId` claim.
-- `api/AgroMesh.Infrastructure/Services/Auth/CurrentUserAccessor.cs` — add
+- `api/Ilevora.Infrastructure/Services/Auth/CurrentUserAccessor.cs` — add
   `Role => Enum.TryParse<UserRole>(...FindFirst("role")?.Value, out var r) ? r : UserRole.Member`
   (fail closed — mirrors the `CompanyId` getter's null-coalescing pattern).
-  No dedicated automated test here (`AgroMesh.Infrastructure` isn't referenced by `AgroMesh.Tests`,
+  No dedicated automated test here (`Ilevora.Infrastructure` isn't referenced by `Ilevora.Tests`,
   same existing boundary as `CurrentUserAccessor.CompanyId` today) — proven indirectly via the fake
   accessor used in Step 6's handler tests, which implements the same interface contract.
 - `dotnet build` for the whole solution (Infrastructure/API compile against the interface change).
 
 ## Step 4 — Application/API: `AuthUserDto`/`AuthUser` gain `Role`
 
-- `api/AgroMesh.Application/DTOs/AuthDtos.cs` — `AuthUserDto` gains `string Role`.
-- `api/AgroMesh.Application/Commands/Auth/RegisterCommand.cs` and `LoginCommand.cs` — construct
+- `api/Ilevora.Application/DTOs/AuthDtos.cs` — `AuthUserDto` gains `string Role`.
+- `api/Ilevora.Application/Commands/Auth/RegisterCommand.cs` and `LoginCommand.cs` — construct
   `new AuthUserDto(..., user.Role.ToString())`.
 - `web/src/types/index.ts` — `AuthUser` gains `role: 'Admin' | 'Member'`.
 - `dotnet build`; `npx vue-tsc --noEmit`.
 
 ## Step 5 — Infrastructure: EF config + migration for `Users.Role`
 
-- `api/AgroMesh.Infrastructure/Persistence/Configurations/UserConfiguration.cs` — add
+- `api/Ilevora.Infrastructure/Persistence/Configurations/UserConfiguration.cs` — add
   `builder.Property(u => u.Role).IsRequired().HasConversion<string>().HasMaxLength(20);` — stored as
   a string column (`"Admin"`/`"Member"`) rather than an int, so a manual `SELECT` against the DB is
   self-describing and a future added role doesn't silently reorder existing ordinals in stored data.
-- `dotnet ef migrations add AddUserRole --project AgroMesh.Infrastructure --startup-project AgroMesh.API`
+- `dotnet ef migrations add AddUserRole --project Ilevora.Infrastructure --startup-project Ilevora.API`
   from `api/`. Existing rows backfill to the column default (`'Admin'`) via `defaultValue` on the
   `AddColumn` call — acceptable since (a) there is no live user data of consequence at this stage of
   the project and (b) it's the same "sole owner becomes admin" reasoning as Requirement/Design
@@ -69,7 +69,7 @@ separately and diffed against post-change runs (see Step 10).
 ## Step 6 — Application: `StockAdjustmentRequest` repository + rewritten `AdjustInventoryStockCommand`
 ### (red → green, handler tests)
 
-- **Red**: new `api/AgroMesh.Tests/StockAdjustmentApprovalTests.cs` with:
+- **Red**: new `api/Ilevora.Tests/StockAdjustmentApprovalTests.cs` with:
   - `FakeInventoryRepository : IInventoryRepository` (in-memory list, tracks `UpdateAsync`/
     `AddMovementAsync` call counts — mirrors `FakeSectionRepository`'s `UpdateCallCount` pattern).
   - `FakeStockAdjustmentRequestRepository : IStockAdjustmentRequestRepository` (in-memory list).
@@ -81,14 +81,14 @@ separately and diffed against post-change runs (see Step 10).
   Run `dotnet test` → fails to compile (`IStockAdjustmentRequestRepository`,
   `AdjustInventoryStockCommand`'s new shape don't exist yet).
 - **Green**:
-  - `api/AgroMesh.Application/Interfaces/IStockAdjustmentRequestRepository.cs` — `GetByIdAsync`,
+  - `api/Ilevora.Application/Interfaces/IStockAdjustmentRequestRepository.cs` — `GetByIdAsync`,
     `GetByFarmIdAsync(farmId, status?)`, `AddAsync`, `UpdateAsync`.
-  - Rewrite `api/AgroMesh.Application/Commands/Inventory/AdjustInventoryStockCommand.cs`:
+  - Rewrite `api/Ilevora.Application/Commands/Inventory/AdjustInventoryStockCommand.cs`:
     `record AdjustInventoryStockCommand(string FarmId, string InventoryItemId, decimal NewQuantity,
     string? Notes) : IRequest<StockAdjustmentRequestDto>`. Handler validates blank `Notes`, resolves
     + IDOR-checks the item, reads `_currentUser.UserId`, calls `StockAdjustmentRequest.Create(...)`,
     persists via the new repo, returns the DTO.
-  - `api/AgroMesh.Application/DTOs/InventoryDtos.cs` — add `StockAdjustmentRequestDto` (see spec
+  - `api/Ilevora.Application/DTOs/InventoryDtos.cs` — add `StockAdjustmentRequestDto` (see spec
     Design decision 3 for the string `Status` field).
 - Run `dotnet test` → green.
 
@@ -104,43 +104,43 @@ separately and diffed against post-change runs (see Step 10).
   - `Reject_MemberRole_ThrowsForbiddenException` (AC7)
   Run `dotnet test` → fails (no `ForbiddenException`/commands yet).
 - **Green**:
-  - `api/AgroMesh.Domain/Exceptions/ForbiddenException.cs` — `public class ForbiddenException :
+  - `api/Ilevora.Domain/Exceptions/ForbiddenException.cs` — `public class ForbiddenException :
     Exception { public ForbiddenException(string message) : base(message) {} }`.
-  - `api/AgroMesh.API/Middleware/ExceptionMiddleware.cs` — new `catch (ForbiddenException ex)` block
+  - `api/Ilevora.API/Middleware/ExceptionMiddleware.cs` — new `catch (ForbiddenException ex)` block
     before the generic `catch (Exception ex)`, mapping to `403`/`application/problem+json` (mirrors
     the existing `DomainException`/`NotFoundException` blocks).
-  - New `api/AgroMesh.Application/Commands/Inventory/ApproveStockAdjustmentCommand.cs` and
+  - New `api/Ilevora.Application/Commands/Inventory/ApproveStockAdjustmentCommand.cs` and
     `RejectStockAdjustmentCommand.cs` per spec Requirements 6/7 (role check first, then farm-scope +
     `Pending` check, then the domain call).
-  - New `api/AgroMesh.Application/Queries/Inventory/GetStockAdjustmentRequestsQuery.cs` — lists via
+  - New `api/Ilevora.Application/Queries/Inventory/GetStockAdjustmentRequestsQuery.cs` — lists via
     the repo, joins in-memory against `IInventoryRepository.GetByFarmIdAsync(farmId)` for
     name/unit (spec Design decision 7 — avoids N+1).
 - Run `dotnet test` → green.
 
 ## Step 8 — Infrastructure: `StockAdjustmentRequest` EF config + repository + migration
 
-- `api/AgroMesh.Infrastructure/Persistence/Configurations/StockAdjustmentRequestConfiguration.cs` —
+- `api/Ilevora.Infrastructure/Persistence/Configurations/StockAdjustmentRequestConfiguration.cs` —
   mirrors `InventoryCategoryConfiguration.cs`: `HasKey`, required/maxlength props, `Status` stored
   `HasConversion<string>()` (same reasoning as `User.Role`), indexes on `FarmId` and
   `(FarmId, Status)` (the queue query's actual access pattern).
-  `AgroMeshDbContext.cs` — add `DbSet<StockAdjustmentRequest> StockAdjustmentRequests`.
-  `api/AgroMesh.Infrastructure/Persistence/Repositories/StockAdjustmentRequestRepository.cs` —
+  `IlevoraDbContext.cs` — add `DbSet<StockAdjustmentRequest> StockAdjustmentRequests`.
+  `api/Ilevora.Infrastructure/Persistence/Repositories/StockAdjustmentRequestRepository.cs` —
   mirrors `InventoryCategoryRepository.cs`.
-  `api/AgroMesh.Infrastructure/DependencyInjection.cs` — register
+  `api/Ilevora.Infrastructure/DependencyInjection.cs` — register
   `IStockAdjustmentRequestRepository`.
-- `dotnet ef migrations add AddStockAdjustmentRequests --project AgroMesh.Infrastructure
-  --startup-project AgroMesh.API`. Review generated `Up`/`Down` — single `CreateTable` + indexes, no
+- `dotnet ef migrations add AddStockAdjustmentRequests --project Ilevora.Infrastructure
+  --startup-project Ilevora.API`. Review generated `Up`/`Down` — single `CreateTable` + indexes, no
   data migration needed (brand-new table).
 - `dotnet ef database update` against local Postgres.
 - `dotnet build` for the whole solution.
 
 ## Step 9 — API: wire endpoints
 
-- `api/AgroMesh.API/Controllers/InventoryController.cs` — rewrite the `Adjust` action:
+- `api/Ilevora.API/Controllers/InventoryController.cs` — rewrite the `Adjust` action:
   `[Authorize]`, sends `new AdjustInventoryStockCommand(farmId, itemId, request.NewQuantity,
   request.Notes)`, returns `Created($"api/farms/{farmId}/inventory-adjustments/{result.Id}",
   result)` (201, per spec Design decision 1).
-- New `api/AgroMesh.API/Controllers/InventoryAdjustmentsController.cs` — `[Authorize]` at the
+- New `api/Ilevora.API/Controllers/InventoryAdjustmentsController.cs` — `[Authorize]` at the
   controller level, route `api/farms/{farmId}/inventory-adjustments`:
   - `GET /` (`?status=`) → `GetStockAdjustmentRequestsQuery`
   - `PATCH /{requestId}/approve` (body: `ReviewStockAdjustmentRequest(string? ReviewNotes)`) →
@@ -150,7 +150,7 @@ separately and diffed against post-change runs (see Step 10).
 
 ## Step 10 — Manual verification against the live local API (COMPLETE)
 
-- Rebuilt/restarted the `agromesh_api` Docker container (`docker compose build api && docker compose
+- Rebuilt/restarted the `ilevora_api` Docker container (`docker compose build api && docker compose
   up -d api`) so it picked up the new code + both migrations.
 - **Bug found and fixed during this step**: the first submit attempt failed with 422 "Could not
   identify the requesting user." — `ICurrentUserAccessor.UserId` resolved to `null` despite a valid
@@ -262,7 +262,7 @@ separately and diffed against post-change runs (see Step 10).
 ## Risks / dependencies
 
 - **Local Postgres availability** for migration-apply + manual curl steps — confirmed running
-  (`agromesh_db` healthy on `localhost:5433`). If unavailable mid-build, migrations are still
+  (`ilevora_db` healthy on `localhost:5433`). If unavailable mid-build, migrations are still
   generated/reviewed (build/test don't require a live DB) and Step 10 is reported as
   blocked/skipped rather than faked.
 - **`dotnet ef migrations add` against a top-level-statement `Program.cs`** — this repo's existing

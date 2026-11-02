@@ -3,24 +3,24 @@ version: "3.9"
 services:
   db:
     image: postgis/postgis:15-3.3
-    container_name: agromesh_db
+    container_name: ilevora_db
     environment:
-      POSTGRES_DB: agromesh
-      POSTGRES_USER: agromesh
-      POSTGRES_PASSWORD: agromesh_dev
+      POSTGRES_DB: ilevora
+      POSTGRES_USER: ilevora
+      POSTGRES_PASSWORD: ilevora_dev
     ports:
       - "5433:5432"
     volumes:
-      - agromesh_pgdata:/var/lib/postgresql/data
+      - ilevora_pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U agromesh -d agromesh"]
+      test: ["CMD-SHELL", "pg_isready -U ilevora -d ilevora"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: agromesh_redis
+    container_name: ilevora_redis
     ports:
       - "6380:6379"
     healthcheck:
@@ -33,16 +33,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: agromesh_api
+    container_name: ilevora_api
     ports:
       - "5000:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=agromesh;Username=agromesh;Password=agromesh_dev"
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=ilevora;Username=ilevora;Password=ilevora_dev"
       ConnectionStrings__Redis: "redis:6379"
     volumes:
       # Local keys are mounted in, not baked into the image (see .dockerignore).
-      - ./AgroMesh.API/appsettings.Development.json:/app/appsettings.Development.json:ro
+      - ./Ilevora.API/appsettings.Development.json:/app/appsettings.Development.json:ro
     depends_on:
       db:
         condition: service_healthy
@@ -56,11 +56,11 @@ services:
       args:
         VITE_API_URL: http://localhost:5000
         VITE_FARM_ID: farm_001
-    container_name: agromesh_web
+    container_name: ilevora_web
     ports:
       - "5173:80"
     depends_on:
       - api
 
 volumes:
-  agromesh_pgdata:
+  ilevora_pgdata:

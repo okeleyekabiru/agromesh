@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:agromesh_mobile/models/models.dart';
-import 'package:agromesh_mobile/services/geo_check.dart';
+import 'package:ilevora_mobile/models/models.dart';
+import 'package:ilevora_mobile/services/geo_check.dart';
 
 GeoPoint p(double lat, double lng) => GeoPoint(lat: lat, lng: lng);
 

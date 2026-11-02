@@ -16,7 +16,7 @@ class SelectFarmScreen extends StatelessWidget {
     final auth = context.watch<AuthStore>();
 
     return Scaffold(
-      backgroundColor: AgroColors.mist,
+      backgroundColor: IlevoraColors.mist,
       appBar: AppBar(title: const Text('Choose a Farm'), automaticallyImplyLeading: false),
       body: Column(
         children: [
@@ -34,9 +34,9 @@ class SelectFarmScreen extends StatelessWidget {
                       title: Text(farm.name, style: Theme.of(context).textTheme.titleMedium),
                       subtitle: Text(
                         farm.setupStatus == FarmSetupStatus.configured ? 'Configured' : 'Draft',
-                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone),
+                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone),
                       ),
-                      trailing: const Icon(Icons.chevron_right, color: AgroColors.stone),
+                      trailing: const Icon(Icons.chevron_right, color: IlevoraColors.stone),
                       onTap: () => context.read<AuthStore>().selectFarm(farm),
                     ),
                   ),

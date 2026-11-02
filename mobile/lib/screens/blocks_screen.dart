@@ -59,18 +59,18 @@ class _BlocksScreenState extends State<BlocksScreen> {
     final store = context.watch<AppStore>();
 
     return Scaffold(
-      backgroundColor: AgroColors.mist,
+      backgroundColor: IlevoraColors.mist,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: store.isOnline
           ? () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddBlockScreen()))
           : null,
-        backgroundColor: store.isOnline ? AgroColors.leaf : AgroColors.stone,
-        foregroundColor: AgroColors.white,
+        backgroundColor: store.isOnline ? IlevoraColors.leaf : IlevoraColors.stone,
+        foregroundColor: IlevoraColors.white,
         icon: const Icon(Icons.add),
         label: const Text('Add Block', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
       ),
       body: RefreshIndicator(
-        color: AgroColors.palm,
+        color: IlevoraColors.palm,
         onRefresh: () async { await store.refreshBlocks(); await _loadProgress(); },
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -80,18 +80,18 @@ class _BlocksScreenState extends State<BlocksScreen> {
               Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: AgroColors.harvest.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(color: IlevoraColors.harvest.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline, size: 14, color: AgroColors.harvest),
+                    const Icon(Icons.info_outline, size: 14, color: IlevoraColors.harvest),
                     const SizedBox(width: 8),
-                    Expanded(child: Text(store.blocksError!, style: const TextStyle(fontSize: 13, color: AgroColors.ink))),
+                    Expanded(child: Text(store.blocksError!, style: const TextStyle(fontSize: 13, color: IlevoraColors.ink))),
                   ],
                 ),
               ),
             if (_progress.isNotEmpty) ...[
               Text('Blocks in progress (${_progress.length})',
-                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
               const SizedBox(height: 8),
               for (final p in _progress)
                 Padding(
@@ -102,28 +102,28 @@ class _BlocksScreenState extends State<BlocksScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AgroColors.white,
+                        color: IlevoraColors.white,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AgroColors.fog),
+                        border: Border.all(color: IlevoraColors.fog),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(children: [
                             Expanded(child: Text('${p['blockName']}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700))),
-                            Text(_typeLabel(p['activityType']), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.leaf, fontWeight: FontWeight.w600)),
+                            Text(_typeLabel(p['activityType']), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.leaf, fontWeight: FontWeight.w600)),
                           ]),
                           const SizedBox(height: 6),
                           LinearProgressIndicator(
                             value: (((p['percent'] as num?) ?? 0) / 100).clamp(0, 1).toDouble(),
-                            color: AgroColors.palm,
-                            backgroundColor: AgroColors.fog,
+                            color: IlevoraColors.palm,
+                            backgroundColor: IlevoraColors.fog,
                             minHeight: 6,
                           ),
                           const SizedBox(height: 4),
                           Text(
                             '${p['percent']}% · ${((p['coveredHectares'] as num?) ?? 0).toStringAsFixed(2)} of ${((p['blockHectares'] as num?) ?? 0).toStringAsFixed(2)} ha',
-                            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone),
+                            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone),
                           ),
                         ],
                       ),
@@ -138,12 +138,12 @@ class _BlocksScreenState extends State<BlocksScreen> {
               child: Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(color: AgroColors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: AgroColors.fog)),
+                decoration: BoxDecoration(color: IlevoraColors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: IlevoraColors.fog)),
                 child: const Row(children: [
                   Text('🛰️', style: TextStyle(fontSize: 16)),
                   SizedBox(width: 8),
-                  Expanded(child: Text('Satellite crop monitoring', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.ink))),
-                  Icon(Icons.chevron_right, size: 18, color: AgroColors.stone),
+                  Expanded(child: Text('Satellite crop monitoring', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.ink))),
+                  Icon(Icons.chevron_right, size: 18, color: IlevoraColors.stone),
                 ]),
               ),
             ),
@@ -152,12 +152,12 @@ class _BlocksScreenState extends State<BlocksScreen> {
                 padding: EdgeInsets.symmetric(vertical: 48),
                 child: Column(
                   children: [
-                    Icon(Icons.grass_outlined, size: 40, color: AgroColors.fog),
+                    Icon(Icons.grass_outlined, size: 40, color: IlevoraColors.fog),
                     SizedBox(height: 12),
-                    Text('No blocks yet', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+                    Text('No blocks yet', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
                     SizedBox(height: 4),
                     Text('Tap Add Block to start tracking one here.',
-                      style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone), textAlign: TextAlign.center),
+                      style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone), textAlign: TextAlign.center),
                   ],
                 ),
               )
@@ -178,9 +178,9 @@ class _BlockCard extends StatelessWidget {
   const _BlockCard({required this.block});
 
   Color get _statusColor => switch (block.status) {
-    BlockStatus.active      => AgroColors.palm,
-    BlockStatus.harvestSoon => AgroColors.harvest,
-    BlockStatus.idle        => AgroColors.stone,
+    BlockStatus.active      => IlevoraColors.palm,
+    BlockStatus.harvestSoon => IlevoraColors.harvest,
+    BlockStatus.idle        => IlevoraColors.stone,
   };
 
   AgroBadgeVariant get _badgeVariant => switch (block.status) {
@@ -200,7 +200,7 @@ class _BlockCard extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
+            decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: IlevoraColors.fog))),
             child: Row(
               children: [
                 Container(width: 10, height: 10, decoration: BoxDecoration(color: _statusColor, shape: BoxShape.circle)),
@@ -260,12 +260,12 @@ class _Row extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: IlevoraColors.fog))),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label.toUpperCase(), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone, letterSpacing: 0.8)),
-          Text(value, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w500, color: AgroColors.forest)),
+          Text(label.toUpperCase(), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone, letterSpacing: 0.8)),
+          Text(value, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w500, color: IlevoraColors.forest)),
         ],
       ),
     );

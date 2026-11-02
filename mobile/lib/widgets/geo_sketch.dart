@@ -54,9 +54,9 @@ class GeoSketch extends StatelessWidget {
       height: height,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AgroColors.mist,
+        color: IlevoraColors.mist,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AgroColors.fog),
+        border: Border.all(color: IlevoraColors.fog),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
@@ -105,10 +105,10 @@ class _SketchPainter extends CustomPainter {
     }
 
     if (remaining.isNotEmpty) {
-      canvas.drawPath(pathOf(remaining), Paint()..color = AgroColors.coverageLeft.withValues(alpha: 0.45));
+      canvas.drawPath(pathOf(remaining), Paint()..color = IlevoraColors.coverageLeft.withValues(alpha: 0.45));
     }
     if (covered.isNotEmpty) {
-      canvas.drawPath(pathOf(covered), Paint()..color = AgroColors.coverageDone.withValues(alpha: 0.55));
+      canvas.drawPath(pathOf(covered), Paint()..color = IlevoraColors.coverageDone.withValues(alpha: 0.55));
     }
     if (block.isNotEmpty) {
       canvas.drawPath(
@@ -116,11 +116,11 @@ class _SketchPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke          
           ..strokeWidth = 2
-          ..color = AgroColors.forest,
+          ..color = IlevoraColors.forest,
       );
     }
 
-    const palette = AgroColors.sectionPalette;
+    const palette = IlevoraColors.sectionPalette;
     for (var i = 0; i < sections.length; i++) {
       final col = palette[i % palette.length];
       Offset? centre;
@@ -148,17 +148,17 @@ class _SketchPainter extends CustomPainter {
     if (marking.isNotEmpty) {
       final pts = marking.map(at).toList();
       if (pts.length >= 3) {
-        canvas.drawPath(Path()..addPolygon(pts, true), Paint()..color = const Color(0x402D7A4F));
+        canvas.drawPath(Path()..addPolygon(pts, true), Paint()..color = const Color(0x400F7A3A));
       }
       canvas.drawPath(
         Path()..addPolygon(pts, pts.length >= 3),
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2
-          ..color = AgroColors.palm,
+          ..color = IlevoraColors.palm,
       );
       for (var i = 0; i < pts.length; i++) {
-        canvas.drawCircle(pts[i], 10, Paint()..color = AgroColors.palm);
+        canvas.drawCircle(pts[i], 10, Paint()..color = IlevoraColors.palm);
         final tp = TextPainter(
           text: TextSpan(text: '${i + 1}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
           textDirection: TextDirection.ltr,

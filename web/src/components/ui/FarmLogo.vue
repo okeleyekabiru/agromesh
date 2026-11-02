@@ -8,19 +8,19 @@
     :class="`farm-logo--${variant}`"
     @error="broken = true"
   />
-  <!-- No logo, still loading, or it failed to load: the caller's fallback, AgroMesh by default. -->
+  <!-- No logo, still loading, or it failed to load: the caller's fallback, Ilevora by default. -->
   <slot v-if="!url || broken" name="fallback">
-    <AgroMeshMark :size="56" />
+    <IlevoraMark :size="56" />
   </slot>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useFarmLogo } from '@/composables/useFarmLogo'
-import AgroMeshMark from '@/components/ui/AgroMeshMark.vue'
+import IlevoraMark from '@/components/ui/IlevoraMark.vue'
 
 // The one place a farm's logo is drawn in the app (the settings preview; invoices print it server-side). It is never
-// used in place of the AgroMesh logo. It fetches the bytes with the bearer token and revokes its object URL when the
+// used in place of the Ilevora logo. It fetches the bytes with the bearer token and revokes its object URL when the
 // logo changes or the component goes away.
 const props = withDefaults(defineProps<{
   farmId?: string | null

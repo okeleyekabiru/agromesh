@@ -71,8 +71,8 @@ Widget textField(TextEditingController c, String label, {String? hint, int lines
 Widget sheetTitle(String t, [String? sub]) => Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(t, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 16, fontWeight: FontWeight.w700, color: AgroColors.forest)),
-        if (sub != null) Text(sub, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
+        Text(t, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 16, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
+        if (sub != null) Text(sub, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone)),
       ]),
     );
 
@@ -80,7 +80,7 @@ Widget primaryButton(String label, VoidCallback? onTap, {bool busy = false}) => 
       width: double.infinity,
       child: ElevatedButton(
         onPressed: busy ? null : onTap,
-        style: ElevatedButton.styleFrom(backgroundColor: AgroColors.leaf, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14)),
+        style: ElevatedButton.styleFrom(backgroundColor: IlevoraColors.leaf, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14)),
         child: busy
             ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
             : Text(label),

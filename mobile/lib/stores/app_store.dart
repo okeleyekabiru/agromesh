@@ -28,7 +28,7 @@ class AppStore extends ChangeNotifier {
   List<StockItem> stockItems = [];
   List<OutstandingStock> outstanding = [];
 
-  // Farm logo (shown in place of the AgroMesh mark after login). Bytes come from disk first, then the server.
+  // Farm logo (shown in place of the Ilevora mark after login). Bytes come from disk first, then the server.
   final FarmLogoService _logoService = FarmLogoService();
   Uint8List? farmLogoBytes;
   bool farmHasLogo = false;

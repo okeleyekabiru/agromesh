@@ -68,7 +68,7 @@ class BrandColorField extends StatelessWidget {
     final shownHex = chosen ?? defaultHex;
     final shown = Color(hexColorValue(shownHex) ?? 0xFF138A44);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w700, color: AgroColors.ink)),
+      Text(label, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w700, color: IlevoraColors.ink)),
       const SizedBox(height: 8),
       Wrap(spacing: 6, runSpacing: 6, children: [
         for (final p in kBrandPalette) _Swatch(name: p.name, hex: p.hex, selected: chosen == p.hex, enabled: enabled, onTap: () => _set(p.hex)),
@@ -82,7 +82,7 @@ class BrandColorField extends StatelessWidget {
             width: 48,
             height: 48,
             margin: const EdgeInsets.only(top: 4),
-            decoration: BoxDecoration(color: shown, borderRadius: BorderRadius.circular(10), border: Border.all(color: AgroColors.fog)),
+            decoration: BoxDecoration(color: shown, borderRadius: BorderRadius.circular(10), border: Border.all(color: IlevoraColors.fog)),
           ),
         ),
         const SizedBox(width: 10),
@@ -153,7 +153,7 @@ class _Swatch extends StatelessWidget {
               decoration: BoxDecoration(
                 color: color,
                 shape: BoxShape.circle,
-                border: Border.all(color: selected ? AgroColors.ink : AgroColors.fog, width: selected ? 2.5 : 1),
+                border: Border.all(color: selected ? IlevoraColors.ink : IlevoraColors.fog, width: selected ? 2.5 : 1),
               ),
               child: selected ? Icon(Icons.check, size: 18, color: onColor(color)) : null,
             ),

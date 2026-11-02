@@ -29,11 +29,11 @@ class AuthService {
 
   static const _storage = FlutterSecureStorage();
 
-  static const _kToken = 'agromesh_token';
-  static const _kUser = 'agromesh_user';
-  static const _kCompanyId = 'agromesh_company_id';
-  static const _kFarms = 'agromesh_farms';
-  static const _kActiveFarmId = 'agromesh_active_farm_id';
+  static const _kToken = 'ilevora_token';
+  static const _kUser = 'ilevora_user';
+  static const _kCompanyId = 'ilevora_company_id';
+  static const _kFarms = 'ilevora_farms';
+  static const _kActiveFarmId = 'ilevora_active_farm_id';
 
   static Future<AuthSession> login(String email, String password) async {
     final json = await ApiClient.post(

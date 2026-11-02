@@ -26,7 +26,7 @@
     <!-- ── Hero command strip ── -->
     <div class="hero">
       <div>
-        <div class="hero-name">{{ store.farm?.name ?? 'AgroMesh' }}</div>
+        <div class="hero-name">{{ store.farm?.name ?? 'Ilevora' }}</div>
         <div class="hero-meta">
           <span v-if="store.farm?.location">{{ store.farm.location }}</span>
           <span v-if="store.farm?.location" class="hdot">·</span>

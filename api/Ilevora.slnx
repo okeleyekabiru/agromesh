@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Ilevora.API/Ilevora.API.csproj" />
+  <Project Path="Ilevora.Application/Ilevora.Application.csproj" />
+  <Project Path="Ilevora.Domain/Ilevora.Domain.csproj" />
+  <Project Path="Ilevora.Infrastructure/Ilevora.Infrastructure.csproj" />
+  <Project Path="Ilevora.Tests/Ilevora.Tests.csproj" />
+</Solution>

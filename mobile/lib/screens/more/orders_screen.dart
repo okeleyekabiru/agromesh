@@ -35,18 +35,18 @@ class OrdersScreen extends StatelessWidget {
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
+                        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: IlevoraColors.fog))),
                         child: Row(children: [
                           Expanded(
                             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               Text('${o['reference'] ?? ''}'.isEmpty ? '${o['supplierName']}' : '${o['reference']} · ${o['supplierName']}',
-                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13.5, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13.5, fontWeight: FontWeight.w600, color: IlevoraColors.ink)),
                               const SizedBox(height: 2),
-                              Text(dateText(o['createdAt']), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
+                              Text(dateText(o['createdAt']), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.stone)),
                             ]),
                           ),
                           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                            Text(naira(dbl(o['total'])), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.forest)),
+                            Text(naira(dbl(o['total'])), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.forest)),
                             Row(mainAxisSize: MainAxisSize.min, children: [
                               statusBadge('${o['status']}'),
                               if (o['isPaid'] == true) ...[const SizedBox(width: 4), const AgroBadge(label: 'Paid', variant: AgroBadgeVariant.green)],
@@ -61,7 +61,7 @@ class OrdersScreen extends StatelessWidget {
             ]),
       fab: Builder(
         builder: (ctx) => FloatingActionButton.extended(
-          backgroundColor: AgroColors.leaf,
+          backgroundColor: IlevoraColors.leaf,
           foregroundColor: Colors.white,
           onPressed: () async {
             final ok = await showSheet<bool>(ctx, _NewOrder(farm: farm));
@@ -134,9 +134,9 @@ class _OrderDetailState extends State<_OrderDetail> {
         Padding(
           padding: const EdgeInsets.only(top: 6),
           child: Text('Pay by bank transfer and put ${o['reference']} in the narration. It is marked paid when the bank sync matches it.',
-              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
+              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.stone)),
         ),
-      if (_error != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert))),
+      if (_error != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.alert))),
       const SizedBox(height: 12),
       OutlinedButton.icon(
         onPressed: _invoicing ? null : _invoice,
@@ -277,7 +277,7 @@ class _NewOrderState extends State<_NewOrder> {
         ]),
       ],
       TextButton.icon(onPressed: () => setState(() => _lines.add(_Line())), icon: const Icon(Icons.add), label: const Text('Add line')),
-      if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert))),
+      if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.alert))),
       primaryButton('Create order', _submit, busy: _busy),
     ]);
   }

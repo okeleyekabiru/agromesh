@@ -136,7 +136,7 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('${_activityType!.label} logged for ${_block!.name}'),
-          backgroundColor: AgroColors.leaf,
+          backgroundColor: IlevoraColors.leaf,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -180,7 +180,7 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
     final store = context.watch<AppStore>();
 
     return Scaffold(
-      backgroundColor: AgroColors.mist,
+      backgroundColor: IlevoraColors.mist,
       appBar: AppBar(
         title: const Text('Log Activity'),
         leading: IconButton(
@@ -350,12 +350,12 @@ class _Stepper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AgroColors.white,
+      color: IlevoraColors.white,
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
       child: Row(
         children: List.generate(steps.length * 2 - 1, (i) {
           if (i.isOdd) {
-            return Expanded(child: Container(height: 1, color: AgroColors.fog));
+            return Expanded(child: Container(height: 1, color: IlevoraColors.fog));
           }
           final stepIndex = i ~/ 2;
           final isActive = stepIndex == currentStep;
@@ -366,21 +366,21 @@ class _Stepper extends StatelessWidget {
                 width: 24, height: 24,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isDone ? AgroColors.palm : isActive ? AgroColors.leaf : Colors.transparent,
-                  border: Border.all(color: isDone || isActive ? Colors.transparent : AgroColors.fog, width: 1.5),
+                  color: isDone ? IlevoraColors.palm : isActive ? IlevoraColors.leaf : Colors.transparent,
+                  border: Border.all(color: isDone || isActive ? Colors.transparent : IlevoraColors.fog, width: 1.5),
                 ),
                 child: Center(
                   child: isDone
                     ? const Icon(Icons.check, color: Colors.white, size: 12)
                     : Text('${stepIndex + 1}',
-                        style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: isActive ? Colors.white : AgroColors.stone)),
+                        style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: isActive ? Colors.white : IlevoraColors.stone)),
                 ),
               ),
               const SizedBox(height: 4),
               Text(steps[stepIndex],
                 style: TextStyle(fontFamily: 'PlusJakartaSans', 
                   fontSize: 12, letterSpacing: 0.5,
-                  color: isActive ? AgroColors.leaf : AgroColors.stone)),
+                  color: isActive ? IlevoraColors.leaf : IlevoraColors.stone)),
             ],
           );
         }),
@@ -410,7 +410,7 @@ class _StepLocation extends StatelessWidget {
         const SizedBox(height: 6),
         DropdownButtonFormField<Block>(
           initialValue: selectedBlock,
-          hint: const Text('Choose block...', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.stone)),
+          hint: const Text('Choose block...', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: IlevoraColors.stone)),
           decoration: const InputDecoration(),
           items: blocks.map((s) => DropdownMenuItem(
             value: s,
@@ -421,7 +421,7 @@ class _StepLocation extends StatelessWidget {
         if (selectedBlock != null) ...[
           const SizedBox(height: 4),
           Text('${selectedBlock!.hectares.toStringAsFixed(0)} ha · Last activity: ${selectedBlock!.lastActivityDate ?? 'Never'}',
-            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
         ],
       ],
     );
@@ -457,10 +457,10 @@ class _StepActivity extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: isSelected ? AgroColors.leaf.withValues(alpha: 0.06) : Colors.transparent,
+                  color: isSelected ? IlevoraColors.leaf.withValues(alpha: 0.06) : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: isSelected ? AgroColors.leaf : AgroColors.fog,
+                    color: isSelected ? IlevoraColors.leaf : IlevoraColors.fog,
                     width: isSelected ? 1.5 : 1,
                   ),
                 ),
@@ -472,7 +472,7 @@ class _StepActivity extends StatelessWidget {
                       child: Text(type.label,
                         style: TextStyle(fontFamily: 'PlusJakartaSans', 
                           fontSize: 12, fontWeight: FontWeight.w600,
-                          color: isSelected ? AgroColors.leaf : AgroColors.forest),
+                          color: isSelected ? IlevoraColors.leaf : IlevoraColors.forest),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -490,10 +490,10 @@ class _StepActivity extends StatelessWidget {
           TextField(
             controller: notes,
             maxLines: 2,
-            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.forest),
+            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: IlevoraColors.forest),
             decoration: const InputDecoration(
               hintText: 'Any details about this activity...',
-              hintStyle: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.stone),
+              hintStyle: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: IlevoraColors.stone),
             ),
           ),
         ],
@@ -562,7 +562,7 @@ class _StepWorkersInputs extends StatelessWidget {
         ],
         if (availableWorkers.isEmpty)
           const Text('No workers yet — they sync from the farm when you are online.',
-            style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone))
+            style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone))
         else
           Row(
             children: [
@@ -570,7 +570,7 @@ class _StepWorkersInputs extends StatelessWidget {
                 child: DropdownButtonFormField<String>(
                   initialValue: workerPickId,
                   isExpanded: true,
-                  hint: const Text('Choose worker...', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
+                  hint: const Text('Choose worker...', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone)),
                   decoration: const InputDecoration(),
                   items: availableWorkers.map((w) => DropdownMenuItem(
                     value: w.id,
@@ -586,10 +586,10 @@ class _StepWorkersInputs extends StatelessWidget {
                 child: TextField(
                   controller: hoursCtrl,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.forest),
+                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: IlevoraColors.forest),
                   decoration: const InputDecoration(
                     hintText: 'Hrs',
-                    hintStyle: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone),
+                    hintStyle: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone),
                   ),
                 ),
               ),
@@ -603,7 +603,7 @@ class _StepWorkersInputs extends StatelessWidget {
           ),
 
         const SizedBox(height: 20),
-        const Divider(color: AgroColors.fog),
+        const Divider(color: IlevoraColors.fog),
         const SizedBox(height: 12),
 
         // Inputs — chosen from stock; using them reduces stock
@@ -620,7 +620,7 @@ class _StepWorkersInputs extends StatelessWidget {
         ],
         if (stockItems.isEmpty)
           const Text('No suitable stock for this activity — add stock on the web app, then sync.',
-            style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone))
+            style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone))
         else ...[
           Row(
             children: [
@@ -628,7 +628,7 @@ class _StepWorkersInputs extends StatelessWidget {
                 child: DropdownButtonFormField<String>(
                   initialValue: stockItemId,
                   isExpanded: true,
-                  hint: const Text('Choose from stock...', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
+                  hint: const Text('Choose from stock...', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone)),
                   decoration: const InputDecoration(),
                   items: stockItems.map((i) {
                     final left = availableFor(i.id);
@@ -636,7 +636,7 @@ class _StepWorkersInputs extends StatelessWidget {
                       value: i.id,
                       enabled: left > 0,
                       child: Text('${i.name} — ${formatQty(left)} ${i.unit}',
-                        style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: left > 0 ? AgroColors.forest : AgroColors.stone),
+                        style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: left > 0 ? IlevoraColors.forest : IlevoraColors.stone),
                         overflow: TextOverflow.ellipsis),
                     );
                   }).toList(),
@@ -649,10 +649,10 @@ class _StepWorkersInputs extends StatelessWidget {
                 child: TextField(
                   controller: inputQtyCtrl,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.forest),
+                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: IlevoraColors.forest),
                   decoration: InputDecoration(
                     hintText: stock == null ? 'Qty' : stock.unit,
-                    hintStyle: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone),
+                    hintStyle: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone),
                   ),
                 ),
               ),
@@ -669,17 +669,17 @@ class _StepWorkersInputs extends StatelessWidget {
             Text(
               '${formatQty(pickedFor(stock.id))} ${stock.unit} picked out for ${block?.name ?? 'this block'} · '
               '${formatQty(stock.currentStock)} ${stock.unit} in the store. Picked stock is used first.',
-              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone),
+              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone),
             ),
           ],
           if (inputError != null) ...[
             const SizedBox(height: 6),
-            Text(inputError!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert)),
+            Text(inputError!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.alert)),
           ],
         ],
 
         const SizedBox(height: 20),
-        const Divider(color: AgroColors.fog),
+        const Divider(color: IlevoraColors.fog),
         const SizedBox(height: 12),
 
         // Supervisor
@@ -687,7 +687,7 @@ class _StepWorkersInputs extends StatelessWidget {
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
           initialValue: selectedSupervisorId,
-          hint: const Text('Select supervisor...', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.stone)),
+          hint: const Text('Select supervisor...', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: IlevoraColors.stone)),
           decoration: const InputDecoration(),
           items: supervisors.map((w) => DropdownMenuItem(
             value: w.id,
@@ -730,7 +730,7 @@ class _StepArea extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'Walk around the edge of the area that was worked and tap Add point at each corner, in order. At least $minPoints points.',
-          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone),
+          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone),
         ),
         const SizedBox(height: 12),
         GeoSketch(
@@ -746,24 +746,24 @@ class _StepArea extends StatelessWidget {
               existing!.status == 'Complete'
                   ? 'The whole block is already covered this cycle: this will start a new cycle.'
                   : 'Green is already done this cycle (${existing!.coveredHectares.toStringAsFixed(2)} ha). Mark only the amber part so the work does not overlap.',
-              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.forest),
+              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.forest),
             ),
           ),
         if (block != null && !block!.hasBoundary)
           const Padding(
             padding: EdgeInsets.only(top: 8),
             child: Text('This block has no boundary yet, so the area cannot be checked against its edge.',
-              style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.harvest)),
+              style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.harvest)),
           ),
         if (areaPointsProblem(points, blockRings: geoJsonRings(block?.boundaryGeoJson)) case final problem?)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(problem, style: const TextStyle(color: AgroColors.alert, fontSize: 12, fontWeight: FontWeight.w600)),
+            child: Text(problem, style: const TextStyle(color: IlevoraColors.alert, fontSize: 12, fontWeight: FontWeight.w600)),
           ),
         if (error != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(error!, style: const TextStyle(color: AgroColors.alert, fontSize: 13)),
+            child: Text(error!, style: const TextStyle(color: IlevoraColors.alert, fontSize: 13)),
           ),
         const SizedBox(height: 12),
         SizedBox(
@@ -816,8 +816,8 @@ class _Footer extends StatelessWidget {
     return Container(
       padding: EdgeInsets.fromLTRB(16, 12, 16, MediaQuery.of(context).padding.bottom + 12),
       decoration: const BoxDecoration(
-        color: AgroColors.white,
-        border: Border(top: BorderSide(color: AgroColors.fog)),
+        color: IlevoraColors.white,
+        border: Border(top: BorderSide(color: IlevoraColors.fog)),
       ),
       child: Row(
         children: [

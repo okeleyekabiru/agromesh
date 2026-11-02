@@ -60,7 +60,7 @@ test('QA-TZ-1: a vendor invoice marked paid at 23:30 UTC shows the Lagos calenda
   await ctx.close()
 })
 
-test('LOGO-SIDEBAR: the farm logo never replaces the AgroMesh logo in the sidebar (it is only used on invoices)', async ({ page }) => {
+test('LOGO-SIDEBAR: the farm logo never replaces the Ilevora logo in the sidebar (it is only used on invoices)', async ({ page }) => {
   await mockSession(page, { hasLogo: true, logoUpdatedAt: '2026-11-01T10:00:00Z' })
   let logoRequested = false
   await page.route('**/api/farms/farm_001/logo', route => { logoRequested = true; return route.fulfill({ status: 200, contentType: 'image/png', body: 'x' }) })

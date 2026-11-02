@@ -1,13 +1,11 @@
-# AgroMesh — Farm Operating System
-
-> Extract this folder to `C:\Users\kabio\source\repos\agromesh`
+# Ilevora — Farm Operating System
 
 ---
 
 ## Project Structure
 
 ```
-agromesh/
+ilevora/
 ├── web/          # Vue 3 + Vite — Manager dashboard (browser)
 └── mobile/       # Flutter — Field supervisor app (Android + iOS)
 ```
@@ -59,8 +57,8 @@ flutter run
 
 ## Brand
 
-Forest `#0D2B1F` · Palm `#3DAA6A` · Harvest `#E8A838`  
-Syne 800 · Inter · JetBrains Mono
+Forest `#0D2B1F` · Ilevora Green `#0F7A3A` (UI primary) · Palm `#3DAA6A` · Harvest `#E8A838` · Invoice default green `#138A44`  
+Plus Jakarta Sans everywhere. Logo: "Rising rows" mark. See `docs/brand/brand-guide.md`.
 
-Domain: agromesh.io
-# agromesh
+Domain: ilevora.com
+

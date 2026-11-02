@@ -1,8 +1,8 @@
 <template>
   <aside class="sidebar" :class="{ 'sidebar--open': drawer.open.value }">
-    <!-- Logo: always the AgroMesh brand; the farm's own logo is only used on invoices -->
+    <!-- Logo: always the Ilevora brand; the farm's own logo is only used on invoices -->
     <div class="sidebar-logo">
-      <div class="logo-icon"><AgroMeshMark :size="26" /></div>
+      <div class="logo-icon"><IlevoraMark :size="26" /></div>
       <span class="logo-text">Agro<span class="logo-accent">Mesh</span></span>
     </div>
 
@@ -112,7 +112,7 @@ import { useAgroStore } from '@/stores/agro'
 import { useFeatureFlag } from '@/composables/useFeatureFlag'
 import { useNavDrawer } from '@/composables/useNavDrawer'
 import AddFarmModal from '@/components/modal/AddFarmModal.vue'
-import AgroMeshMark from '@/components/ui/AgroMeshMark.vue'
+import IlevoraMark from '@/components/ui/IlevoraMark.vue'
 
 const store = useAgroStore()
 const router = useRouter()

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:agromesh_mobile/models/models.dart';
-import 'package:agromesh_mobile/widgets/geo_sketch.dart';
+import 'package:ilevora_mobile/models/models.dart';
+import 'package:ilevora_mobile/widgets/geo_sketch.dart';
 
 void main() {
   test('polygon and multipolygon GeoJSON rings are read', () {

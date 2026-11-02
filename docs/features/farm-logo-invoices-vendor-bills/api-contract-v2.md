@@ -1,4 +1,4 @@
-# AgroMesh API contract v2: invoice brand colours, 10 templates, preview
+# Ilevora API contract v2: invoice brand colours, 10 templates, preview
 
 All routes need `Authorization: Bearer <jwt>`. JSON is camelCase. All additions are optional/nullable, so old clients keep working.
 
