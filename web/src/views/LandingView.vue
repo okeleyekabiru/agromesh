@@ -32,7 +32,7 @@
           <line x1="24" y1="48" x2="36" y2="36" stroke="#3DAA6A" stroke-width="1.5"/>
           <line x1="48" y1="48" x2="36" y2="36" stroke="#3DAA6A" stroke-width="1.5"/>
         </svg>
-        <span>Agro<span class="logo-accent">Mesh</span></span>
+        <span>Ilevora</span>
       </div>
     </nav>
 
@@ -283,7 +283,7 @@
           <line x1="24" y1="48" x2="36" y2="36" stroke="#3DAA6A" stroke-width="1.5"/>
           <line x1="48" y1="48" x2="36" y2="36" stroke="#3DAA6A" stroke-width="1.5"/>
         </svg>
-        <span>Agro<span class="logo-accent">Mesh</span></span>
+        <span>Ilevora</span>
       </div>
       <p class="foot-copy">© {{ new Date().getFullYear() }} Ilevora. Purpose-built for Nigerian agriculture.</p>
     </footer>

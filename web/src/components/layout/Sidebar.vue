@@ -3,7 +3,7 @@
     <!-- Logo: always the Ilevora brand; the farm's own logo is only used on invoices -->
     <div class="sidebar-logo">
       <div class="logo-icon"><IlevoraMark :size="26" /></div>
-      <span class="logo-text">Agro<span class="logo-accent">Mesh</span></span>
+      <span class="logo-text">Ilevora</span>
     </div>
 
     <!-- Farm Context / Switcher -->
