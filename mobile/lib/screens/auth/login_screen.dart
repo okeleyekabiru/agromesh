@@ -39,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final auth = context.watch<AuthStore>();
 
     return Scaffold(
-      backgroundColor: AgroColors.mist,
+      backgroundColor: IlevoraColors.mist,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -55,14 +55,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     Container(
                       width: 56, height: 56,
                       alignment: Alignment.center,
-                      decoration: BoxDecoration(color: AgroColors.canopy, borderRadius: BorderRadius.circular(14)),
-                      child: const Text('A', style: TextStyle(fontFamily: 'PlusJakartaSans', color: AgroColors.palm, fontWeight: FontWeight.w800, fontSize: 26)),
+                      decoration: BoxDecoration(color: IlevoraColors.canopy, borderRadius: BorderRadius.circular(14)),
+                      child: const Text('A', style: TextStyle(fontFamily: 'PlusJakartaSans', color: IlevoraColors.palm, fontWeight: FontWeight.w800, fontSize: 26)),
                     ),
                     const SizedBox(height: 20),
-                    Text('AgroMesh', textAlign: TextAlign.center, style: Theme.of(context).textTheme.displayMedium),
+                    Text('Ilevora', textAlign: TextAlign.center, style: Theme.of(context).textTheme.displayMedium),
                     const SizedBox(height: 4),
                     const Text('Field supervisor login', textAlign: TextAlign.center,
-                      style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.stone)),
+                      style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: IlevoraColors.stone)),
                     const SizedBox(height: 32),
 
                     AgroTextField(
@@ -81,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       validator: (v) => (v == null || v.isEmpty) ? 'Enter your password' : null,
                       suffixIcon: IconButton(
                         tooltip: _obscure ? 'Show password' : 'Hide password',
-                        icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 22, color: AgroColors.stone),
+                        icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 22, color: IlevoraColors.stone),
                         onPressed: () => setState(() => _obscure = !_obscure),
                       ),
                     ),
@@ -91,11 +91,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AgroColors.alert.withValues(alpha: 0.08),
+                          color: IlevoraColors.alert.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AgroColors.alert.withValues(alpha: 0.25)),
+                          border: Border.all(color: IlevoraColors.alert.withValues(alpha: 0.25)),
                         ),
-                        child: Text(auth.error!, style: const TextStyle(color: AgroColors.alert, fontSize: 13)),
+                        child: Text(auth.error!, style: const TextStyle(color: IlevoraColors.alert, fontSize: 13)),
                       ),
                     ],
 

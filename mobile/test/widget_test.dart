@@ -8,18 +8,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:agromesh_mobile/screens/auth/login_screen.dart';
-import 'package:agromesh_mobile/screens/blocks/boundary_capture_screen.dart';
-import 'package:agromesh_mobile/stores/auth_store.dart';
-import 'package:agromesh_mobile/theme/app_theme.dart';
-import 'package:agromesh_mobile/widgets/widgets.dart';
+import 'package:ilevora_mobile/screens/auth/login_screen.dart';
+import 'package:ilevora_mobile/screens/blocks/boundary_capture_screen.dart';
+import 'package:ilevora_mobile/stores/auth_store.dart';
+import 'package:ilevora_mobile/theme/app_theme.dart';
+import 'package:ilevora_mobile/widgets/widgets.dart';
 
 void main() {
   testWidgets('LoginScreen renders email/password fields and a Log In button', (tester) async {
     await tester.pumpWidget(
       ChangeNotifierProvider<AuthStore>(
         create: (_) => AuthStore(),
-        child: MaterialApp(theme: AgroTheme.theme, home: const LoginScreen()),
+        child: MaterialApp(theme: IlevoraTheme.theme, home: const LoginScreen()),
       ),
     );
 
@@ -30,7 +30,7 @@ void main() {
   testWidgets('BoundaryCaptureScreen starts with zero corners marked and Finish Boundary disabled', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        theme: AgroTheme.theme,
+        theme: IlevoraTheme.theme,
         home: const BoundaryCaptureScreen(blockId: 'sec_1', blockName: 'Test Section'),
       ),
     );

@@ -146,11 +146,11 @@ class _FinanceScreenState extends State<FinanceScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: [
-              const Icon(Icons.account_balance_outlined, color: AgroColors.leaf, size: 20),
+              const Icon(Icons.account_balance_outlined, color: IlevoraColors.leaf, size: 20),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(linked ? 'Bank account linked' : 'No bank account linked',
-                    style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+                    style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: IlevoraColors.ink)),
               ),
               AgroBadge(label: linked ? 'Linked' : 'Not linked', variant: linked ? AgroBadgeVariant.green : AgroBadgeVariant.stone),
             ]),
@@ -179,7 +179,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
             else
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const Text('Linking a bank account is done in the browser (Mono Connect). Sign in there, link the account, then come back and sync here.',
-                    style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
+                    style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.stone)),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: () => openWebApp(ctx, '/finance'),
@@ -201,19 +201,19 @@ class _FinanceScreenState extends State<FinanceScreen> {
           for (final t in queue)
             Container(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-              decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: IlevoraColors.fog))),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('${t['narration'] ?? ''}', maxLines: 2, overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, fontWeight: FontWeight.w600, color: IlevoraColors.ink)),
                   const SizedBox(height: 2),
                   Text('${naira((t['amount'] as num?)?.abs())} · ${dateText(t['date'])}',
-                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
                   if ((t['reconciliationNote'] as String?)?.isNotEmpty ?? false)
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
-                      child: Text(t['reconciliationNote'] as String, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+                      child: Text(t['reconciliationNote'] as String, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
                     ),
                   const SizedBox(height: 8),
                   Row(children: [
@@ -257,7 +257,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
       onTap: () => _openDetail(ctx, farm, t, reload),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
+        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: IlevoraColors.fog))),
         child: Row(
           children: [
             Expanded(
@@ -265,10 +265,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('${t['narration'] ?? ''}', maxLines: 2, overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, fontWeight: FontWeight.w600, color: IlevoraColors.ink)),
                   const SizedBox(height: 4),
                   Wrap(spacing: 6, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                    Text(dateText(t['date']), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+                    Text(dateText(t['date']), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
                     AgroBadge(label: _catLabel(cat), variant: AgroBadgeVariant.stone),
                     if (kind == 'Capital') const AgroBadge(label: 'Capital', variant: AgroBadgeVariant.harvest),
                     if (!reviewed) const AgroBadge(label: 'To review', variant: AgroBadgeVariant.harvest),
@@ -278,7 +278,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
             ),
             const SizedBox(width: 10),
             Text('${out ? '-' : '+'}${naira(amount.abs())}',
-                style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, fontWeight: FontWeight.w600, color: out ? AgroColors.alert : AgroColors.leaf)),
+                style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, fontWeight: FontWeight.w600, color: out ? IlevoraColors.alert : IlevoraColors.leaf)),
           ],
         ),
       ),
@@ -355,16 +355,16 @@ class _TxDetailState extends State<_TxDetail> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text('${out ? '-' : '+'}${naira(_amount.abs())}',
-            style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 22, fontWeight: FontWeight.w600, color: out ? AgroColors.alert : AgroColors.leaf)),
+            style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 22, fontWeight: FontWeight.w600, color: out ? IlevoraColors.alert : IlevoraColors.leaf)),
         const SizedBox(height: 6),
-        Text('${t['narration'] ?? ''}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+        Text('${t['narration'] ?? ''}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: IlevoraColors.ink)),
         const SizedBox(height: 10),
         KvRow('Date', dateText(t['date'])),
         KvRow('Confidence', _enumName(t['confidence'], const ['High', 'Medium', 'Low'])),
         KvRow('Categorised by', _enumName(t['source'], const ['Dictionary', 'Pattern', 'Llm', 'Manual'])),
         KvRow('Reviewed', t['reviewedByUser'] == true ? 'Yes' : 'Not yet'),
         const Divider(height: 24),
-        const Text('Category', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+        const Text('Category', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
         const SizedBox(height: 4),
         DropdownButtonFormField<String>(
           initialValue: _category,
@@ -375,7 +375,7 @@ class _TxDetailState extends State<_TxDetail> {
         ),
         if (!out) ...[
           const SizedBox(height: 12),
-          const Text('Money in is', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+          const Text('Money in is', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
           const SizedBox(height: 4),
           SegmentedButton<String>(
             segments: const [ButtonSegment(value: 'Income', label: Text('Income')), ButtonSegment(value: 'Capital', label: Text('Capital'))],
@@ -392,7 +392,7 @@ class _TxDetailState extends State<_TxDetail> {
         if (_error != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.alert)),
+            child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.alert)),
           ),
         const SizedBox(height: 14),
         Row(mainAxisAlignment: MainAxisAlignment.end, children: [

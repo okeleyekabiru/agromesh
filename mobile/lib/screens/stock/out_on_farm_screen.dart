@@ -39,10 +39,10 @@ class _OutOnFarmScreenState extends State<OutOnFarmScreen> {
     final rows = groups.values.toList();
 
     return Scaffold(
-      backgroundColor: AgroColors.mist,
+      backgroundColor: IlevoraColors.mist,
       appBar: widget.embedded ? null : AppBar(title: const Text('Out on the farm')),
       body: RefreshIndicator(
-        color: AgroColors.palm,
+        color: IlevoraColors.palm,
         onRefresh: store.refreshStock,
         child: rows.isEmpty
             ? ListView(
@@ -53,7 +53,7 @@ class _OutOnFarmScreenState extends State<OutOnFarmScreen> {
                   Center(
                     child: Text('Nothing is out on the farm.\nPick stock on the web app to see it here.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.stone, height: 1.5)),
+                      style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: IlevoraColors.stone, height: 1.5)),
                   ),
                 ],
               )
@@ -76,13 +76,13 @@ class _OutOnFarmScreenState extends State<OutOnFarmScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(g.sample.inventoryItemName,
-                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
                                 const SizedBox(height: 2),
                                 Text(blockName,
-                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
                                 const SizedBox(height: 6),
                                 Text('${formatQty(g.total)} ${g.sample.unit} left',
-                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
+                                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: IlevoraColors.leaf)),
                               ],
                             ),
                           ),
@@ -109,7 +109,7 @@ class _OutOnFarmScreenState extends State<OutOnFarmScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Returned to stock — ${g.sample.inventoryItemName}'),
-          backgroundColor: AgroColors.leaf,
+          backgroundColor: IlevoraColors.leaf,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -182,7 +182,7 @@ class _ReturnDialogState extends State<_ReturnDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('${widget.blockName}: ${formatQty(widget.group.total)} $unit still out.',
-              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
+              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone)),
             const SizedBox(height: 12),
             TextField(
               controller: _qtyCtrl,
@@ -203,7 +203,7 @@ class _ReturnDialogState extends State<_ReturnDialog> {
             ),
             if (_error != null) ...[
               const SizedBox(height: 10),
-              Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert)),
+              Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.alert)),
             ],
           ],
         ),

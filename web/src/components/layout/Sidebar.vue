@@ -1,8 +1,8 @@
 <template>
-  <aside class="sidebar">
-    <!-- Logo: always the AgroMesh brand; the farm's own logo is only used on invoices -->
+  <aside class="sidebar" :class="{ 'sidebar--open': drawer.open.value }">
+    <!-- Logo: always the Ilevora brand; the farm's own logo is only used on invoices -->
     <div class="sidebar-logo">
-      <div class="logo-icon"><AgroMeshMark :size="26" /></div>
+      <div class="logo-icon"><IlevoraMark :size="26" /></div>
       <span class="logo-text">Agro<span class="logo-accent">Mesh</span></span>
     </div>
 
@@ -110,12 +110,14 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAgroStore } from '@/stores/agro'
 import { useFeatureFlag } from '@/composables/useFeatureFlag'
+import { useNavDrawer } from '@/composables/useNavDrawer'
 import AddFarmModal from '@/components/modal/AddFarmModal.vue'
-import AgroMeshMark from '@/components/ui/AgroMeshMark.vue'
+import IlevoraMark from '@/components/ui/IlevoraMark.vue'
 
 const store = useAgroStore()
 const router = useRouter()
 const { hasFeature } = useFeatureFlag()
+const drawer = useNavDrawer()
 
 function handleLogout() {
   store.logout()
@@ -262,6 +264,18 @@ const navItems = computed(() =>
 </script>
 
 <style scoped>
+@media (max-width: 900px) {
+  .sidebar {
+    position: fixed; top: 0; bottom: 0; left: 0; z-index: 100;
+    width: min(280px, 85vw); min-width: 0;
+    transform: translateX(-100%);
+    transition: transform var(--dur-base) var(--ease-io);
+  }
+  .sidebar--open { transform: translateX(0); box-shadow: 8px 0 32px rgba(10, 26, 16, 0.35); }
+}
+@media (max-width: 900px) and (prefers-reduced-motion: reduce) {
+  .sidebar { transition: none; }
+}
 .sidebar {
   width: 224px;
   min-width: 224px;

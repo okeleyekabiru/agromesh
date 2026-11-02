@@ -78,16 +78,16 @@ class _LoadScaffoldState<T> extends State<LoadScaffold<T>> {
   Widget build(BuildContext context) {
     Widget body;
     if (_loading) {
-      body = const Center(child: CircularProgressIndicator(color: AgroColors.palm));
+      body = const Center(child: CircularProgressIndicator(color: IlevoraColors.palm));
     } else if (_data == null) {
       body = ListView(children: [
         Padding(
           padding: const EdgeInsets.all(32),
           child: Column(children: [
-            const Icon(Icons.cloud_off_outlined, color: AgroColors.stone, size: 36),
+            const Icon(Icons.cloud_off_outlined, color: IlevoraColors.stone, size: 36),
             const SizedBox(height: 10),
             Text(_error ?? 'Nothing to show.', textAlign: TextAlign.center,
-                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.stone)),
+                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: IlevoraColors.stone)),
             const SizedBox(height: 12),
             OutlinedButton(onPressed: _reload, child: const Text('Retry')),
           ]),
@@ -97,15 +97,15 @@ class _LoadScaffoldState<T> extends State<LoadScaffold<T>> {
       body = widget.builder(context, _data as T, _reload);
     }
     return Scaffold(
-      backgroundColor: AgroColors.mist,
+      backgroundColor: IlevoraColors.mist,
       appBar: widget.embedded ? null : AppBar(
-        backgroundColor: AgroColors.forest,
-        foregroundColor: AgroColors.white,
+        backgroundColor: IlevoraColors.forest,
+        foregroundColor: IlevoraColors.white,
         title: Text(widget.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
         actions: widget.actions,
       ),
       floatingActionButton: widget.fab,
-      body: RefreshIndicator(color: AgroColors.palm, onRefresh: _reload, child: body),
+      body: RefreshIndicator(color: IlevoraColors.palm, onRefresh: _reload, child: body),
     );
   }
 }
@@ -121,11 +121,11 @@ class KvRow extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Expanded(child: Text(k, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone))),
+          Expanded(child: Text(k, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone))),
           const SizedBox(width: 12),
           Flexible(
             child: Text(v, textAlign: TextAlign.right,
-                style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w600, color: vColor ?? AgroColors.ink)),
+                style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w600, color: vColor ?? IlevoraColors.ink)),
           ),
         ]),
       );
@@ -134,7 +134,7 @@ class KvRow extends StatelessWidget {
 Widget emptyNote(String text) => Padding(
       padding: const EdgeInsets.all(28),
       child: Center(
-        child: Text(text, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
+        child: Text(text, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.stone)),
       ),
     );
 
@@ -142,7 +142,7 @@ Widget emptyNote(String text) => Padding(
 Future<T?> showSheet<T>(BuildContext c, Widget child) => showModalBottomSheet<T>(
       context: c,
       isScrollControlled: true,
-      backgroundColor: AgroColors.white,
+      backgroundColor: IlevoraColors.white,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.of(ctx).viewInsets.bottom),
@@ -150,10 +150,10 @@ Future<T?> showSheet<T>(BuildContext c, Widget child) => showModalBottomSheet<T>
       ),
     );
 
-const _kWebUrl = 'agromesh_web_url';
+const _kWebUrl = 'ilevora_web_url';
 const _webUrlDefine = String.fromEnvironment('WEB_APP_URL');
 
-/// Opens a page of the AgroMesh web app in the browser. The web address is asked for once and remembered.
+/// Opens a page of the Ilevora web app in the browser. The web address is asked for once and remembered.
 Future<void> openWebApp(BuildContext context, String path) async {
   const storage = FlutterSecureStorage();
   var base = _webUrlDefine.isNotEmpty ? _webUrlDefine : (await storage.read(key: _kWebUrl)) ?? '';
@@ -166,7 +166,7 @@ Future<void> openWebApp(BuildContext context, String path) async {
         content: TextField(
           controller: ctrl,
           keyboardType: TextInputType.url,
-          decoration: const InputDecoration(hintText: 'https://your-agromesh-web-address'),
+          decoration: const InputDecoration(hintText: 'https://your-ilevora-web-address'),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),

@@ -4,38 +4,38 @@ Ordered so each step has one red→green cycle and the suite stays green after e
 
 ## Step 1 — Domain: `StockMovement.WorkerId` (red → green)
 
-- **Red**: add `api/AgroMesh.Tests/StockMovementTests.cs` with:
+- **Red**: add `api/Ilevora.Tests/StockMovementTests.cs` with:
   - `CreateOut_SetsWorkerIdWhenProvided`
   - `CreateOut_WorkerIdDefaultsToNullWhenOmitted` (regression for the existing
     `InventoryDeductionService` call site, which never passes one)
   - `CreateOut_SetsCoreFields` (farmId/inventoryItemId/quantity/type=Out/notes — no existing test
     file covers `StockMovement` at all)
   Run `dotnet test` → new tests fail to compile/fail (no `WorkerId` param yet).
-- **Green**: `api/AgroMesh.Domain/Entities/StockMovement.cs` — add `public string? WorkerId { get; private set; }`
+- **Green**: `api/Ilevora.Domain/Entities/StockMovement.cs` — add `public string? WorkerId { get; private set; }`
   and an optional trailing `string? workerId = null` parameter to `CreateOut`, setting it on the
   returned instance. `CreateIn`/`CreateAdjustment` untouched.
 - Run `dotnet test` → all green.
 
 ## Step 2 — Infrastructure: EF config + migration
 
-- `api/AgroMesh.Infrastructure/Persistence/Configurations/StockMovementConfiguration.cs` — add
+- `api/Ilevora.Infrastructure/Persistence/Configurations/StockMovementConfiguration.cs` — add
   `builder.Property(m => m.WorkerId).HasMaxLength(50);` (nullable, no `.IsRequired()`, no new index
   — movements aren't queried by worker in this phase).
-- `dotnet ef migrations add AddStockMovementWorkerId --project AgroMesh.Infrastructure --startup-project AgroMesh.API`
+- `dotnet ef migrations add AddStockMovementWorkerId --project Ilevora.Infrastructure --startup-project Ilevora.API`
   from `api/`. Review the generated `Up`/`Down` (should be a single nullable `ADD COLUMN`).
-- `dotnet ef database update --project AgroMesh.Infrastructure --startup-project AgroMesh.API`
+- `dotnet ef database update --project Ilevora.Infrastructure --startup-project Ilevora.API`
   against the local Postgres (`localhost:5433`, already running via docker-compose) — confirms the
   migration applies cleanly to real data (16 farms / existing StockMovements rows, if any).
 - `dotnet build` for the whole solution.
 
 ## Step 3 — Application: DTOs + `PickStockCommand`
 
-- `api/AgroMesh.Application/DTOs/InventoryDtos.cs` — add:
+- `api/Ilevora.Application/DTOs/InventoryDtos.cs` — add:
   ```csharp
   public record PickStockRequest(decimal Quantity, string WorkerId, string Purpose);
   public record PickStockResponse(InventoryItemDto Item, string? LowStockWarning);
   ```
-- New file `api/AgroMesh.Application/Commands/Inventory/PickStockCommand.cs`:
+- New file `api/Ilevora.Application/Commands/Inventory/PickStockCommand.cs`:
   `PickStockCommand(string FarmId, string InventoryItemId, PickStockRequest Request) : IRequest<PickStockResponse>`.
   Handler (constructor-injects `IInventoryRepository`, `IWorkerRepository`):
   1. Validate `Request.WorkerId`/`Request.Purpose` non-blank → `DomainException` if not.
@@ -54,7 +54,7 @@ Ordered so each step has one red→green cycle and the suite stays green after e
 
 ## Step 4 — API: wire the endpoint
 
-- `api/AgroMesh.API/Controllers/InventoryController.cs` — add:
+- `api/Ilevora.API/Controllers/InventoryController.cs` — add:
   ```csharp
   [HttpPost("{itemId}/pick")]
   public async Task<IActionResult> Pick(string farmId, string itemId, [FromBody] PickStockRequest request, CancellationToken ct) =>
@@ -64,7 +64,7 @@ Ordered so each step has one red→green cycle and the suite stays green after e
 
 ## Step 5 — Manual verification against the live local API (AC8)
 
-- Restart/rebuild the `agromesh_api` container (or run `dotnet run` against the same connection
+- Restart/rebuild the `ilevora_api` container (or run `dotnet run` against the same connection
   string) so it picks up the new code + migration.
 - `curl` sequence: (a) a valid pick on a real item/worker pair → 200, reduced `CurrentStock`,
   `LowStockWarning` present/absent as expected; (b) an over-quantity pick → 422,
@@ -127,7 +127,7 @@ No other entities change. No new tables.
 ## Risks / dependencies
 
 - **Local Postgres availability** for the migration-apply + manual curl steps — confirmed running
-  (`agromesh_db` healthy on `localhost:5433`) before starting; if it becomes unavailable mid-build,
+  (`ilevora_db` healthy on `localhost:5433`) before starting; if it becomes unavailable mid-build,
   the migration is still generated and reviewed (build/test don't require a live DB), and AC8's
   manual verification is reported as blocked/skipped rather than faked.
 - **`store.workers` staleness** — if a farm has zero active workers, the "Picked by" select has no

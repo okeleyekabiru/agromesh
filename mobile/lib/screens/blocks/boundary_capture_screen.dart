@@ -158,7 +158,7 @@ class _BoundaryCaptureScreenState extends State<BoundaryCaptureScreen> {
           content: Text(saved
               ? 'Boundary saved for ${widget.blockName} (${_points.length} corners)'
               : 'Boundary queued for ${widget.blockName}. It is sent when you are back online.'),
-          backgroundColor: AgroColors.leaf,
+          backgroundColor: IlevoraColors.leaf,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -205,11 +205,11 @@ class _BoundaryCaptureScreenState extends State<BoundaryCaptureScreen> {
     final canFinish = _points.length >= _minPoints && !_isFinishing;
     final acc = _live?.accuracy;
     final accColor = acc == null
-        ? AgroColors.stone
-        : acc <= _goodAccuracyM ? AgroColors.palm : acc <= 25 ? AgroColors.harvest : AgroColors.alert;
+        ? IlevoraColors.stone
+        : acc <= _goodAccuracyM ? IlevoraColors.palm : acc <= 25 ? IlevoraColors.harvest : IlevoraColors.alert;
 
     return Scaffold(
-      backgroundColor: AgroColors.mist,
+      backgroundColor: IlevoraColors.mist,
       appBar: AppBar(title: Text('Mark Boundary · ${widget.blockName}')),
       body: Column(
         children: [
@@ -234,20 +234,20 @@ class _BoundaryCaptureScreenState extends State<BoundaryCaptureScreen> {
             padding: EdgeInsets.fromLTRB(16, 4, 16, 0),
             child: Text(
               'Walk to each corner, in order around the edge, and tap "Mark Corner Here". Stand still on the corner for a few seconds first. At least $_minPoints corners.',
-              style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone),
+              style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.stone),
             ),
           ),
           Expanded(
             child: Container(
               margin: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AgroColors.white,
+                color: IlevoraColors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AgroColors.fog),
+                border: Border.all(color: IlevoraColors.fog),
               ),
               clipBehavior: Clip.antiAlias,
               child: _points.isEmpty && _existing.isEmpty
-                  ? const Center(child: Text('No corners marked yet', style: TextStyle(fontFamily: 'PlusJakartaSans', color: AgroColors.stone, fontSize: 14)))
+                  ? const Center(child: Text('No corners marked yet', style: TextStyle(fontFamily: 'PlusJakartaSans', color: IlevoraColors.stone, fontSize: 14)))
                   : SizedBox.expand(
                       child: CustomPaint(
                         painter: BoundarySchematicPainter(
@@ -262,13 +262,13 @@ class _BoundaryCaptureScreenState extends State<BoundaryCaptureScreen> {
           if (_error != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(_error!, style: const TextStyle(color: AgroColors.alert, fontSize: 12)),
+              child: Text(_error!, style: const TextStyle(color: IlevoraColors.alert, fontSize: 12)),
             ),
           Container(
             padding: EdgeInsets.fromLTRB(16, 12, 16, MediaQuery.of(context).padding.bottom + 12),
             decoration: const BoxDecoration(
-              color: AgroColors.white,
-              border: Border(top: BorderSide(color: AgroColors.fog)),
+              color: IlevoraColors.white,
+              border: Border(top: BorderSide(color: IlevoraColors.fog)),
             ),
             child: Column(
               children: [
@@ -278,7 +278,7 @@ class _BoundaryCaptureScreenState extends State<BoundaryCaptureScreen> {
                       child: Text(
                         '${_points.length} corner${_points.length == 1 ? '' : 's'} marked'
                         '${_points.length >= 3 ? ' · about ${_areaHa.toStringAsFixed(2)} ha' : ''}',
-                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w600, fontSize: 13, color: AgroColors.forest),
+                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w600, fontSize: 13, color: IlevoraColors.forest),
                       ),
                     ),
                     if (_points.isNotEmpty)
@@ -376,7 +376,7 @@ class BoundarySchematicPainter extends CustomPainter {
 
     // Saved outline (dashed grey)
     final ghost = Paint()
-      ..color = AgroColors.stone
+      ..color = IlevoraColors.stone
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
     for (final ring in em) {
@@ -397,10 +397,10 @@ class BoundarySchematicPainter extends CustomPainter {
       }
       if (cp.length >= 3) {
         path.close();
-        canvas.drawPath(path, Paint()..color = AgroColors.palm.withValues(alpha: 0.14));
+        canvas.drawPath(path, Paint()..color = IlevoraColors.palm.withValues(alpha: 0.14));
       }
       canvas.drawPath(path, Paint()
-        ..color = AgroColors.leaf
+        ..color = IlevoraColors.leaf
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2);
 
@@ -411,7 +411,7 @@ class BoundarySchematicPainter extends CustomPainter {
           final a = pm[i], b = pm[(i + 1) % pm.length];
           final len = (b - a).distance;
           final mid = (cp[i] + cp[(i + 1) % cp.length]) / 2;
-          _label(canvas, '${len.toStringAsFixed(len < 100 ? 1 : 0)} m', mid, size, AgroColors.ink, 9.5);
+          _label(canvas, '${len.toStringAsFixed(len < 100 ? 1 : 0)} m', mid, size, IlevoraColors.ink, 9.5);
         }
       }
       for (var i = 0; i < cp.length; i++) {
@@ -440,13 +440,13 @@ class BoundarySchematicPainter extends CustomPainter {
     final y = size.height - 16;
     const x = 14.0;
     final p = Paint()
-      ..color = AgroColors.forest
+      ..color = IlevoraColors.forest
       ..strokeWidth = 2;
     canvas.drawLine(Offset(x, y), Offset(x + w, y), p);
     canvas.drawLine(Offset(x, y - 4), Offset(x, y + 4), p);
     canvas.drawLine(Offset(x + w, y - 4), Offset(x + w, y + 4), p);
-    _label(canvas, '${m.round()} m', Offset(x + w / 2, y - 10), size, AgroColors.forest, 10, plate: false);
-    _label(canvas, 'N ↑', Offset(size.width - 22, 16), size, AgroColors.forest, 11, plate: false);
+    _label(canvas, '${m.round()} m', Offset(x + w / 2, y - 10), size, IlevoraColors.forest, 10, plate: false);
+    _label(canvas, 'N ↑', Offset(size.width - 22, 16), size, IlevoraColors.forest, 11, plate: false);
   }
 
   void _dash(Canvas canvas, Path path, Paint paint) {
@@ -470,7 +470,7 @@ class BoundarySchematicPainter extends CustomPainter {
   }
 
   void _dot(Canvas canvas, Offset center, String label) {
-    canvas.drawCircle(center, 8, Paint()..color = AgroColors.forest);
+    canvas.drawCircle(center, 8, Paint()..color = IlevoraColors.forest);
     final tp = TextPainter(
       text: TextSpan(text: label, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
       textDirection: TextDirection.ltr,

@@ -63,8 +63,8 @@ class _Splash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const Scaffold(
-    backgroundColor: AgroColors.forest,
-    body: Center(child: CircularProgressIndicator(color: AgroColors.palm)),
+    backgroundColor: IlevoraColors.forest,
+    body: Center(child: CircularProgressIndicator(color: IlevoraColors.palm)),
   );
 }
 
@@ -74,17 +74,17 @@ class _NoFarmsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AgroColors.mist,
+      backgroundColor: IlevoraColors.mist,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.agriculture_outlined, size: 48, color: AgroColors.stone),
+              const Icon(Icons.agriculture_outlined, size: 48, color: IlevoraColors.stone),
               const SizedBox(height: 16),
               const Text(
-                'No farms found on your account.\nSet up a farm on the AgroMesh web app first.',
+                'No farms found on your account.\nSet up a farm on the Ilevora web app first.',
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),

@@ -18,7 +18,7 @@ class DashboardScreen extends StatelessWidget {
     final store = context.watch<AppStore>();
 
     return RefreshIndicator(
-      color: AgroColors.palm,
+      color: IlevoraColors.palm,
       onRefresh: store.syncNow,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -35,22 +35,22 @@ class DashboardScreen extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: AgroColors.harvest.withValues(alpha: 0.08),
+                    color: IlevoraColors.harvest.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AgroColors.harvest.withValues(alpha: 0.25)),
+                    border: Border.all(color: IlevoraColors.harvest.withValues(alpha: 0.25)),
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.agriculture_outlined, color: AgroColors.harvest, size: 16),
+                      Icon(Icons.agriculture_outlined, color: IlevoraColors.harvest, size: 16),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           "Your farm setup isn't finished. Add your location, blocks and boundaries to unlock scheduling and reporting.",
-                          style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink),
+                          style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.ink),
                         ),
                       ),
-                      Text('Continue setup', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
-                      Icon(Icons.chevron_right, color: AgroColors.leaf, size: 16),
+                      Text('Continue setup', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: IlevoraColors.leaf)),
+                      Icon(Icons.chevron_right, color: IlevoraColors.leaf, size: 16),
                     ],
                   ),
                 ),
@@ -63,22 +63,22 @@ class DashboardScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AgroColors.alert.withValues(alpha: 0.07),
+                  color: IlevoraColors.alert.withValues(alpha: 0.07),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AgroColors.alert.withValues(alpha: 0.25)),
+                  border: Border.all(color: IlevoraColors.alert.withValues(alpha: 0.25)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('${store.failedActivities.length} activit${store.failedActivities.length == 1 ? 'y was' : 'ies were'} not accepted by the server',
-                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w700, color: AgroColors.alert)),
+                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w700, color: IlevoraColors.alert)),
                     const SizedBox(height: 4),
                     for (final f in store.failedActivities.take(3))
                       Padding(
                         padding: const EdgeInsets.only(bottom: 2),
                         child: Text(
                           '${f['blockName']}: ${'${f['reason']}'.isEmpty ? 'reason not kept. Retry to see it, or log it again.' : f['reason']}',
-                          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.ink),
+                          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.ink),
                         ),
                       ),
                     const SizedBox(height: 6),
@@ -98,23 +98,23 @@ class DashboardScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: AgroColors.harvest.withValues(alpha: 0.08),
+                  color: IlevoraColors.harvest.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AgroColors.harvest.withValues(alpha: 0.25)),
+                  border: Border.all(color: IlevoraColors.harvest.withValues(alpha: 0.25)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.upload_outlined, color: AgroColors.harvest, size: 16),
+                    const Icon(Icons.upload_outlined, color: IlevoraColors.harvest, size: 16),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         '${store.pendingSyncCount} activities queued for sync',
-                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink),
+                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.ink),
                       ),
                     ),
                     TextButton(
                       onPressed: store.syncNow,
-                      child: const Text('Sync now', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
+                      child: const Text('Sync now', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: IlevoraColors.leaf)),
                     ),
                   ],
                 ),
@@ -133,22 +133,22 @@ class DashboardScreen extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: AgroColors.leaf.withValues(alpha: 0.08),
+                    color: IlevoraColors.leaf.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AgroColors.leaf.withValues(alpha: 0.25)),
+                    border: Border.all(color: IlevoraColors.leaf.withValues(alpha: 0.25)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.inventory_2_outlined, color: AgroColors.leaf, size: 16),
+                      const Icon(Icons.inventory_2_outlined, color: IlevoraColors.leaf, size: 16),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           '${store.outstanding.length} pick${store.outstanding.length == 1 ? '' : 's'} of stock out on the farm',
-                          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink),
+                          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.ink),
                         ),
                       ),
-                      const Text('Return leftover', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.leaf)),
-                      const Icon(Icons.chevron_right, color: AgroColors.leaf, size: 16),
+                      const Text('Return leftover', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: IlevoraColors.leaf)),
+                      const Icon(Icons.chevron_right, color: IlevoraColors.leaf, size: 16),
                     ],
                   ),
                 ),
@@ -176,7 +176,7 @@ class DashboardScreen extends StatelessWidget {
                               store.weatherFailed
                                   ? 'No weather forecast yet. It needs the farm location (state and town).'
                                   : 'Loading the weather forecast…',
-                              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone),
+                              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone),
                             ),
                             if (store.weatherFailed) ...[
                               const SizedBox(height: 8),
@@ -222,7 +222,7 @@ class DashboardScreen extends StatelessWidget {
                     title: 'Recent Activities',
                     trailing: TextButton(
                       onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ActivitiesScreen())),
-                      child: const Text('View all', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.leaf, fontWeight: FontWeight.w600)),
+                      child: const Text('View all', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: IlevoraColors.leaf, fontWeight: FontWeight.w600)),
                     ),
                   ),
                   if (store.activities.isEmpty)
@@ -230,12 +230,12 @@ class DashboardScreen extends StatelessWidget {
                       padding: EdgeInsets.all(32),
                       child: Column(
                         children: [
-                          Icon(Icons.assignment_outlined, size: 40, color: AgroColors.fog),
+                          Icon(Icons.assignment_outlined, size: 40, color: IlevoraColors.fog),
                           SizedBox(height: 12),
-                          Text('No activities yet', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+                          Text('No activities yet', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
                           SizedBox(height: 4),
                           Text('Tap the Log Activity button below to record today\'s farm work',
-                            style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone), textAlign: TextAlign.center),
+                            style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone), textAlign: TextAlign.center),
                         ],
                       ),
                     )

@@ -40,7 +40,7 @@ export interface FarmLogoState {
   /** Object URL of the logo, or null when there is none / it could not be loaded. */
   url: Ref<string | null>
   loading: Ref<boolean>
-  /** True when the farm should have a logo but loading it failed (callers fall back to AgroMesh). */
+  /** True when the farm should have a logo but loading it failed (callers fall back to Ilevora). */
   failed: Ref<boolean>
 }
 

@@ -295,16 +295,16 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: AgroColors.mist, borderRadius: BorderRadius.circular(10), border: Border.all(color: AgroColors.fog)),
+      decoration: BoxDecoration(color: IlevoraColors.mist, borderRadius: BorderRadius.circular(10), border: Border.all(color: IlevoraColors.fog)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Text('Item ${i + 1}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+          Text('Item ${i + 1}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
           const Spacer(),
           if (_lines.length > 1)
             IconButton(
               tooltip: 'Remove item ${i + 1}',
               constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-              icon: const Icon(Icons.delete_outline, color: AgroColors.alert, size: 20),
+              icon: const Icon(Icons.delete_outline, color: IlevoraColors.alert, size: 20),
               onPressed: () => setState(() => _lines.removeAt(i).dispose()),
             ),
         ]),
@@ -340,7 +340,7 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
         Align(
           alignment: Alignment.centerRight,
           child: Text('Amount ${nairaExact(parsed?.amount ?? 0)}',
-              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w700, color: AgroColors.ink)),
+              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w700, color: IlevoraColors.ink)),
         ),
       ]),
     );
@@ -350,14 +350,14 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
   Widget build(BuildContext context) {
     final totals = computeInvoiceTotals(_typedLines, _vatPercent);
     return Scaffold(
-      backgroundColor: AgroColors.mist,
+      backgroundColor: IlevoraColors.mist,
       appBar: AppBar(
-        backgroundColor: AgroColors.forest,
-        foregroundColor: AgroColors.white,
+        backgroundColor: IlevoraColors.forest,
+        foregroundColor: IlevoraColors.white,
         title: Text(_editing ? 'Edit ${widget.existing!.reference}' : 'New invoice', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AgroColors.palm))
+          ? const Center(child: CircularProgressIndicator(color: IlevoraColors.palm))
           : ListView(padding: const EdgeInsets.all(16), children: [
               AgroCard(
                 padding: const EdgeInsets.all(16),
@@ -490,10 +490,10 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                   ],
                   const SizedBox(height: 8),
                   OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(minimumSize: const Size(44, 48), foregroundColor: AgroColors.leaf, side: const BorderSide(color: AgroColors.leaf)),
+                    style: OutlinedButton.styleFrom(minimumSize: const Size(44, 48), foregroundColor: IlevoraColors.leaf, side: const BorderSide(color: IlevoraColors.leaf)),
                     onPressed: (_offline || _previewing || _saving) ? null : _preview,
                     icon: _previewing
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AgroColors.palm))
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: IlevoraColors.palm))
                         : const Icon(Icons.picture_as_pdf_outlined, size: 18),
                     label: Text(_previewing ? 'Preparing preview...' : 'Preview this template'),
                   ),
@@ -525,12 +525,12 @@ class InvoiceTotalsCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(top: 12, bottom: 6),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: AgroColors.mist, borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(color: IlevoraColors.mist, borderRadius: BorderRadius.circular(10)),
       child: Column(children: [
         KvRow('Subtotal', nairaExact(totals.subtotal)),
         KvRow('VAT ($vatLabel%)', nairaExact(totals.vatAmount)),
         const Divider(height: 12),
-        KvRow('Total', nairaExact(totals.total), vColor: AgroColors.forest),
+        KvRow('Total', nairaExact(totals.total), vColor: IlevoraColors.forest),
       ]),
     );
   }

@@ -37,7 +37,7 @@ String previewFailText(Object e) {
 /// or null when it opened.
 Future<String?> saveAndOpen(List<int> bytes, String fileName) async {
   try {
-    final dir = Directory('${(await getTemporaryDirectory()).path}/agromesh_open');
+    final dir = Directory('${(await getTemporaryDirectory()).path}/ilevora_open');
     await dir.create(recursive: true);
     await _purgeOldOpenedFiles(dir);
     final safe = fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
@@ -78,17 +78,17 @@ Widget errorLine(String? text) => text == null
     ? const SizedBox.shrink()
     : Padding(
         padding: const EdgeInsets.only(bottom: 8),
-        child: Text(text, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert)),
+        child: Text(text, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.alert)),
       );
 
 Widget hintLine(String text) => Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(text, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
+      child: Text(text, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.stone)),
     );
 
 Widget sectionLabel(String text) => Padding(
       padding: const EdgeInsets.only(top: 6, bottom: 8),
-      child: Text(text, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+      child: Text(text, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
     );
 
 /// A tappable field that opens the date picker. At least 48dp tall.
@@ -132,7 +132,7 @@ class DateField extends StatelessWidget {
           ),
           child: Text(
             value == null ? 'Not set' : dateText(dateOnly(value!)),
-            style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: value == null ? AgroColors.stone : AgroColors.ink),
+            style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: value == null ? IlevoraColors.stone : IlevoraColors.ink),
           ),
         ),
       ),
@@ -182,7 +182,7 @@ Future<bool> confirmDialog(BuildContext context, String title, String body, Stri
         TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
         TextButton(
           onPressed: () => Navigator.pop(ctx, true),
-          style: TextButton.styleFrom(foregroundColor: AgroColors.alert),
+          style: TextButton.styleFrom(foregroundColor: IlevoraColors.alert),
           child: Text(action),
         ),
       ],
@@ -196,14 +196,14 @@ Widget offlineNote(String text) => Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: AgroColors.harvest.withValues(alpha: 0.1),
+        color: IlevoraColors.harvest.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AgroColors.harvest.withValues(alpha: 0.3)),
+        border: Border.all(color: IlevoraColors.harvest.withValues(alpha: 0.3)),
       ),
       child: Row(children: [
-        const Icon(Icons.cloud_off_outlined, size: 16, color: AgroColors.harvest),
+        const Icon(Icons.cloud_off_outlined, size: 16, color: IlevoraColors.harvest),
         const SizedBox(width: 8),
-        Expanded(child: Text(text, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.ink))),
+        Expanded(child: Text(text, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.ink))),
       ]),
     );
 

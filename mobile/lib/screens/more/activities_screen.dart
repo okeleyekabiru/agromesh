@@ -52,23 +52,23 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AgroColors.mist,
+      backgroundColor: IlevoraColors.mist,
       appBar: AppBar(
-        backgroundColor: AgroColors.forest,
-        foregroundColor: AgroColors.white,
+        backgroundColor: IlevoraColors.forest,
+        foregroundColor: IlevoraColors.white,
         title: const Text('Activities', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
       ),
       body: RefreshIndicator(
-        color: AgroColors.palm,
+        color: IlevoraColors.palm,
         onRefresh: () => _load(reset: true),
         child: _items.isEmpty
             ? ListView(physics: const AlwaysScrollableScrollPhysics(), children: [
-                if (_loading) const Padding(padding: EdgeInsets.all(48), child: Center(child: CircularProgressIndicator(color: AgroColors.palm)))
+                if (_loading) const Padding(padding: EdgeInsets.all(48), child: Center(child: CircularProgressIndicator(color: IlevoraColors.palm)))
                 else if (_error != null)
                   Padding(
                     padding: const EdgeInsets.all(32),
                     child: Column(children: [
-                      Text(_error!, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.stone)),
+                      Text(_error!, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: IlevoraColors.stone)),
                       const SizedBox(height: 12),
                       OutlinedButton(onPressed: () => _load(reset: true), child: const Text('Retry')),
                     ]),
@@ -85,7 +85,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                     ]),
                   ),
                   if (_error != null)
-                    Padding(padding: const EdgeInsets.only(top: 10), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert))),
+                    Padding(padding: const EdgeInsets.only(top: 10), child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.alert))),
                   if (_items.length < _total)
                     Padding(
                       padding: const EdgeInsets.only(top: 10),
@@ -118,18 +118,18 @@ class _ActivityRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
+        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: IlevoraColors.fog))),
         child: Row(children: [
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(activityName(a['activityType']), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13.5, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+              Text(activityName(a['activityType']), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13.5, fontWeight: FontWeight.w600, color: IlevoraColors.ink)),
               const SizedBox(height: 2),
               Text('${blockName(context, a['blockId'] as String?)} · ${dateText(a['date'])}',
-                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
+                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.stone)),
             ]),
           ),
-          Text(naira(cost), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.forest)),
-          const Icon(Icons.chevron_right, size: 18, color: AgroColors.stone),
+          Text(naira(cost), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.forest)),
+          const Icon(Icons.chevron_right, size: 18, color: IlevoraColors.stone),
         ]),
       ),
     );
@@ -186,21 +186,21 @@ class _ActivityDetailState extends State<_ActivityDetail> {
         if (a['createdOffline'] == true) const KvRow('Logged', 'Offline, synced later'),
         if (notes.isNotEmpty) ...[
           const SizedBox(height: 8),
-          const Text('Notes', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
-          Text(notes, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.ink)),
+          const Text('Notes', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone)),
+          Text(notes, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: IlevoraColors.ink)),
         ],
         if (workers.isNotEmpty) ...[
           const SizedBox(height: 12),
-          const Text('Workers', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+          const Text('Workers', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
           for (final w in workers) KvRow('${w['workerName']}', '${qty(w['hoursWorked'])} h'),
         ],
         if (inputs.isNotEmpty) ...[
           const SizedBox(height: 12),
-          const Text('Inputs used', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+          const Text('Inputs used', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
           for (final i in inputs) KvRow('${i['item']}', '${qty(i['quantity'])} ${i['unit'] ?? ''}'),
         ],
         if (_error != null)
-          Padding(padding: const EdgeInsets.only(top: 8), child: Text('Showing the summary only: $_error', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone))),
+          Padding(padding: const EdgeInsets.only(top: 8), child: Text('Showing the summary only: $_error', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone))),
         const SizedBox(height: 8),
       ],
     );

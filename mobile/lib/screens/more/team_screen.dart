@@ -33,7 +33,7 @@ class _TeamScreenState extends State<TeamScreen> {
   Widget build(BuildContext context) {
     if (!isManager(context)) {
       return Scaffold(
-        appBar: AppBar(backgroundColor: AgroColors.forest, foregroundColor: AgroColors.white, title: const Text('Team')),
+        appBar: AppBar(backgroundColor: IlevoraColors.forest, foregroundColor: IlevoraColors.white, title: const Text('Team')),
         body: emptyNote('Only admins and farm managers can see the team.'),
       );
     }
@@ -43,8 +43,8 @@ class _TeamScreenState extends State<TeamScreen> {
       title: 'Team',
       load: () async => asList(await ApiClient.get('/api/users')),
       fab: FloatingActionButton.extended(
-        backgroundColor: AgroColors.leaf,
-        foregroundColor: AgroColors.white,
+        backgroundColor: IlevoraColors.leaf,
+        foregroundColor: IlevoraColors.white,
         onPressed: () async {
           final added = await showSheet<bool>(context, _AddMember(admin: admin));
           if (added == true && mounted) setState(() => _version++);
@@ -88,15 +88,15 @@ class _TeamScreenState extends State<TeamScreen> {
       opacity: active ? 1 : 0.55,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
+        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: IlevoraColors.fog))),
         child: Row(
           children: [
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${m['fullName'] ?? ''}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.ink)),
-                  Text('${m['email'] ?? ''}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone), overflow: TextOverflow.ellipsis),
+                  Text('${m['fullName'] ?? ''}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: IlevoraColors.ink)),
+                  Text('${m['email'] ?? ''}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone), overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
                   Wrap(spacing: 6, children: [
                     AgroBadge(label: _roleLabel(role), variant: _roleVariant(role)),
@@ -109,7 +109,7 @@ class _TeamScreenState extends State<TeamScreen> {
               TextButton(
                 onPressed: _busy == id ? null : () => _toggle(ctx, id, !active, reload),
                 child: Text(active ? 'Disable' : 'Enable',
-                    style: TextStyle(color: active ? AgroColors.alert : AgroColors.leaf, fontWeight: FontWeight.w600)),
+                    style: TextStyle(color: active ? IlevoraColors.alert : IlevoraColors.leaf, fontWeight: FontWeight.w600)),
               ),
           ],
         ),
@@ -193,7 +193,7 @@ class _AddMemberState extends State<_AddMember> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text('Add a team member', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 15, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+        const Text('Add a team member', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 15, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
         const SizedBox(height: 12),
         TextField(controller: _name, textCapitalization: TextCapitalization.words,
             decoration: const InputDecoration(labelText: 'Full name', isDense: true, border: OutlineInputBorder())),
@@ -214,11 +214,11 @@ class _AddMemberState extends State<_AddMember> {
             onSelectionChanged: _saving ? null : (s) => setState(() => _role = s.first),
           )
         else
-          const Text('Farm managers can add supervisors.', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
+          const Text('Farm managers can add supervisors.', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.stone)),
         if (_error != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.alert)),
+            child: Text(_error!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.alert)),
           ),
         const SizedBox(height: 14),
         Row(mainAxisAlignment: MainAxisAlignment.end, children: [

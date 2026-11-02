@@ -6,7 +6,7 @@ export default {
       colors: {
         forest:  '#0D2B1F',
         canopy:  '#1A4A32',
-        leaf:    '#2D7A4F',
+        leaf:    '#0F7A3A',
         palm:    '#3DAA6A',
         harvest: '#E8A838',
         mist:    '#F0F4F1',

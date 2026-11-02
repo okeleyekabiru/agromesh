@@ -1,18 +1,20 @@
 # Farm logo, generated invoices, and vendor bills (API slice)
 
+> Note: the product was named Ilevora when these docs were written; it is now Ilevora. Docs under `docs/features/` are kept as historical.
+
 Scope of this document: the `api/` (.NET) slice only. Web and mobile are built separately against the contract in the final report.
 
 ## Goal
 
-1. A farm manager/owner can upload, replace and delete the farm logo; after login every client can fetch it and show it in place of the AgroMesh logo.
+1. A farm manager/owner can upload, replace and delete the farm logo; after login every client can fetch it and show it in place of the Ilevora logo.
 2. A farm manager/owner can create sales invoices (customer bill-to, line items, VAT, payment details, terms, signatory), with automatic per-farm invoice numbers, and download a branded A4 PDF that embeds the farm logo. Invoices render through a template; "NGF - Invoice" (Nature's Gold Farm) ships as the default and new templates are added by writing one renderer class.
 3. A user can attach the invoice a vendor (supplier) issued to the farm to an order once that order is completed (Received): upload the file (pdf/png/jpg) with vendor name, invoice number, amount, dates and notes; list per farm and per order; download; mark paid/unpaid; delete.
 
 ## Context / existing code
 
-- Orders and suppliers already exist ("vendor" = `Supplier`): `api/AgroMesh.Domain/Entities/Order.cs`, `Supplier.cs`, `Enums/OrderStatus.cs` (Draft -> Placed -> Received). "Completed" = `Received`. Controllers `OrdersController`, `SuppliersController` (route `api/farms/{farmId}/...`, class-level `[Authorize]`).
-- QuestPDF is already a dependency, licence set in `Program.cs`; an order PDF exists in `AgroMesh.Infrastructure/Services/OrderInvoiceService.cs` (this is the purchase-order document and is left alone).
-- MediatR command/query + hand-rolled-fake handler tests (`AgroMesh.Tests/SupplierAndOrderHandlerTests.cs`, `StockAdjustmentApprovalTests.cs`). Roles via `ICurrentUserAccessor` (`UserRole`: Admin = company owner, FarmManager, Supervisor, Member), `ForbiddenException` -> 403, `NotFoundException` -> 404, `DomainException` -> 422, all as RFC 7807 in `ExceptionMiddleware`.
+- Orders and suppliers already exist ("vendor" = `Supplier`): `api/Ilevora.Domain/Entities/Order.cs`, `Supplier.cs`, `Enums/OrderStatus.cs` (Draft -> Placed -> Received). "Completed" = `Received`. Controllers `OrdersController`, `SuppliersController` (route `api/farms/{farmId}/...`, class-level `[Authorize]`).
+- QuestPDF is already a dependency, licence set in `Program.cs`; an order PDF exists in `Ilevora.Infrastructure/Services/OrderInvoiceService.cs` (this is the purchase-order document and is left alone).
+- MediatR command/query + hand-rolled-fake handler tests (`Ilevora.Tests/SupplierAndOrderHandlerTests.cs`, `StockAdjustmentApprovalTests.cs`). Roles via `ICurrentUserAccessor` (`UserRole`: Admin = company owner, FarmManager, Supervisor, Member), `ForbiddenException` -> 403, `NotFoundException` -> 404, `DomainException` -> 422, all as RFC 7807 in `ExceptionMiddleware`.
 - Per-farm sequential numbering precedent: `IOrderRepository.GetNextNumberAsync`.
 - jsonb value-object list precedent: `Order.LineItems` / `OrderConfiguration`.
 - No file/blob storage exists anywhere. Render's disk is ephemeral and the DB is Supabase Postgres, so uploads are stored as `bytea` rows in a new `StoredFiles` table behind `IStoredFileRepository` (swappable for object storage later).
@@ -64,7 +66,7 @@ Scope of this document: the `api/` (.NET) slice only. Web and mobile are built s
 
 ## Acceptance criteria
 
-Each maps to automated tests in `api/AgroMesh.Tests` (xUnit, fakes; PDF tests use real QuestPDF).
+Each maps to automated tests in `api/Ilevora.Tests` (xUnit, fakes; PDF tests use real QuestPDF).
 
 - [x] AC1 Logo upload stores a valid PNG/JPEG/WebP, sets `LogoFileId/LogoUpdatedAt`, returns info (LogoTests)
 - [x] AC2 Replace deletes the old stored file; delete clears the farm and the file; delete with no logo is a no-op (LogoTests)
@@ -100,7 +102,7 @@ Each maps to automated tests in `api/AgroMesh.Tests` (xUnit, fakes; PDF tests us
 
 ## Outcome notes (as built)
 
-- Final suite: 717 xUnit tests green (`dotnet test api/AgroMesh.slnx`). Beyond the unit tests, the API was run against a throwaway Postgres 15 container (migration applied, all endpoints exercised with curl, 8 parallel invoice creates gave unique numbers); the container was removed afterwards.
+- Final suite: 717 xUnit tests green (`dotnet test api/Ilevora.slnx`). Beyond the unit tests, the API was run against a throwaway Postgres 15 container (migration applied, all endpoints exercised with curl, 8 parallel invoice creates gave unique numbers); the container was removed afterwards.
 - AC11: the unique index `IX_Invoices_FarmId_Number` plus the retry in `InvoiceRepository.AddAsync` is only verified by the smoke run, not by an automated test (no DB in the test setup).
 - AC21: `dotnet ef migrations has-pending-model-changes` reports no changes after `AddLogoInvoicesAndVendorBills`.
 - Plus Jakarta Sans ships as four static weights (400/600/700/800) cut from the variable font with fonttools, because QuestPDF picks weights by file and cannot choose inside a variable font.

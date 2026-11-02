@@ -2,7 +2,7 @@
   <div class="review-shell">
     <div class="review-card">
       <div class="review-header">
-        <div class="review-logo">AgroMesh</div>
+        <div class="review-logo">Ilevora</div>
         <div class="review-subtitle">Farm Setup · Review &amp; Confirm</div>
       </div>
 
@@ -123,7 +123,7 @@ onMounted(async () => {
 }
 
 .review-header {
-  background: linear-gradient(135deg, #0d2b1f 0%, #2d7a4f 100%);
+  background: linear-gradient(135deg, #0d2b1f 0%, #0F7A3A 100%);
   padding: 24px 32px 20px;
 }
 .review-logo {
@@ -154,8 +154,8 @@ onMounted(async () => {
 .review-lead { font-size: 12px; color: var(--stone); line-height: 1.6; margin-bottom: 20px; }
 
 .summary-block {
-  background: rgba(45,122,79,0.05);
-  border: 1px solid rgba(45,122,79,0.14);
+  background: rgba(15,122,58,0.05);
+  border: 1px solid rgba(15,122,58,0.14);
   border-radius: 10px;
   padding: 12px 16px;
   margin-bottom: 16px;
@@ -183,7 +183,7 @@ onMounted(async () => {
   font-size: 11px; padding: 2px 7px; border-radius: 4px;
   text-transform: uppercase; letter-spacing: 0.05em;
 }
-.boundary-src-badge.src-gps    { background: rgba(61,170,106,0.12); color: #2d7a4f; }
+.boundary-src-badge.src-gps    { background: rgba(61,170,106,0.12); color: #0F7A3A; }
 .boundary-src-badge.src-upload { background: rgba(91,79,207,0.12); color: #5b4fcf; }
 .boundary-src-badge.src-manual { background: var(--fog); color: var(--stone); }
 
@@ -203,7 +203,7 @@ onMounted(async () => {
   transition: background 0.15s;
   margin-bottom: 10px;
 }
-.btn-confirm:hover:not(:disabled) { background: #2d7a4f; }
+.btn-confirm:hover:not(:disabled) { background: #0F7A3A; }
 .btn-confirm:disabled { opacity: 0.55; cursor: not-allowed; }
 
 .btn-back {

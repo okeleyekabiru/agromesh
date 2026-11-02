@@ -149,7 +149,7 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
           );
           messenger.showSnackBar(SnackBar(
             content: Text('Block "$name" added. Now mark its boundary, or go back to do it later.'),
-            backgroundColor: AgroColors.leaf,
+            backgroundColor: IlevoraColors.leaf,
             behavior: SnackBarBehavior.floating,
           ));
           return;
@@ -160,7 +160,7 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(_editing ? 'Block "$name" saved' : 'Block "$name" added'),
-            backgroundColor: AgroColors.leaf,
+            backgroundColor: IlevoraColors.leaf,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -177,7 +177,7 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
     final isOnline = context.watch<AppStore>().isOnline;
 
     return Scaffold(
-      backgroundColor: AgroColors.mist,
+      backgroundColor: IlevoraColors.mist,
       appBar: AppBar(title: Text(_editing ? 'Edit Block' : 'Add Block')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -188,10 +188,10 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(color: AgroColors.harvest.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(color: IlevoraColors.harvest.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                 child: const Row(
                   children: [
-                    Icon(Icons.cloud_off_outlined, size: 16, color: AgroColors.harvest),
+                    Icon(Icons.cloud_off_outlined, size: 16, color: IlevoraColors.harvest),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -211,7 +211,7 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
             const SizedBox(height: 18),
-            const Text('What is growing here?', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w600, color: AgroColors.forest)),
+            const Text('What is growing here?', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w600, color: IlevoraColors.forest)),
             const SizedBox(height: 8),
             SegmentedButton<bool>(
               segments: const [
@@ -233,7 +233,7 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
               )
             else ...[
               const Text('Pick every crop in this block, then its share of the block. Fertilizer timing follows the crops.',
-                style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+                style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -248,7 +248,7 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
                   padding: const EdgeInsets.only(top: 8),
                   child: Row(
                     children: [
-                      Expanded(child: Text(c.label, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.forest))),
+                      Expanded(child: Text(c.label, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: IlevoraColors.forest))),
                       SizedBox(
                         width: 90,
                         child: TextFormField(
@@ -275,7 +275,7 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
-                child: Text(_error!, style: const TextStyle(color: AgroColors.alert, fontSize: 13)),
+                child: Text(_error!, style: const TextStyle(color: IlevoraColors.alert, fontSize: 13)),
               ),
             const SizedBox(height: 20),
             ElevatedButton(

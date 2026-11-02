@@ -34,12 +34,12 @@ class WeatherCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('${today.tempMaxC.round()}°C',
-                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 24, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 24, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
                       Text(
                         [if (weather.location != null) weather.location!, if (weather.season.isNotEmpty) weather.season].join(' · '),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone),
+                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone),
                       ),
                     ],
                   ),
@@ -48,10 +48,10 @@ class WeatherCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text('${today.precipitationMm.toStringAsFixed(1)} mm today',
-                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.forest)),
+                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.forest)),
                     const SizedBox(height: 2),
                     Text('${weather.rainfallLast30Days.round()} mm last 30 days',
-                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
                   ],
                 ),
               ],
@@ -64,18 +64,18 @@ class WeatherCard extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: AgroColors.leaf.withValues(alpha: 0.07),
+                  color: IlevoraColors.leaf.withValues(alpha: 0.07),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AgroColors.leaf.withValues(alpha: 0.2)),
+                  border: Border.all(color: IlevoraColors.leaf.withValues(alpha: 0.2)),
                 ),
                 child: Text(
                   '💧 Best spray window: ${_short(weather.nextDryWindowStart!)}'
                   '${weather.nextDryWindowEnd != null ? ' – ${_short(weather.nextDryWindowEnd!)}' : ''}',
-                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w600, color: AgroColors.forest),
+                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w600, color: IlevoraColors.forest),
                 ),
               ),
             ),
-          const Divider(height: 1, color: AgroColors.fog),
+          const Divider(height: 1, color: IlevoraColors.fog),
           SizedBox(
             height: 172,
             child: ListView.separated(
@@ -104,22 +104,22 @@ class _DayTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        color: isToday ? AgroColors.palm.withValues(alpha: 0.07) : null,
-        border: Border.all(color: isToday ? AgroColors.palm : AgroColors.fog),
+        color: isToday ? IlevoraColors.palm.withValues(alpha: 0.07) : null,
+        border: Border.all(color: isToday ? IlevoraColors.palm : IlevoraColors.fog),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(isToday ? 'Today' : _days[day.date.weekday - 1],
-            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
           Text(day.icon, style: const TextStyle(fontSize: 22)),
           Text('${day.tempMaxC.round()}° ${day.tempMinC.round()}°',
-            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w600, color: AgroColors.forest)),
+            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w600, color: IlevoraColors.forest)),
           Text('${day.precipitationMm.toStringAsFixed(1)}mm${day.rainChance > 0 ? ' ${day.rainChance}%' : ''}',
-            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
           Text(day.goodSprayDay ? '💧 Spray' : '—',
             style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, fontWeight: FontWeight.w600,
-              color: day.goodSprayDay ? AgroColors.leaf : AgroColors.fog)),
+              color: day.goodSprayDay ? IlevoraColors.leaf : IlevoraColors.fog)),
         ],
       ),
     );

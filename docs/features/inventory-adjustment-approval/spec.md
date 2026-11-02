@@ -14,38 +14,38 @@ they're an admin — not a general permissions system, just enough to gate this 
 
 ## Context / existing code (reuse, don't rebuild)
 
-- **Current Adjust Stock flow (being replaced)**: `api/AgroMesh.Domain/Entities/InventoryItem.cs:61-67`
+- **Current Adjust Stock flow (being replaced)**: `api/Ilevora.Domain/Entities/InventoryItem.cs:61-67`
   — `AdjustStock(decimal newQuantity, string? notes)` takes an absolute new quantity, throws
   `DomainException` on negative, overwrites `CurrentStock`. **Kept as-is** — the new Approve handler
-  calls it, no new stock arithmetic is written. `api/AgroMesh.Application/Commands/Inventory/AdjustInventoryStockCommand.cs`
+  calls it, no new stock arithmetic is written. `api/Ilevora.Application/Commands/Inventory/AdjustInventoryStockCommand.cs`
   currently applies immediately and has **no farm-scoping/IDOR guard at all** (unlike
   `CreateInventoryItemCommand.ResolveTargetItemAsync` and `PickStockCommand`, both of which check
   `item.FarmId != farmId`) — fixed as part of this rewrite. Controller:
-  `api/AgroMesh.API/Controllers/InventoryController.cs:48-53`,
+  `api/Ilevora.API/Controllers/InventoryController.cs:48-53`,
   `PATCH api/farms/{farmId}/inventory/{itemId}/adjust`, body `AdjustStockRequest(decimal NewQuantity,
-  string? Notes)` (`api/AgroMesh.Application/DTOs/InventoryDtos.cs:39`). Frontend:
+  string? Notes)` (`api/Ilevora.Application/DTOs/InventoryDtos.cs:39`). Frontend:
   `web/src/views/InventoryView.vue` Adjust modal (~73-102) and `openAdjust`/`submitAdjust`
   (~267-284); store action `web/src/stores/agro.ts:326-329` (`adjustStock` → `inventoryApi.adjust`
   → full `fetchInventory()` refetch). `submitAdjust` today only `console.error`s on failure — no
   inline error UI, unlike Add Item/Pick Stock which both use `.error-msg`/`extractErrorMessage`
   (`web/src/utils/http.ts`) — fixed as part of this rewrite.
-- **Sibling command/entity shapes to mirror**: `api/AgroMesh.Application/Commands/Inventory/PickStockCommand.cs`
+- **Sibling command/entity shapes to mirror**: `api/Ilevora.Application/Commands/Inventory/PickStockCommand.cs`
   — required-reason validation pattern (`string.IsNullOrWhiteSpace(req.Purpose)` →
   `DomainException`) and the IDOR guard (`item.FarmId != command.FarmId`). `InventoryItem.AddStock`/
   `DeductStock` — domain entities enforce their own invariants and throw `DomainException` on
   invalid transitions; `StockAdjustmentRequest.Approve`/`Reject` follow the same convention (throw if
   not `Pending`).
 - **"Small new farm-scoped entity with its own repo" shape (Phase 1 precedent)**:
-  `api/AgroMesh.Application/Interfaces/IInventoryCategoryRepository.cs` +
-  `api/AgroMesh.Infrastructure/Persistence/Repositories/InventoryCategoryRepository.cs` +
-  `api/AgroMesh.Infrastructure/Persistence/Configurations/InventoryCategoryConfiguration.cs` — same
+  `api/Ilevora.Application/Interfaces/IInventoryCategoryRepository.cs` +
+  `api/Ilevora.Infrastructure/Persistence/Repositories/InventoryCategoryRepository.cs` +
+  `api/Ilevora.Infrastructure/Persistence/Configurations/InventoryCategoryConfiguration.cs` — same
   shape followed for `IStockAdjustmentRequestRepository`/`StockAdjustmentRequestRepository`/
   `StockAdjustmentRequestConfiguration`. Sibling controller precedent:
-  `api/AgroMesh.API/Controllers/InventoryCategoriesController.cs`
+  `api/Ilevora.API/Controllers/InventoryCategoriesController.cs`
   (`api/farms/{farmId}/inventory-categories`) — same shape for the new
   `api/farms/{farmId}/inventory-adjustments` controller.
 - **What is *not* a precedent for this workflow (confirmed, not to be copied)**: `Transaction.Review()`
-  (`api/AgroMesh.Domain/Entities/Transaction.cs`) is a one-way boolean confirm flag
+  (`api/Ilevora.Domain/Entities/Transaction.cs`) is a one-way boolean confirm flag
   (`ReviewedByUser: bool`) for correcting an AI-guessed bank-transaction category. It applies
   immediately, has no rejection concept, and never gates money/stock that already moved. Only its
   generic plumbing *shape* is reused (MediatR command/handler → repo → DTO; controller route
@@ -53,34 +53,34 @@ they're an admin — not a general permissions system, just enough to gate this 
   `web/src/views/FinanceView.vue`'s "Pending Review" pill and `store.pendingReviews`
   (`web/src/stores/agro.ts:68-70`) as a shape reference for the new pending-count nav badge). Phase 3
   is this codebase's first real Pending/Approved/Rejected state machine.
-- **No admin/role concept exists today**: `api/AgroMesh.Domain/Entities/User.cs` has no `Role`.
-  `api/AgroMesh.Application/Commands/Auth/RegisterCommand.cs` makes every registrant the sole owner
+- **No admin/role concept exists today**: `api/Ilevora.Domain/Entities/User.cs` has no `Role`.
+  `api/Ilevora.Application/Commands/Auth/RegisterCommand.cs` makes every registrant the sole owner
   of their own new `Company` (`isDefaultCompany: true`, `OwnerId = user.Id`) — there is no
-  invite/multi-user-per-company flow anywhere in this codebase. `api/AgroMesh.Infrastructure/Services/Auth/JwtService.cs:24-31`
-  issues `sub`/`email`/`fullName`/`companyId`/`jti` claims. `api/AgroMesh.Application/Interfaces/ICurrentUserAccessor.cs`
-  + `api/AgroMesh.Infrastructure/Services/Auth/CurrentUserAccessor.cs:13-17` expose `UserId`/`CompanyId`
+  invite/multi-user-per-company flow anywhere in this codebase. `api/Ilevora.Infrastructure/Services/Auth/JwtService.cs:24-31`
+  issues `sub`/`email`/`fullName`/`companyId`/`jti` claims. `api/Ilevora.Application/Interfaces/ICurrentUserAccessor.cs`
+  + `api/Ilevora.Infrastructure/Services/Auth/CurrentUserAccessor.cs:13-17` expose `UserId`/`CompanyId`
   read from JWT claims via `FindFirst(...)`.
-- **Handler-test precedent**: `api/AgroMesh.Tests/BoundarySubmissionIdempotencyTests.cs:66-70` — a
+- **Handler-test precedent**: `api/Ilevora.Tests/BoundarySubmissionIdempotencyTests.cs:66-70` — a
   hand-rolled `FakeCurrentUserAccessor` implementing `ICurrentUserAccessor` with fixed
   `UserId`/`CompanyId`, used to drive a real handler (`SubmitBoundaryPointsCommandHandler`) without
-  mocks (`AgroMesh.Tests.csproj` references no mocking library). This is this repo's actual precedent
+  mocks (`Ilevora.Tests.csproj` references no mocking library). This is this repo's actual precedent
   for testing handlers that depend on `ICurrentUserAccessor` — extended here (fake gets a `Role`) to
   prove the admin gate.
-- **`[Authorize]` precedent**: `api/AgroMesh.API/Controllers/SectionsController.cs:11` already uses
+- **`[Authorize]` precedent**: `api/Ilevora.API/Controllers/SectionsController.cs:11` already uses
   `[Authorize]` at the controller level with JWT bearer auth wired in `Program.cs:48-60`.
   `InventoryController`/`InventoryCategoriesController` have no `[Authorize]` today — an existing,
   explicitly out-of-scope gap for their GET/POST/pick actions (Phases 1/2), left alone. The new
   adjust/approve/reject/queue actions are different in kind (they need to know *who* is calling to
   record `RequestedByUserId`/`ReviewedByUserId` and check role), so `[Authorize]` is added only to
   those.
-- **User-id reference convention**: `api/AgroMesh.Domain/Entities/Farm.cs` — `OwnerId` is a plain
+- **User-id reference convention**: `api/Ilevora.Domain/Entities/Farm.cs` — `OwnerId` is a plain
   `string`, unconstrained (no FK to `Users`), just an indexed varchar column
   (`FarmConfiguration.cs:14,50`). `StockAdjustmentRequest.RequestedByUserId`/`ReviewedByUserId` follow
   the same convention — no FK constraint to `Users`.
 
 ## Bug discovered and fixed while building this phase
 
-`api/AgroMesh.API/Program.cs`'s `AddJwtBearer(...)` never set `MapInboundClaims = false`. ASP.NET
+`api/Ilevora.API/Program.cs`'s `AddJwtBearer(...)` never set `MapInboundClaims = false`. ASP.NET
 Core's default inbound claim-type mapping silently rewrites short claim types like `sub` to the long
 `ClaimTypes.NameIdentifier` URI on the server side, which broke every
 `FindFirst(JwtRegisteredClaimNames.Sub)`/`FindFirst("role")` lookup in `CurrentUserAccessor` for
@@ -101,7 +101,7 @@ and confirmed the fix.
    and a `Location` header pointing at the queue — because submitting now creates a new sub-resource
    (a pending request) rather than mutating the item in place.
 2. **Role-gate exception → HTTP 403, not 422**: a new `ForbiddenException` (in
-   `AgroMesh.Domain.Exceptions`, alongside the existing `DomainException`/`NotFoundException`) is
+   `Ilevora.Domain.Exceptions`, alongside the existing `DomainException`/`NotFoundException`) is
    thrown when a non-admin calls Approve/Reject, and mapped to `403 Forbidden` in
    `ExceptionMiddleware`. Reasoning: `DomainException`→422 is this app's convention for *business
    rule* violations (e.g. "can't adjust to negative stock") that are meaningful regardless of who's
@@ -111,7 +111,7 @@ and confirmed the fix.
    string-matching the error body.
 3. **Role/status on the wire are strings, not raw enum ordinals**: this codebase has no
    `JsonStringEnumConverter` configured, so enums serialize as raw ints by default (confirmed: no
-   converter is registered anywhere in `api/AgroMesh.API` or `api/AgroMesh.Infrastructure`) — the
+   converter is registered anywhere in `api/Ilevora.API` or `api/Ilevora.Infrastructure`) — the
    existing `PAY_FREQUENCY_LABELS` numeric-ordinal convention lives with that reality for
    `PayFrequency`. For the two *new* wire fields this phase introduces (`AuthUserDto.Role`,
    `StockAdjustmentRequestDto.Status`), the DTOs are hand-constructed in application code (not
@@ -138,7 +138,7 @@ and confirmed the fix.
 
 ## Requirements
 
-1. New domain entity `StockAdjustmentRequest` (`api/AgroMesh.Domain/Entities/StockAdjustmentRequest.cs`)
+1. New domain entity `StockAdjustmentRequest` (`api/Ilevora.Domain/Entities/StockAdjustmentRequest.cs`)
    with `FarmId`, `InventoryItemId`, `RequestedQuantity` (decimal, absolute new value — same
    semantics as `AdjustStock`'s parameter), `Status` (new enum `StockAdjustmentStatus { Pending,
    Approved, Rejected }`), `Notes` (requester's reason, required), `RequestedByUserId`,
@@ -148,7 +148,7 @@ and confirmed the fix.
    obviously-bad request doesn't sit in the queue). `Approve(reviewedByUserId, reviewNotes?)` and
    `Reject(reviewedByUserId, reviewNotes?)` both throw `DomainException` if `Status != Pending` (no
    double-review).
-2. New `UserRole` enum (`Admin`, `Member`) on `User` (`api/AgroMesh.Domain/Entities/User.cs`),
+2. New `UserRole` enum (`Admin`, `Member`) on `User` (`api/Ilevora.Domain/Entities/User.cs`),
    defaulting to `Admin` at `Create(...)` time (see Design decision 4). EF migration adds the `Role`
    column to `Users`.
 3. `JwtService.GenerateToken` issues an additional `role` claim (`user.Role.ToString()`).
@@ -247,7 +247,7 @@ and confirmed the fix.
       claim — proves an old token never gets silently treated as Admin. *(covered at the
       `ICurrentUserAccessor` contract level via the fake used in AC6/AC7's "Member" cases, which is
       the same shape `CurrentUserAccessor` implements; `CurrentUserAccessor` itself lives in
-      `AgroMesh.Infrastructure`, which `AgroMesh.Tests` doesn't reference, per this repo's existing
+      `Ilevora.Infrastructure`, which `Ilevora.Tests` doesn't reference, per this repo's existing
       test-project boundary — see Test plan for why this is judged sufficient.)*
 - [x] **AC10** — E2E: submitting a valid Adjust does **not** change the item's displayed stock
       immediately, and shows "submitted for approval" messaging; the existing "adjust button opens
@@ -268,7 +268,7 @@ and confirmed the fix.
 
 ## Test plan
 
-- **Domain unit tests** (`api/AgroMesh.Tests/`, xUnit, plain `Assert.*`, no mocks — matches
+- **Domain unit tests** (`api/Ilevora.Tests/`, xUnit, plain `Assert.*`, no mocks — matches
   `InventoryTests.cs`): new `StockAdjustmentRequestTests.cs` (AC1-AC3) and additions to a small new
   `UserTests.cs` (AC4, since no such file exists yet — `User` has never had unit-testable behavior
   before this phase).
@@ -308,5 +308,5 @@ because the Sidebar's new unconditional `fetchPendingAdjustments()` call (added 
 fell through to the real, unmocked backend in that test's separate mock setup and 401-redirected the
 page away — fixed by adding the same `inventory-adjustments` intercept that test's own mock set
 already mirrors from `app.spec.ts`. Manual live-API verification (Step 10 in `plan.md`) run against
-the rebuilt `agromesh_api` Docker container and local Postgres, including the real 403 admin-gate
+the rebuilt `ilevora_api` Docker container and local Postgres, including the real 403 admin-gate
 proof via a role-flipped session, full transcript in the build summary.

@@ -56,8 +56,8 @@ class FilePicking {
       rethrow;
     } catch (e) {
       throw PickFailure(source == PickSource.camera
-          ? 'The camera could not be opened. Check that AgroMesh may use the camera, or choose a file instead.'
-          : 'Could not open the file chooser. Check that AgroMesh may read your files and try again.');
+          ? 'The camera could not be opened. Check that Ilevora may use the camera, or choose a file instead.'
+          : 'Could not open the file chooser. Check that Ilevora may read your files and try again.');
     }
   }
 }

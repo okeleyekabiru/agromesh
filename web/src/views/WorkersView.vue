@@ -16,7 +16,7 @@
           <button v-if="canAddWorker" class="btn btn-primary btn-sm" @click="showAdd = true">+ Add Worker</button>
         </div>
       </div>
-      <div v-if="store.loading" style="padding:24px;text-align:center;color:var(--stone);font-size:12px;">Loading workers…</div>
+      <PageLoader v-if="store.loading" label="Loading workers…" />
       <WorkerRow v-for="w in store.workers" :key="w.id" :worker="w" />
       <div v-if="!store.loading && !store.workers.length" style="padding:40px;text-align:center;color:var(--stone);font-size:12px;">No workers yet</div>
     </div>

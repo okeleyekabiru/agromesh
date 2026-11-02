@@ -25,7 +25,7 @@ class ApprovalsScreen extends StatelessWidget {
           if (!admin)
             const Padding(
               padding: EdgeInsets.only(bottom: 10),
-              child: Text('Only an admin can approve or reject these.', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
+              child: Text('Only an admin can approve or reject these.', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone)),
             ),
           AgroCard(
             child: Column(children: [
@@ -122,14 +122,14 @@ class _RequestState extends State<_Request> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: IlevoraColors.fog))),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Expanded(child: Text(widget.title, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13.5, fontWeight: FontWeight.w600, color: AgroColors.ink))),
-          Text(dateText(widget.when), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+          Expanded(child: Text(widget.title, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13.5, fontWeight: FontWeight.w600, color: IlevoraColors.ink))),
+          Text(dateText(widget.when), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
         ]),
         const SizedBox(height: 4),
-        for (final l in widget.lines) Text(l, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
+        for (final l in widget.lines) Text(l, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone)),
         if (widget.canReview) ...[
           const SizedBox(height: 10),
           Row(children: [
@@ -138,7 +138,7 @@ class _RequestState extends State<_Request> {
             Expanded(
               child: ElevatedButton(
                 onPressed: _busy ? null : () => _decide(true),
-                style: ElevatedButton.styleFrom(backgroundColor: AgroColors.leaf, foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(backgroundColor: IlevoraColors.leaf, foregroundColor: Colors.white),
                 child: const Text('Approve'),
               ),
             ),

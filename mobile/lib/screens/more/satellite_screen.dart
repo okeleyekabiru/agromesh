@@ -67,7 +67,7 @@ class _SatelliteScreenState extends State<SatelliteScreen> {
                 children: [
                   Expanded(
                     child: Text('Last updated ${dateText(data['lastSyncAt'])}',
-                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
+                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone)),
                   ),
                   OutlinedButton(
                       onPressed: _refreshing ? null : () => _refresh(reload),
@@ -115,14 +115,14 @@ class _BlockCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text('${block['blockName']}',
-                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+                        style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
                   ),
                   AgroBadge(label: '${block['label'] ?? block['condition']}', variant: variant),
                 ],
               ),
               if ('${block['summary'] ?? ''}'.isNotEmpty) ...[
                 const SizedBox(height: 6),
-                Text('${block['summary']}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone, height: 1.4)),
+                Text('${block['summary']}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone, height: 1.4)),
               ],
               const SizedBox(height: 10),
               Row(
@@ -137,7 +137,7 @@ class _BlockCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(block['hasBoundary'] == false ? 'No usable boundary: redraw it on the web app.' : 'Tap to see the pictures',
-                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.leaf, fontWeight: FontWeight.w600)),
+                  style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.leaf, fontWeight: FontWeight.w600)),
             ],
           ),
         ),
@@ -155,8 +155,8 @@ class _Metric extends StatelessWidget {
   Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(value, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 15, fontWeight: FontWeight.w600, color: AgroColors.forest)),
-          Text(label, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+          Text(value, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 15, fontWeight: FontWeight.w600, color: IlevoraColors.forest)),
+          Text(label, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
         ],
       );
 }
@@ -177,7 +177,7 @@ class _Spark extends CustomPainter {
       final y = size.height - (v[i] - lo) / span * size.height;
       i == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
     }
-    canvas.drawPath(path, Paint()..color = AgroColors.palm..style = PaintingStyle.stroke..strokeWidth = 2);
+    canvas.drawPath(path, Paint()..color = IlevoraColors.palm..style = PaintingStyle.stroke..strokeWidth = 2);
   }
 
   @override
@@ -257,11 +257,11 @@ class _PictureScreenState extends State<_PictureScreen> {
       padding: const EdgeInsets.only(top: 8),
       child: Container(
         padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(color: AgroColors.harvest.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(color: IlevoraColors.harvest.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
         child: Text(
           'The boundary of this block is only about ${widthM.round()} × ${heightM.round()} m, smaller than a few satellite pixels (10 m each), so the colours here are not meaningful. '
           'Mark the boundary again around the real edge of the block.',
-          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.ink),
+          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.ink),
         ),
       ),
     );
@@ -278,7 +278,7 @@ class _PictureScreenState extends State<_PictureScreen> {
 
   Widget _legend() {
     if (_layer == 'TrueColour') {
-      return const Text('Natural colour. White patches are cloud.', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone));
+      return const Text('Natural colour. White patches are cloud.', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.stone));
     }
     final items = _layer == 'Ndvi' ? _ndvi : _ndmi;
     return Wrap(
@@ -289,7 +289,7 @@ class _PictureScreenState extends State<_PictureScreen> {
           Row(mainAxisSize: MainAxisSize.min, children: [
             Container(width: 12, height: 12, decoration: BoxDecoration(color: i.$1, borderRadius: BorderRadius.circular(3))),
             const SizedBox(width: 5),
-            Text(i.$2, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+            Text(i.$2, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
           ]),
       ],
     );
@@ -308,7 +308,7 @@ class _PictureScreenState extends State<_PictureScreen> {
 
     return Container(
       height: 380,
-      decoration: BoxDecoration(color: AgroColors.forest, borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(color: IlevoraColors.forest, borderRadius: BorderRadius.circular(10)),
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
@@ -323,7 +323,7 @@ class _PictureScreenState extends State<_PictureScreen> {
                 urlTemplate: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                 maxNativeZoom: 19, // closer than this the tiles are stretched instead of going blank
                 maxZoom: 22,
-                userAgentPackageName: 'com.agromesh.mobile',
+                userAgentPackageName: 'com.ilevora.app',
               ),
               if (_bytes != null)
                 OverlayImageLayer(overlayImages: [
@@ -358,7 +358,7 @@ class _PictureScreenState extends State<_PictureScreen> {
   Widget build(BuildContext context) {
     Widget body;
     if (_loading) {
-      body = const Center(child: CircularProgressIndicator(color: AgroColors.palm));
+      body = const Center(child: CircularProgressIndicator(color: IlevoraColors.palm));
     } else if (_error != null) {
       body = emptyNote(_error!);
     } else if (_view?['configured'] != true) {
@@ -407,7 +407,7 @@ class _PictureScreenState extends State<_PictureScreen> {
           const SizedBox(height: 8),
           _legend(),
           if (_imgError != null)
-            Padding(padding: const EdgeInsets.only(top: 8), child: Text(_imgError!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.alert))),
+            Padding(padding: const EdgeInsets.only(top: 8), child: Text(_imgError!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.alert))),
           _smallNote(),
           const SizedBox(height: 8),
           Text(
@@ -416,17 +416,17 @@ class _PictureScreenState extends State<_PictureScreen> {
                 : _layer == 'Ndmi'
                     ? 'Leaf water (NDMI): how much water the leaves hold.'
                     : 'Sentinel-2 picture, 10 m detail.',
-            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone),
+            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.stone),
           ),
-          const Text('One picture covers a 5-day window.', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
+          const Text('One picture covers a 5-day window.', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.stone)),
         ],
       );
     }
     return Scaffold(
-      backgroundColor: AgroColors.mist,
+      backgroundColor: IlevoraColors.mist,
       appBar: AppBar(
-        backgroundColor: AgroColors.forest,
-        foregroundColor: AgroColors.white,
+        backgroundColor: IlevoraColors.forest,
+        foregroundColor: IlevoraColors.white,
         title: Text('${widget.name} · satellite', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
       ),
       body: body,

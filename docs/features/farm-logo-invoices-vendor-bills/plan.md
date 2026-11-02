@@ -1,6 +1,6 @@
 # Plan
 
-Order is red-green per step; run `dotnet test api/AgroMesh.slnx` after each.
+Order is red-green per step; run `dotnet test api/Ilevora.slnx` after each.
 
 1. **Upload validation service** (`Application/Services/UploadedFileValidator.cs`, `UploadRules`): magic bytes, size, declared type, allowed sets. New exceptions `PayloadTooLargeException` (413), `UnsupportedFileTypeException` (415) deriving from `DomainException`. Tests: `UploadedFileValidatorTests`. Also `ExceptionMiddleware` branches.
 2. **Stored files**: `Domain/Entities/StoredFile.cs`, `IStoredFileRepository`, `StoredFileRepository`, `StoredFileConfiguration`. Tests via fakes in the later steps.

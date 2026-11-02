@@ -14,7 +14,7 @@
         >
           <template #fallback>
             <div class="logo-empty">
-              <AgroMeshMark :size="44" />
+              <IlevoraMark :size="44" />
               <span>{{ store.farm?.hasLogo ? 'The logo could not be loaded' : 'No logo uploaded yet' }}</span>
             </div>
           </template>
@@ -23,7 +23,7 @@
 
       <div class="logo-side">
         <p class="logo-help">
-          Printed at the top of your invoices. The app keeps showing the AgroMesh logo.
+          Printed at the top of your invoices. The app keeps showing the Ilevora logo.
           PNG, JPEG or WebP, up to 2 MB and 4096 x 4096 pixels.
         </p>
 
@@ -75,7 +75,7 @@
 import { computed, ref } from 'vue'
 import { useAgroStore } from '@/stores/agro'
 import FarmLogo from '@/components/ui/FarmLogo.vue'
-import AgroMeshMark from '@/components/ui/AgroMeshMark.vue'
+import IlevoraMark from '@/components/ui/IlevoraMark.vue'
 import ConfirmDialog from '@/components/modal/ConfirmDialog.vue'
 import { canManageFarm } from '@/utils/roles'
 import { validateLogoFile, readImageSize, LOGO_MAX_DIMENSION } from '@/utils/files'

@@ -231,14 +231,14 @@ class _FarmBrandingScreenState extends State<FarmBrandingScreen> {
     final bytes = context.select<AppStore, Uint8List?>((s) => s.farmLogoBytes);
     final farmName = context.select<AppStore, String>((s) => s.farmName);
     return Scaffold(
-      backgroundColor: AgroColors.mist,
+      backgroundColor: IlevoraColors.mist,
       appBar: AppBar(
-        backgroundColor: AgroColors.forest,
-        foregroundColor: AgroColors.white,
+        backgroundColor: IlevoraColors.forest,
+        foregroundColor: IlevoraColors.white,
         title: const Text('Farm logo & profile', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AgroColors.palm))
+          ? const Center(child: CircularProgressIndicator(color: IlevoraColors.palm))
           : ListView(padding: const EdgeInsets.all(16), children: [
               if (_loadError != null)
                 AgroCard(
@@ -260,20 +260,20 @@ class _FarmBrandingScreenState extends State<FarmBrandingScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AgroColors.fog),
+                          border: Border.all(color: IlevoraColors.fog),
                         ),
                         padding: const EdgeInsets.all(6),
                         child: bytes == null
-                            ? const AgroMark(size: 64)
-                            : BoundedLogoImage(bytes: bytes, size: 76, fallback: () => const AgroMark(size: 64)),
+                            ? const IlevoraMark(size: 64)
+                            : BoundedLogoImage(bytes: bytes, size: 76, fallback: () => const IlevoraMark(size: 64)),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Text(
                           bytes == null
                               ? 'No logo yet. Add one to print it on $farmName invoices.'
-                              : 'Printed on your invoices. The app keeps showing the AgroMesh logo.',
-                          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink),
+                              : 'Printed on your invoices. The app keeps showing the Ilevora logo.',
+                          style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.ink),
                         ),
                       ),
                     ]),
@@ -291,7 +291,7 @@ class _FarmBrandingScreenState extends State<FarmBrandingScreen> {
                       if (_logoBusy)
                         const Padding(
                           padding: EdgeInsets.only(top: 12),
-                          child: LinearProgressIndicator(color: AgroColors.palm, backgroundColor: AgroColors.fog),
+                          child: LinearProgressIndicator(color: IlevoraColors.palm, backgroundColor: IlevoraColors.fog),
                         ),
                     ] else
                       hintLine('Only the farm owner or a farm manager can change the logo.'),
@@ -353,8 +353,8 @@ class _FarmBrandingScreenState extends State<FarmBrandingScreen> {
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(44, 44),
-          foregroundColor: danger ? AgroColors.alert : AgroColors.leaf,
-          side: BorderSide(color: danger ? AgroColors.alert : AgroColors.leaf),
+          foregroundColor: danger ? IlevoraColors.alert : IlevoraColors.leaf,
+          side: BorderSide(color: danger ? IlevoraColors.alert : IlevoraColors.leaf),
         ),
         icon: Icon(icon, size: 18),
         label: Text(label),

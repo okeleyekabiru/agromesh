@@ -1,0 +1,15 @@
+using Ilevora.Domain.Entities;
+
+namespace Ilevora.Application.Interfaces;
+
+public interface IFarmRepository
+{
+    Task<Farm?> GetByIdAsync(string id, CancellationToken ct = default);
+    Task<Farm?> GetByIdWithBlocksAsync(string id, CancellationToken ct = default);
+    Task<List<Farm>> GetAllAsync(CancellationToken ct = default);
+    Task<List<Farm>> GetByOwnerIdAsync(string ownerId, CancellationToken ct = default);
+    Task<List<Farm>> GetByCompanyIdAsync(string companyId, CancellationToken ct = default);
+    Task<Farm> AddAsync(Farm farm, CancellationToken ct = default);
+    Task UpdateAsync(Farm farm, CancellationToken ct = default);
+    Task<bool> ExistsAsync(string id, CancellationToken ct = default);
+}

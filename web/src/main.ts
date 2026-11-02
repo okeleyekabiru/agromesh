@@ -4,8 +4,12 @@ import router from './router'
 import App from './App.vue'
 import '@fontsource-variable/plus-jakarta-sans'
 import './assets/main.css'
+import PageLoader from './components/ui/PageLoader.vue'
 
 const app = createApp(App)
+
+// Used on every list page while data loads; registered once so views don't each import it.
+app.component('PageLoader', PageLoader)
 
 app.use(createPinia())
 app.use(router)

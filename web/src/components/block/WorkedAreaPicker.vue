@@ -265,7 +265,7 @@ function redraw() {
   polygonLayer = null
   if (points.value.length >= 2) {
     polygonLayer = L.polygon(points.value.map(p => [p.lat, p.lng] as [number, number]), {
-      color: crossing.value ? '#c0392b' : '#2d7a4f', weight: 2, fillColor: '#2d7a4f', fillOpacity: 0.25, interactive: false
+      color: crossing.value ? '#c0392b' : '#0F7A3A', weight: 2, fillColor: '#0F7A3A', fillOpacity: 0.25, interactive: false
     }).addTo(map)
   }
 }
@@ -324,6 +324,6 @@ watch(() => [props.block?.id, props.activityType], loadExisting)
 <style>
 .wp-pin span {
   display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%;
-  background: #2d7a4f; color: #fff; font: 600 11px var(--font-sans); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  background: #0F7A3A; color: #fff; font: 600 11px var(--font-sans); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.4);
 }
 </style>

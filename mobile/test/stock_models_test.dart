@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:agromesh_mobile/models/models.dart';
-import 'package:agromesh_mobile/stores/app_store.dart';
+import 'package:ilevora_mobile/models/models.dart';
+import 'package:ilevora_mobile/stores/app_store.dart';
 
 void main() {
   weatherTests();

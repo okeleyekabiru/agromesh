@@ -80,7 +80,7 @@ describe('useFarmLogo', () => {
     expect(revoked).toEqual(['blob:logo-1'])
   })
 
-  it('reports failure (so callers fall back to AgroMesh) when the request fails', async () => {
+  it('reports failure (so callers fall back to Ilevora) when the request fails', async () => {
     get.mockRejectedValueOnce(new Error('404'))
     const { wrapper } = host({ farmId: 'f1', hasLogo: true, version: 'v1' })
     await flushPromises()
@@ -121,14 +121,14 @@ describe('FarmLogo component', () => {
     expect(img.attributes('alt')).toBe('Green Acres logo')
   })
 
-  it('falls back to the AgroMesh mark when the farm has no logo', async () => {
+  it('falls back to the Ilevora mark when the farm has no logo', async () => {
     const w = mount(FarmLogo, { props: { farmId: 'f1', hasLogo: false } })
     await flushPromises()
     expect(w.find('img').exists()).toBe(false)
     expect(w.find('svg').exists()).toBe(true)
   })
 
-  it('falls back to the AgroMesh mark when loading fails', async () => {
+  it('falls back to the Ilevora mark when loading fails', async () => {
     get.mockRejectedValueOnce(new Error('500'))
     const w = mount(FarmLogo, { props: { farmId: 'f1', hasLogo: true, version: 'v1' } })
     await flushPromises()
@@ -136,12 +136,12 @@ describe('FarmLogo component', () => {
     expect(w.find('svg').exists()).toBe(true)
   })
 
-  it('falls back to the AgroMesh mark when the image cannot be decoded (200 OK, not an image)', async () => {
+  it('falls back to the Ilevora mark when the image cannot be decoded (200 OK, not an image)', async () => {
     const w = mount(FarmLogo, { props: { farmId: 'f1', hasLogo: true, version: 'v1' } })
     await flushPromises()
     expect(w.find('img').exists()).toBe(true)
     await w.find('img').trigger('error')
-    // The undecodable image stays out of sight (display: none) and the AgroMesh mark takes its place.
+    // The undecodable image stays out of sight (display: none) and the Ilevora mark takes its place.
     expect(w.find('img').isVisible()).toBe(false)
     expect(w.find('svg').exists()).toBe(true)
   })
@@ -149,8 +149,8 @@ describe('FarmLogo component', () => {
   it('renders a custom fallback slot', async () => {
     const w = mount(FarmLogo, {
       props: { farmId: 'f1', hasLogo: false },
-      slots: { fallback: '<span class="custom">AgroMesh wordmark</span>' }
+      slots: { fallback: '<span class="custom">Ilevora wordmark</span>' }
     })
-    expect(w.find('.custom').text()).toBe('AgroMesh wordmark')
+    expect(w.find('.custom').text()).toBe('Ilevora wordmark')
   })
 })

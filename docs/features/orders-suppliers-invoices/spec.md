@@ -3,7 +3,7 @@
 ## Addendum — three live-testing bug fixes folded into this session
 
 Mid-build, the requester live-tested the already-shipped Phases 1-3 (and this in-progress Phase 4)
-against a rebuilt `agromesh_api` container and found three issues, explicitly brought in scope for
+against a rebuilt `ilevora_api` container and found three issues, explicitly brought in scope for
 this session alongside the Phase 4 acceptance criteria below:
 
 1. **Add Item quantity corruption (typed 1000, stored 999.980)** — root-caused via direct
@@ -15,7 +15,7 @@ this session alongside the Phase 4 acceptance criteria below:
    round-trip were confirmed byte-for-byte correct for a plain fill+submit before this was
    identified. Fixed via `@wheel.prevent` on every `type="number"` input in `web/src` (16 inputs
    across 6 files) — see `InventoryView.vue`'s doc comment. Regression coverage:
-   `AgroMesh.Tests/InventoryTests.cs` (`Create_WholeNumberOpeningStock_IsStoredExactly`,
+   `Ilevora.Tests/InventoryTests.cs` (`Create_WholeNumberOpeningStock_IsStoredExactly`,
    `AddStock_WholeNumberQuantity_IsAddedExactly`) and a new Playwright test simulating the exact
    wheel-scroll-while-focused scenario (`web/e2e/app.spec.ts`).
 2. **Pick Stock: auto-attribute the logged-in user instead of a manual Worker picker, and require a
@@ -61,15 +61,15 @@ step.
 
 Phases 1-3 (commit `5663075`) already built:
 
-- `InventoryItem` (`api/AgroMesh.Domain/Entities/InventoryItem.cs`) — `AddStock`/`DeductStock`/`AdjustStock`, farm-scoped, `CurrentStock`/`ReorderThreshold`/`IsLowStock`.
-- `InventoryCategory` (`api/AgroMesh.Domain/Entities/InventoryCategory.cs`) — the farm-scoped entity shape this feature's `Supplier` mirrors: `FarmId`, `Name`, private setters, static `Create`, its own repository (`InventoryCategoryRepository.cs`), EF configuration (`InventoryCategoryConfiguration.cs`), migration, `CreateInventoryCategoryCommand` + `GetInventoryCategoriesQuery`, and sibling controller `InventoryCategoriesController` at `api/farms/{farmId}/inventory-categories`.
-- `StockMovement` (`api/AgroMesh.Domain/Entities/StockMovement.cs`) — `CreateIn`/`CreateOut`/`CreateAdjustment` factories; `CreateIn` currently links only to an optional `TransactionId`.
-- `StockAdjustmentRequest` (`api/AgroMesh.Domain/Entities/StockAdjustmentRequest.cs`) — the precedent for an entity enforcing its own status-transition invariants (`Approve`/`Reject`, throws `DomainException` on an invalid transition) that `Order`'s `Place`/`Receive` mirror.
-- `RecordInventoryReceiptCommand` (`api/AgroMesh.Application/Commands/Transaction/RecordInventoryReceiptCommand.cs`) — the exact precedent for turning "stock arrived" into an `In` movement: `item.AddStock(qty, notes)` → `_inventoryRepo.UpdateAsync(item)` → `StockMovement.CreateIn(...)` → `_inventoryRepo.AddMovementAsync(movement)`. No arithmetic duplicated, no nested `_mediator.Send`.
-- `ICurrentUserAccessor` (`api/AgroMesh.Application/Interfaces/ICurrentUserAccessor.cs`) — `UserId`/`Role`/`IsAdmin`, JWT-claims backed, fails closed to `Member`.
-- `Section.Crops` (`api/AgroMesh.Domain/Entities/Section.cs`, `api/AgroMesh.Infrastructure/Persistence/Configurations/SectionConfiguration.cs`) — the precedent for a `List<TValueObject>` mapped as a single `jsonb` column via `HasConversion` + `System.Text.Json`, which `Order.LineItems` mirrors.
+- `InventoryItem` (`api/Ilevora.Domain/Entities/InventoryItem.cs`) — `AddStock`/`DeductStock`/`AdjustStock`, farm-scoped, `CurrentStock`/`ReorderThreshold`/`IsLowStock`.
+- `InventoryCategory` (`api/Ilevora.Domain/Entities/InventoryCategory.cs`) — the farm-scoped entity shape this feature's `Supplier` mirrors: `FarmId`, `Name`, private setters, static `Create`, its own repository (`InventoryCategoryRepository.cs`), EF configuration (`InventoryCategoryConfiguration.cs`), migration, `CreateInventoryCategoryCommand` + `GetInventoryCategoriesQuery`, and sibling controller `InventoryCategoriesController` at `api/farms/{farmId}/inventory-categories`.
+- `StockMovement` (`api/Ilevora.Domain/Entities/StockMovement.cs`) — `CreateIn`/`CreateOut`/`CreateAdjustment` factories; `CreateIn` currently links only to an optional `TransactionId`.
+- `StockAdjustmentRequest` (`api/Ilevora.Domain/Entities/StockAdjustmentRequest.cs`) — the precedent for an entity enforcing its own status-transition invariants (`Approve`/`Reject`, throws `DomainException` on an invalid transition) that `Order`'s `Place`/`Receive` mirror.
+- `RecordInventoryReceiptCommand` (`api/Ilevora.Application/Commands/Transaction/RecordInventoryReceiptCommand.cs`) — the exact precedent for turning "stock arrived" into an `In` movement: `item.AddStock(qty, notes)` → `_inventoryRepo.UpdateAsync(item)` → `StockMovement.CreateIn(...)` → `_inventoryRepo.AddMovementAsync(movement)`. No arithmetic duplicated, no nested `_mediator.Send`.
+- `ICurrentUserAccessor` (`api/Ilevora.Application/Interfaces/ICurrentUserAccessor.cs`) — `UserId`/`Role`/`IsAdmin`, JWT-claims backed, fails closed to `Member`.
+- `Section.Crops` (`api/Ilevora.Domain/Entities/Section.cs`, `api/Ilevora.Infrastructure/Persistence/Configurations/SectionConfiguration.cs`) — the precedent for a `List<TValueObject>` mapped as a single `jsonb` column via `HasConversion` + `System.Text.Json`, which `Order.LineItems` mirrors.
 - Money: no currency field anywhere in the domain; `Transaction.Amount`/`WorkerRole.PayRate` are plain `decimal`; the frontend renders money with a literal `₦` prefix + `.toLocaleString()` (`web/src/components/ui/TransactionRow.vue`, `WorkerRow.vue`). `Order`/`OrderLineItem` money fields follow this exactly.
-- Auth: `InventoryAdjustmentsController` (`api/AgroMesh.API/Controllers/InventoryAdjustmentsController.cs`) is this repo's only precedent for a controller-level `[Authorize]` attribute; `InventoryController`/`InventoryCategoriesController` remain deliberately open. New `SuppliersController`/`OrdersController` follow the `[Authorize]`-at-controller-level pattern (any authenticated user — no role gate, unlike Phase 3's approve/reject).
+- Auth: `InventoryAdjustmentsController` (`api/Ilevora.API/Controllers/InventoryAdjustmentsController.cs`) is this repo's only precedent for a controller-level `[Authorize]` attribute; `InventoryController`/`InventoryCategoriesController` remain deliberately open. New `SuppliersController`/`OrdersController` follow the `[Authorize]`-at-controller-level pattern (any authenticated user — no role gate, unlike Phase 3's approve/reject).
 - Frontend: `web/src/views/InventoryView.vue`'s "Add Item / Stock" modal is the precedent for inline-create-a-related-entity UX (create-new-category-inline while filling the main form) that the Orders page's inline-add-supplier mirrors. `web/src/stores/agro.ts` call-then-refetch action shape, `web/src/router/index.ts` + `web/src/components/layout/Sidebar.vue`'s `ALL_NAV` array for the new route/nav entry.
 - Zero existing `Supplier`/`Order`/`Invoice`/`Purchase` concepts anywhere in the repo (confirmed via repo-wide grep) — this is genuinely greenfield on top of the above. No PDF library, no file-download endpoint, no CSV-export precedent exist either (Topbar's "Export CSV" button is dead UI with no handler).
 
@@ -93,7 +93,7 @@ Phases 1-3 (commit `5663075`) already built:
 - Partial receipt (receiving only some line items, or receiving more/less than ordered) — `Receive()` always converts every line item's full ordered quantity.
 - Any payment/accounts-payable tracking (order total is informational, not linked to `Transaction`/Finance).
 - Multi-currency — this app has one implicit currency (₦), matching the rest of the codebase.
-- Uploading a supplier-provided invoice/attachment — the PDF generated here is AgroMesh's own outgoing invoice/purchase-order document, not an imported file.
+- Uploading a supplier-provided invoice/attachment — the PDF generated here is Ilevora's own outgoing invoice/purchase-order document, not an imported file.
 - Any change to the pre-existing, still-ungated `InventoryController`/`InventoryCategoriesController`/`InventoryAdjustmentsController` endpoints.
 - Real second-user/second-role live e2e coverage for the `[Authorize]` gate (same limitation Phase 3 already documented) — covered by a handler-level test with a fake `ICurrentUserAccessor`/anonymous-request style check instead, consistent with how Phase 3 tested its admin gate.
 
@@ -132,8 +132,8 @@ Phases 1-3 (commit `5663075`) already built:
 
 ## Test plan
 
-- **Domain unit tests** (`AgroMesh.Tests`, plain xUnit, `Assert.*`, no mocking library): `Supplier.Create` validation; `Order.Create`/`Place`/`Receive` status-transition invariants and the computed `Total`.
-- **Handler/integration tests** (`AgroMesh.Tests`, hand-rolled fake repositories mirroring `StockAdjustmentApprovalTests.cs`'s `FakeInventoryRepository` pattern — no in-memory EF, no mocking library): `CreateSupplierCommand`, `GetSuppliersQuery`, `CreateOrderCommand`, `PlaceOrderCommand` (happy path + invalid-transition-throws-with-no-side-effects), `ReceiveOrderCommand` (happy path with movement/stock assertions + Draft-throws + already-Received-throws, each proving zero side effects on the failure paths), `GetOrdersQuery`/`GetOrderByIdQuery` (farm-scoping negative case).
-- **Infra test** (new: a project reference from `AgroMesh.Tests` to `AgroMesh.Infrastructure`, since this is the first thing worth testing that isn't fake-able and has no DB dependency): the real QuestPDF-backed invoice service actually produces valid, non-empty PDF bytes.
-- **API layer**: `[Authorize]` presence is verified via a plain reflection/attribute check in a unit test (no ASP.NET Core `TestServer`/`WebApplicationFactory` precedent exists in this repo to stand up for one feature) plus a manual live-verification pass against local Postgres (`docker-compose`, port 5433, `agromesh_api` container) hitting the real endpoints end-to-end (create supplier → create/place/receive order → confirm stock increased → download invoice, confirm bytes are a real PDF) — matching this repo's established coverage shape.
+- **Domain unit tests** (`Ilevora.Tests`, plain xUnit, `Assert.*`, no mocking library): `Supplier.Create` validation; `Order.Create`/`Place`/`Receive` status-transition invariants and the computed `Total`.
+- **Handler/integration tests** (`Ilevora.Tests`, hand-rolled fake repositories mirroring `StockAdjustmentApprovalTests.cs`'s `FakeInventoryRepository` pattern — no in-memory EF, no mocking library): `CreateSupplierCommand`, `GetSuppliersQuery`, `CreateOrderCommand`, `PlaceOrderCommand` (happy path + invalid-transition-throws-with-no-side-effects), `ReceiveOrderCommand` (happy path with movement/stock assertions + Draft-throws + already-Received-throws, each proving zero side effects on the failure paths), `GetOrdersQuery`/`GetOrderByIdQuery` (farm-scoping negative case).
+- **Infra test** (new: a project reference from `Ilevora.Tests` to `Ilevora.Infrastructure`, since this is the first thing worth testing that isn't fake-able and has no DB dependency): the real QuestPDF-backed invoice service actually produces valid, non-empty PDF bytes.
+- **API layer**: `[Authorize]` presence is verified via a plain reflection/attribute check in a unit test (no ASP.NET Core `TestServer`/`WebApplicationFactory` precedent exists in this repo to stand up for one feature) plus a manual live-verification pass against local Postgres (`docker-compose`, port 5433, `ilevora_api` container) hitting the real endpoints end-to-end (create supplier → create/place/receive order → confirm stock increased → download invoice, confirm bytes are a real PDF) — matching this repo's established coverage shape.
 - **Playwright e2e** (`web/e2e/orders.spec.ts`, new file — the Orders flow is large enough to warrant its own file rather than growing `app.spec.ts` further, following the existing precedent of `gps-boundary.spec.ts` being split out): create order → place → receive → stock-increase assertion → status-gated buttons → invoice download request assertion. Mocked HTTP throughout, same convention as `app.spec.ts`/`gps-boundary.spec.ts`.

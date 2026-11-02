@@ -48,22 +48,22 @@ class MoreScreen extends StatelessWidget {
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => it.screen())),
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
+                    decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: IlevoraColors.fog))),
                     child: Row(
                       children: [
-                        Icon(it.icon, color: AgroColors.leaf, size: 22),
+                        Icon(it.icon, color: IlevoraColors.leaf, size: 22),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(it.title, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+                              Text(it.title, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: IlevoraColors.ink)),
                               const SizedBox(height: 2),
-                              Text(it.sub, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
+                              Text(it.sub, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.stone)),
                             ],
                           ),
                         ),
-                        const Icon(Icons.chevron_right, color: AgroColors.stone, size: 18),
+                        const Icon(Icons.chevron_right, color: IlevoraColors.stone, size: 18),
                       ],
                     ),
                   ),

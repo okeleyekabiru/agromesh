@@ -142,10 +142,10 @@ class _VendorInvoiceUploadScreenState extends State<VendorInvoiceUploadScreen> {
   Widget build(BuildContext context) {
     final file = _file;
     return Scaffold(
-      backgroundColor: AgroColors.mist,
+      backgroundColor: IlevoraColors.mist,
       appBar: AppBar(
-        backgroundColor: AgroColors.forest,
-        foregroundColor: AgroColors.white,
+        backgroundColor: IlevoraColors.forest,
+        foregroundColor: IlevoraColors.white,
         title: const Text('Upload vendor invoice', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
       ),
       body: ListView(padding: const EdgeInsets.all(16), children: [
@@ -159,14 +159,14 @@ class _VendorInvoiceUploadScreenState extends State<VendorInvoiceUploadScreen> {
               Container(
                 margin: const EdgeInsets.only(bottom: 10),
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: AgroColors.mist, borderRadius: BorderRadius.circular(10), border: Border.all(color: AgroColors.fog)),
+                decoration: BoxDecoration(color: IlevoraColors.mist, borderRadius: BorderRadius.circular(10), border: Border.all(color: IlevoraColors.fog)),
                 child: Row(children: [
                   _Preview(kind: _kind!, bytes: file.bytes),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(file.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w600, color: AgroColors.ink)),
-                      Text('${_kind!.label} · ${formatBytes(file.bytes.length)}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
+                      Text(file.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w600, color: IlevoraColors.ink)),
+                      Text('${_kind!.label} · ${formatBytes(file.bytes.length)}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.stone)),
                     ]),
                   ),
                 ]),
@@ -200,7 +200,7 @@ class _VendorInvoiceUploadScreenState extends State<VendorInvoiceUploadScreen> {
 
   Widget _pickButton(IconData icon, String label, PickSource source) => OutlinedButton.icon(
         onPressed: (_picking || _busy) ? null : () => _pick(source),
-        style: OutlinedButton.styleFrom(minimumSize: const Size(44, 44), foregroundColor: AgroColors.leaf, side: const BorderSide(color: AgroColors.leaf)),
+        style: OutlinedButton.styleFrom(minimumSize: const Size(44, 44), foregroundColor: IlevoraColors.leaf, side: const BorderSide(color: IlevoraColors.leaf)),
         icon: Icon(icon, size: 18),
         label: Text(label),
       );
@@ -217,8 +217,8 @@ class _Preview extends StatelessWidget {
       return Container(
         width: 56,
         height: 56,
-        decoration: BoxDecoration(color: AgroColors.alert.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
-        child: const Icon(Icons.picture_as_pdf_outlined, color: AgroColors.alert),
+        decoration: BoxDecoration(color: IlevoraColors.alert.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
+        child: const Icon(Icons.picture_as_pdf_outlined, color: IlevoraColors.alert),
       );
     }
     return ClipRRect(

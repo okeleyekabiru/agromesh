@@ -1,4 +1,4 @@
-# Deploys the AgroMesh API to Azure Container Apps (consumption plan, scaled to zero) with Supabase Postgres.
+# Deploys the Ilevora API to Azure Container Apps (consumption plan, scaled to zero) with Supabase Postgres.
 #
 # Before running:
 #   1. winget install Microsoft.AzureCLI ; az login
@@ -8,15 +8,15 @@
 #        $env:AGRO_JWT     = "<a new long random secret, 48+ characters>"
 #        $env:AGRO_ANTHROPIC, $env:AGRO_MONO_SECRET, $env:AGRO_MONO_PUBLIC, $env:AGRO_MONO_WEBHOOK,
 #        $env:AGRO_COPERNICUS_ID, $env:AGRO_COPERNICUS_SECRET   (leave a key unset to skip it)
-#   4. Run:  ./deploy/azure.ps1 -Image ghcr.io/<your-github-user>/agromesh-api
+#   4. Run:  ./deploy/azure.ps1 -Image ghcr.io/<your-github-user>/ilevora-api
 #
 # The database migrations are NOT run here: run `dotnet ef database update` against Supabase once, first.
 
 param(
     [Parameter(Mandatory = $true)][string]$Image,
-    [string]$ResourceGroup = "agromesh",
+    [string]$ResourceGroup = "ilevora",
     [string]$Location = "westeurope",
-    [string]$AppName = "agromesh-api",
+    [string]$AppName = "ilevora-api",
     [string]$WakeTimeZone = "Africa/Lagos",
     [string]$WakeAt = "0 3 * * *",       # the app is woken once a day at 03:00 ...
     [string]$WakeUntil = "15 3 * * *"    # ... and may sleep again from 03:15

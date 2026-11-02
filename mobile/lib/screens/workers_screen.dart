@@ -17,7 +17,7 @@ class WorkersScreen extends StatelessWidget {
     final contractors = store.workers.where((w) => w.type == WorkerType.contractor).toList();
 
     return RefreshIndicator(
-      color: AgroColors.palm,
+      color: IlevoraColors.palm,
       onRefresh: store.reloadWorkers,
       child: ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -27,8 +27,8 @@ class WorkersScreen extends StatelessWidget {
           Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: AgroColors.harvest.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-            child: Text(store.workersError!, style: const TextStyle(fontSize: 12, color: AgroColors.ink)),
+            decoration: BoxDecoration(color: IlevoraColors.harvest.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+            child: Text(store.workersError!, style: const TextStyle(fontSize: 12, color: IlevoraColors.ink)),
           ),
         // Summary row
         Row(
@@ -71,15 +71,15 @@ class _WorkerTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: IlevoraColors.fog))),
       child: Row(
         children: [
           Container(
             width: 36, height: 36,
-            decoration: const BoxDecoration(color: AgroColors.canopy, shape: BoxShape.circle),
+            decoration: const BoxDecoration(color: IlevoraColors.canopy, shape: BoxShape.circle),
             child: Center(
               child: Text(worker.initials,
-                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.palm)),
+                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: IlevoraColors.palm)),
             ),
           ),
           const SizedBox(width: 12),
@@ -88,7 +88,7 @@ class _WorkerTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(worker.name, style: Theme.of(context).textTheme.titleMedium),
-                Text(worker.role, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+                Text(worker.role, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
               ],
             ),
           ),
@@ -101,8 +101,8 @@ class _WorkerTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text('₦${worker.dailyRate.toStringAsFixed(0)}',
-                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: AgroColors.forest)),
-              const Text('per day', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
+              const Text('per day', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
             ],
           ),
         ],

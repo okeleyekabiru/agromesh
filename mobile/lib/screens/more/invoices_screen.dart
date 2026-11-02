@@ -73,15 +73,15 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     final items = _items;
     Widget body;
     if (_loading) {
-      body = const Center(child: CircularProgressIndicator(color: AgroColors.palm));
+      body = const Center(child: CircularProgressIndicator(color: IlevoraColors.palm));
     } else if (items == null) {
       body = ListView(children: [
         Padding(
           padding: const EdgeInsets.all(32),
           child: Column(children: [
-            const Icon(Icons.cloud_off_outlined, color: AgroColors.stone, size: 36),
+            const Icon(Icons.cloud_off_outlined, color: IlevoraColors.stone, size: 36),
             const SizedBox(height: 10),
-            Text(_error ?? 'Nothing to show.', textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.stone)),
+            Text(_error ?? 'Nothing to show.', textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: IlevoraColors.stone)),
             const SizedBox(height: 12),
             OutlinedButton(onPressed: _load, child: const Text('Retry')),
           ]),
@@ -100,21 +100,21 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                 child: Container(
                   constraints: const BoxConstraints(minHeight: 56),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AgroColors.fog))),
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: IlevoraColors.fog))),
                   child: Row(children: [
                     Expanded(flex: 3,
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text('${s.reference} · ${s.billToName}',
                             maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13.5, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+                            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13.5, fontWeight: FontWeight.w600, color: IlevoraColors.ink)),
                         const SizedBox(height: 2),
                         Text('${dateText(s.date == null ? null : dateOnly(s.date!))} · due ${dateText(s.dueDate == null ? null : dateOnly(s.dueDate!))}',
-                            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
+                            style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.stone)),
                       ]),
                     ),
                     const SizedBox(width: 8),
-                    amountCell(nairaExact(s.total), const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w600, color: AgroColors.forest)),
-                    const Icon(Icons.chevron_right, color: AgroColors.stone, size: 18),
+                    amountCell(nairaExact(s.total), const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w600, color: IlevoraColors.forest)),
+                    const Icon(Icons.chevron_right, color: IlevoraColors.stone, size: 18),
                   ]),
                 ),
               ),
@@ -125,22 +125,22 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AgroColors.mist,
+      backgroundColor: IlevoraColors.mist,
       appBar: AppBar(
-        backgroundColor: AgroColors.forest,
-        foregroundColor: AgroColors.white,
+        backgroundColor: IlevoraColors.forest,
+        foregroundColor: IlevoraColors.white,
         title: const Text('Invoices', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
       ),
       floatingActionButton: _canEdit && items != null
           ? FloatingActionButton.extended(
-              backgroundColor: AgroColors.leaf,
+              backgroundColor: IlevoraColors.leaf,
               foregroundColor: Colors.white,
               onPressed: _offline ? null : _create,
               icon: const Icon(Icons.add),
               label: const Text('New invoice'),
             )
           : null,
-      body: RefreshIndicator(color: AgroColors.palm, onRefresh: _load, child: body),
+      body: RefreshIndicator(color: IlevoraColors.palm, onRefresh: _load, child: body),
     );
   }
 }
@@ -228,22 +228,22 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
         if (!didPop) Navigator.pop(context, _changed);
       },
       child: Scaffold(
-        backgroundColor: AgroColors.mist,
+        backgroundColor: IlevoraColors.mist,
         appBar: AppBar(
-          backgroundColor: AgroColors.forest,
-          foregroundColor: AgroColors.white,
+          backgroundColor: IlevoraColors.forest,
+          foregroundColor: IlevoraColors.white,
           title: Text(widget.summary.reference.isEmpty ? 'Invoice' : widget.summary.reference, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
         ),
         body: _loading
-            ? const Center(child: CircularProgressIndicator(color: AgroColors.palm))
+            ? const Center(child: CircularProgressIndicator(color: IlevoraColors.palm))
             : inv == null
                 ? ListView(children: [
                     Padding(
                       padding: const EdgeInsets.all(32),
                       child: Column(children: [
-                        const Icon(Icons.cloud_off_outlined, color: AgroColors.stone, size: 36),
+                        const Icon(Icons.cloud_off_outlined, color: IlevoraColors.stone, size: 36),
                         const SizedBox(height: 10),
-                        Text(_error ?? 'Could not load the invoice.', textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: AgroColors.stone)),
+                        Text(_error ?? 'Could not load the invoice.', textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, color: IlevoraColors.stone)),
                         const SizedBox(height: 12),
                         OutlinedButton(onPressed: _load, child: const Text('Retry')),
                       ]),
@@ -254,9 +254,9 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                       padding: const EdgeInsets.all(16),
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         sectionLabel('Billed to'),
-                        Text(inv.billToName, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 15, fontWeight: FontWeight.w700, color: AgroColors.ink)),
+                        Text(inv.billToName, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 15, fontWeight: FontWeight.w700, color: IlevoraColors.ink)),
                         for (final line in [inv.billToPhone, inv.billToEmail, inv.billToAddress])
-                          if (line != null) Text(line, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
+                          if (line != null) Text(line, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone)),
                         const SizedBox(height: 8),
                         KvRow('Invoice date', dateText(inv.date == null ? null : dateOnly(inv.date!))),
                         KvRow('Due date', dateText(inv.dueDate == null ? null : dateOnly(inv.dueDate!))),
@@ -274,12 +274,12 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               Expanded(flex: 3,
                                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                  Text('${i + 1}. ${inv.lineItems[i].description}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink)),
-                                  Text('${nairaExact(inv.lineItems[i].rate)} × ${qtyText(inv.lineItems[i].quantity)}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: AgroColors.stone)),
+                                  Text('${i + 1}. ${inv.lineItems[i].description}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.ink)),
+                                  Text('${nairaExact(inv.lineItems[i].rate)} × ${qtyText(inv.lineItems[i].quantity)}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5, color: IlevoraColors.stone)),
                                 ]),
                               ),
                               const SizedBox(width: 8),
-                              amountCell(nairaExact(inv.lineItems[i].amount), const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w600, color: AgroColors.ink)),
+                              amountCell(nairaExact(inv.lineItems[i].amount), const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, fontWeight: FontWeight.w600, color: IlevoraColors.ink)),
                             ]),
                           ),
                         InvoiceTotalsCard(totals: InvoiceTotals(inv.subtotal, inv.vatAmount, inv.total), vatPercent: inv.vatPercent),
@@ -298,7 +298,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                           ],
                           if (inv.termsAndNotes != null) ...[
                             sectionLabel('Terms & notes'),
-                            Text(inv.termsAndNotes!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.ink)),
+                            Text(inv.termsAndNotes!, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.ink)),
                           ],
                           if (inv.signatoryName != null) KvRow('Signatory', inv.signatoryName!),
                         ]),
@@ -321,7 +321,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(minimumSize: const Size(44, 48), foregroundColor: AgroColors.alert, side: const BorderSide(color: AgroColors.alert)),
+                            style: OutlinedButton.styleFrom(minimumSize: const Size(44, 48), foregroundColor: IlevoraColors.alert, side: const BorderSide(color: IlevoraColors.alert)),
                             onPressed: _busy ? null : _delete,
                             icon: const Icon(Icons.delete_outline, size: 18),
                             label: const Text('Delete'),

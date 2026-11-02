@@ -15,7 +15,7 @@ class DatabaseService {
   // v3 -> v4: activity_inputs.inventory_item_id (inputs are real stock items now) and a small
   // kv_cache table for offline copies of the stock list and "out on the farm" list.
   static const _version = 5;
-  static const _name = 'agromesh.db';
+  static const _name = 'ilevora.db';
 
   static Future<Database> get database async {
     _db ??= await _initDb();

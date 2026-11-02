@@ -3,7 +3,7 @@
     <div class="onboard-card">
       <!-- Header -->
       <div class="onboard-header">
-        <div class="onboard-logo">AgroMesh</div>
+        <div class="onboard-logo">Ilevora</div>
         <div class="onboard-subtitle">Farm Setup · Step {{ step + 1 }} of {{ steps.length }}</div>
       </div>
 
@@ -309,7 +309,7 @@ onMounted(() => {
 }
 
 .onboard-header {
-  background: linear-gradient(135deg, #0d2b1f 0%, #2d7a4f 100%);
+  background: linear-gradient(135deg, #0d2b1f 0%, #0F7A3A 100%);
   padding: 24px 32px 20px;
   display: flex;
   align-items: center;
@@ -408,8 +408,8 @@ onMounted(() => {
 .form-row { display: flex; gap: 12px; }
 
 .hint-box {
-  background: rgba(45,122,79,0.06);
-  border: 1px solid rgba(45,122,79,0.15);
+  background: rgba(15,122,58,0.06);
+  border: 1px solid rgba(15,122,58,0.15);
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 11px;
@@ -434,8 +434,8 @@ onMounted(() => {
   gap: 7px;
   width: 100%;
   padding: 9px 14px;
-  background: rgba(45,122,79,0.06);
-  border: 1px solid rgba(45,122,79,0.2);
+  background: rgba(15,122,58,0.06);
+  border: 1px solid rgba(15,122,58,0.2);
   border-radius: 10px;
   color: var(--leaf);
   font-size: 12px;
@@ -444,11 +444,11 @@ onMounted(() => {
   transition: background 0.15s, border-color 0.15s;
   margin-bottom: 8px;
 }
-.gps-btn:hover:not(:disabled) { background: rgba(45,122,79,0.1); border-color: rgba(45,122,79,0.35); }
+.gps-btn:hover:not(:disabled) { background: rgba(15,122,58,0.1); border-color: rgba(15,122,58,0.35); }
 .gps-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .gps-spinner {
   width: 11px; height: 11px;
-  border: 1.5px solid rgba(45,122,79,0.25);
+  border: 1.5px solid rgba(15,122,58,0.25);
   border-top-color: var(--leaf);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -460,8 +460,8 @@ onMounted(() => {
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
-  background: rgba(45,122,79,0.08);
-  border: 1px solid rgba(45,122,79,0.2);
+  background: rgba(15,122,58,0.08);
+  border: 1px solid rgba(15,122,58,0.2);
   border-radius: 8px;
   font-size: 11px;
   font-family: var(--font-sans);

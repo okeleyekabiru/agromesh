@@ -1,8 +1,8 @@
 // Vercel can only schedule a cron against a path in this deployment, not an arbitrary external URL,
 // so this just relays the ping: it wakes the Render API by hitting its /health endpoint. Render then
 // restarts DailyBankSyncService and DailySatelliteRefreshService, whose in-process loops catch up
-// anything due. See api/AgroMesh.API/Program.cs for the endpoint and
-// api/AgroMesh.Infrastructure/Services/Financial/DailyBankSyncService.cs for why this is needed
+// anything due. See api/Ilevora.API/Program.cs for the endpoint and
+// api/Ilevora.Infrastructure/Services/Financial/DailyBankSyncService.cs for why this is needed
 // (Render's free tier spins the instance down when idle).
 export default async function handler(_req: any, res: any) {
   const apiUrl = process.env.API_BASE_URL;

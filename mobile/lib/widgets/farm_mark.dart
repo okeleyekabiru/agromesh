@@ -2,26 +2,53 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-/// The AgroMesh "A" mark.
-class AgroMark extends StatelessWidget {
+/// The Ilevora mark: three rising field rows (Direction B) on a forest tile.
+class IlevoraMark extends StatelessWidget {
   final double size;
-  const AgroMark({super.key, this.size = 32});
+  const IlevoraMark({super.key, this.size = 32});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(color: AgroColors.canopy, borderRadius: BorderRadius.circular(size / 4)),
-      child: Center(
-        child: Text('A', style: TextStyle(fontFamily: 'PlusJakartaSans', color: AgroColors.palm, fontWeight: FontWeight.w800, fontSize: size / 2)),
-      ),
+    return Semantics(
+      label: 'Ilevora',
+      image: true,
+      child: SizedBox(width: size, height: size, child: CustomPaint(painter: _IlevoraMarkPainter())),
     );
   }
 }
 
-/// A farm's own logo on a white tile, or the AgroMesh mark when there are no bytes (or they cannot be decoded). Used
-/// for previewing the logo in the farm settings; the app header always shows the AgroMesh mark.
+class _IlevoraMarkPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final k = size.width / 96;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(22 * k)),
+      Paint()..color = IlevoraColors.forest,
+    );
+    void row(double y0, List<double> c, double x1, double y1, Color color) {
+      final path = Path()
+        ..moveTo(14 * k, y0 * k)
+        ..cubicTo(c[0] * k, c[1] * k, c[2] * k, c[3] * k, x1 * k, y1 * k);
+      canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeWidth = 7 * k
+          ..color = color,
+      );
+    }
+    row(74, [34, 74, 52, 62], 82, 30, const Color(0xFF138A44));
+    row(60, [30, 60, 44, 50], 66, 26, const Color(0xFF8FD9A8));
+    row(46, [26, 46, 36, 38], 50, 22, const Color(0xFFF5C90C));
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// A farm's own logo on a white tile, or the Ilevora mark when there are no bytes (or they cannot be decoded). Used
+/// for previewing the logo in the farm settings; the app header always shows the Ilevora mark.
 class FarmMarkImage extends StatelessWidget {
   final Uint8List? bytes;
   final double size;
@@ -30,7 +57,7 @@ class FarmMarkImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final b = bytes;
-    if (b == null || b.isEmpty) return AgroMark(size: size);
+    if (b == null || b.isEmpty) return IlevoraMark(size: size);
     return Semantics(
       label: 'Farm logo',
       image: true,
@@ -41,7 +68,7 @@ class FarmMarkImage extends StatelessWidget {
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(size / 4)),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(size / 6),
-          child: BoundedLogoImage(bytes: b, size: size, fallback: () => AgroMark(size: size)),
+          child: BoundedLogoImage(bytes: b, size: size, fallback: () => IlevoraMark(size: size)),
         ),
       ),
     );

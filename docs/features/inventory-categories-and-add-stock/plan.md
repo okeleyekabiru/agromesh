@@ -23,9 +23,9 @@ xUnit suite (65/65) are green.
 
 ## Step 1 — `InventoryCategory` domain entity
 
-- **Files**: new `api/AgroMesh.Domain/Entities/InventoryCategory.cs`; delete
-  `api/AgroMesh.Domain/Enums/InventoryCategory.cs`.
-- **Test (red first)**: new `api/AgroMesh.Tests/InventoryCategoryTests.cs` —
+- **Files**: new `api/Ilevora.Domain/Entities/InventoryCategory.cs`; delete
+  `api/Ilevora.Domain/Enums/InventoryCategory.cs`.
+- **Test (red first)**: new `api/Ilevora.Tests/InventoryCategoryTests.cs` —
   `Create_ValidName_SetsFields`, `Create_BlankName_ThrowsDomainException`,
   `CreateDefaults_ReturnsEightDefaultCategories` (asserts the exact name set from spec.md
   Requirement 3, all `IsDefault == true`, all `FarmId == farmId`).
@@ -34,8 +34,8 @@ xUnit suite (65/65) are green.
 
 ## Step 2 — `InventoryItem` switches from enum to FK + nav
 
-- **Files**: `api/AgroMesh.Domain/Entities/InventoryItem.cs` (`CategoryId` string + `Category` nav
-  replacing the enum property; `Create(...)` takes `categoryId`), `api/AgroMesh.Tests/InventoryTests.cs`
+- **Files**: `api/Ilevora.Domain/Entities/InventoryItem.cs` (`CategoryId` string + `Category` nav
+  replacing the enum property; `Create(...)` takes `categoryId`), `api/Ilevora.Tests/InventoryTests.cs`
   (update the one `InventoryItem.Create(...)` call site to pass a category id string instead of the
   enum value).
 - **Test**: existing `InventoryTests.cs` tests must still pass unchanged (regression) — this is the
@@ -46,9 +46,9 @@ xUnit suite (65/65) are green.
 
 ## Step 3 — Fix every other compile-time consumer of the old enum
 
-- **Files**: `api/AgroMesh.Application/DTOs/InventoryDtos.cs` (`InventoryItemDto.Category` →
+- **Files**: `api/Ilevora.Application/DTOs/InventoryDtos.cs` (`InventoryItemDto.Category` →
   `CategoryId`/`CategoryName`; `CreateInventoryItemRequest.Category` → `CategoryId`, plus new
-  `Quantity`/`ExistingItemId` fields per spec Requirement 7), `api/AgroMesh.Infrastructure/Services/Scheduling/ClaudeSchedulingService.cs:155`
+  `Quantity`/`ExistingItemId` fields per spec Requirement 7), `api/Ilevora.Infrastructure/Services/Scheduling/ClaudeSchedulingService.cs:155`
   (`i.Category == InventoryCategory.Chemical` → `i.Category.Name == "Chemical"`).
 - **Test**: `dotnet build` is the acceptance gate here (no new behavior yet, just making the tree
   compile again) — confirm 0 errors before moving on.
@@ -56,33 +56,33 @@ xUnit suite (65/65) are green.
 ## Step 4 — Infrastructure: EF configuration, repository, DI
 
 - **Files**:
-  - new `api/AgroMesh.Application/Interfaces/IInventoryCategoryRepository.cs` (mirrors
+  - new `api/Ilevora.Application/Interfaces/IInventoryCategoryRepository.cs` (mirrors
     `IWorkerRoleRepository`: `GetByIdAsync`, `GetByFarmIdAsync`, `FindByNameAsync`, `AddAsync`,
     `AddRangeAsync`).
-  - new `api/AgroMesh.Infrastructure/Persistence/Repositories/InventoryCategoryRepository.cs`
+  - new `api/Ilevora.Infrastructure/Persistence/Repositories/InventoryCategoryRepository.cs`
     (mirrors `WorkerRoleRepository.cs`).
-  - new `api/AgroMesh.Infrastructure/Persistence/Configurations/InventoryCategoryConfiguration.cs`
+  - new `api/Ilevora.Infrastructure/Persistence/Configurations/InventoryCategoryConfiguration.cs`
     (mirrors `WorkerRoleConfiguration.cs`: `HasMany(c => c.Items).WithOne(i => i.Category)
     .HasForeignKey(i => i.CategoryId).OnDelete(Restrict)`, indexes on `FarmId` and `(FarmId, Name)`).
-  - `api/AgroMesh.Infrastructure/Persistence/Configurations/InventoryItemConfiguration.cs` (drop the
+  - `api/Ilevora.Infrastructure/Persistence/Configurations/InventoryItemConfiguration.cs` (drop the
     old `Category` property config + its index; add `CategoryId` maxlength-50 required + new
     `(FarmId, CategoryId)` index — relationship itself is configured on the category side).
-  - `api/AgroMesh.Infrastructure/Persistence/Repositories/InventoryRepository.cs` (`.Include(i =>
+  - `api/Ilevora.Infrastructure/Persistence/Repositories/InventoryRepository.cs` (`.Include(i =>
     i.Category)` on `GetByIdAsync`/`GetByFarmIdAsync`/`FindByNameAsync`/`GetLowStockAsync` — single
     eager-load join, not N+1).
-  - `api/AgroMesh.Infrastructure/Persistence/AgroMeshDbContext.cs` (`DbSet<InventoryCategory>
+  - `api/Ilevora.Infrastructure/Persistence/IlevoraDbContext.cs` (`DbSet<InventoryCategory>
     InventoryCategories`).
-  - `api/AgroMesh.Domain/Entities/Farm.cs` (`List<InventoryCategory> InventoryCategories` nav, for
+  - `api/Ilevora.Domain/Entities/Farm.cs` (`List<InventoryCategory> InventoryCategories` nav, for
     convention parity with `Sections`/`WorkerRoles`/`InventoryItems`, enabling the FK).
-  - `api/AgroMesh.Infrastructure/DependencyInjection.cs:36-61` (`services.AddScoped<IInventoryCategoryRepository,
+  - `api/Ilevora.Infrastructure/DependencyInjection.cs:36-61` (`services.AddScoped<IInventoryCategoryRepository,
     InventoryCategoryRepository>();` next to `IInventoryRepository`).
 - **Test**: `dotnet build` green. No unit test here (pure plumbing, no business logic) — consistent
   with how `SectionRepository`/`WorkerRoleRepository` etc. have no dedicated tests either.
 
 ## Step 5 — EF Core migration (structure + data backfill)
 
-- Scaffold with `dotnet ef migrations add AddInventoryCategories` from `api/AgroMesh.API` (start
-  project) against `api/AgroMesh.Infrastructure`, then hand-edit the generated file to sequence:
+- Scaffold with `dotnet ef migrations add AddInventoryCategories` from `api/Ilevora.API` (start
+  project) against `api/Ilevora.Infrastructure`, then hand-edit the generated file to sequence:
   1. `CreateTable InventoryCategories` (+ FK to `Farms`, + indexes).
   2. `Sql(...)` — seed the 8 default categories for every row currently in `Farms`.
   3. `AddColumn CategoryId` to `InventoryItems` as **nullable** first (can't be `NOT NULL` against
@@ -96,7 +96,7 @@ xUnit suite (65/65) are green.
   - `Down()` reverses all of the above (drop FK/index/table, re-add nullable `Category` int column,
     reverse-map backfill, `NOT NULL`, re-add old index) so the migration is round-trippable.
 - **Verification**: apply against the reachable local Postgres (`localhost:5433`,
-  `agromesh_db` container, already healthy) with `dotnet ef database update`, then query
+  `ilevora_db` container, already healthy) with `dotnet ef database update`, then query
   `InventoryCategories`/`InventoryItems` directly to confirm: 8 rows per farm, every existing item
   has a non-null `CategoryId` that resolves to a real category row. This is the closest thing to
   "testing" a data migration in a repo with no migration-test harness — reported as manual
@@ -108,17 +108,17 @@ xUnit suite (65/65) are green.
 ## Step 6 — Application layer: category list/create + unified item stock-in
 
 - **Files**:
-  - new `api/AgroMesh.Application/DTOs/InventoryCategoryDtos.cs` (or appended to `InventoryDtos.cs`
+  - new `api/Ilevora.Application/DTOs/InventoryCategoryDtos.cs` (or appended to `InventoryDtos.cs`
     — decide based on which reads cleaner once written; `InventoryCategoryDto(Id, FarmId, Name,
     IsDefault)`, `CreateInventoryCategoryRequest(Name)`).
-  - new `api/AgroMesh.Application/Queries/Inventory/GetInventoryCategoriesQuery.cs` (mirrors
+  - new `api/Ilevora.Application/Queries/Inventory/GetInventoryCategoriesQuery.cs` (mirrors
     `GetWorkerRolesQuery.cs`, minus the per-item count join since `ItemCount` isn't required).
-  - new `api/AgroMesh.Application/Commands/Inventory/CreateInventoryCategoryCommand.cs` (mirrors
+  - new `api/Ilevora.Application/Commands/Inventory/CreateInventoryCategoryCommand.cs` (mirrors
     `CreateWorkerRoleCommand.cs`).
-  - `api/AgroMesh.Application/Commands/Inventory/CreateInventoryItemCommand.cs` — rewritten per spec
+  - `api/Ilevora.Application/Commands/Inventory/CreateInventoryItemCommand.cs` — rewritten per spec
     Requirement 7: resolve target item (`ExistingItemId` → name match → new), validate unit match on
     an existing target, `AddStock` either way, always `AddMovementAsync(StockMovement.CreateIn(...))`.
-  - `api/AgroMesh.Application/Queries/Inventory/GetInventoryQuery.cs` — map `CategoryId`/`CategoryName`
+  - `api/Ilevora.Application/Queries/Inventory/GetInventoryQuery.cs` — map `CategoryId`/`CategoryName`
     from the now-included `Category` nav.
 - **Test**: no handler tests added (see spec.md Test plan) — this step's correctness is proven by
   the e2e tests in Step 8 plus the manual curl pass in Step 5's verification. `dotnet build` +
@@ -126,7 +126,7 @@ xUnit suite (65/65) are green.
 
 ## Step 7 — API controllers
 
-- **Files**: new `api/AgroMesh.API/Controllers/InventoryCategoriesController.cs` (mirrors
+- **Files**: new `api/Ilevora.API/Controllers/InventoryCategoriesController.cs` (mirrors
   `WorkerRolesController.cs`, route `api/farms/{farmId}/inventory-categories`, `GET`/`POST`).
   `InventoryController.cs` itself needs no route changes (create endpoint behavior changes
   internally only).

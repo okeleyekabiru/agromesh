@@ -25,7 +25,7 @@
     </div>
     <div v-if="actions.error.value" class="vv-error" role="alert">{{ actions.error.value }}</div>
 
-    <div v-if="loading" class="state-box" role="status">Loading vendor invoices…</div>
+    <PageLoader v-if="loading" label="Loading vendor invoices…" />
 
     <div v-else-if="loadError" class="state-box state-box--error" role="alert">
       <div>{{ loadError }}</div>

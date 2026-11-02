@@ -2,8 +2,8 @@
 // These exercise the real request that goes on the wire (captured with a MockClient), not a re-implementation.
 import 'dart:convert';
 
-import 'package:agromesh_mobile/screens/more/billing_common.dart';
-import 'package:agromesh_mobile/services/api_client.dart';
+import 'package:ilevora_mobile/screens/more/billing_common.dart';
+import 'package:ilevora_mobile/services/api_client.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;

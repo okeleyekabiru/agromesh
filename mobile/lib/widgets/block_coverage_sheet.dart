@@ -11,7 +11,7 @@ void showBlockCoverageSheet(BuildContext context, Block block, {ActivityType? in
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: AgroColors.white,
+    backgroundColor: IlevoraColors.white,
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
     builder: (_) => _CoverageSheet(block: block, initialType: initialType),
   );
@@ -93,7 +93,7 @@ class _CoverageSheetState extends State<_CoverageSheet> {
     }
   }
 
-  Color _sectionColour(int n) => AgroColors.sectionPalette[(n - 1) % AgroColors.sectionPalette.length];
+  Color _sectionColour(int n) => IlevoraColors.sectionPalette[(n - 1) % IlevoraColors.sectionPalette.length];
 
   String _date(DateTime? d) => d == null ? '' : '${d.day}/${d.month}';
 
@@ -109,7 +109,7 @@ class _CoverageSheetState extends State<_CoverageSheet> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('${widget.block.name} · work progress',
-                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 16, fontWeight: FontWeight.w700, color: AgroColors.forest)),
+                style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 16, fontWeight: FontWeight.w700, color: IlevoraColors.forest)),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
@@ -126,12 +126,12 @@ class _CoverageSheetState extends State<_CoverageSheet> {
               if (_loading)
                 const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()))
               else if (_error != null)
-                Text(_error!, style: const TextStyle(color: AgroColors.alert, fontSize: 13))
+                Text(_error!, style: const TextStyle(color: IlevoraColors.alert, fontSize: 13))
               else if (c != null) ...[
                 Row(
                   children: [
                     Text(c.hasBoundary ? '${c.percent.toStringAsFixed(0)}%' : '—',
-                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 28, fontWeight: FontWeight.w600, color: AgroColors.forest)),
+                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 28, fontWeight: FontWeight.w600, color: IlevoraColors.forest)),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -143,10 +143,10 @@ class _CoverageSheetState extends State<_CoverageSheet> {
                           ),
                           if (c.hasBoundary)
                             Text('${c.coveredHectares.toStringAsFixed(2)} ha done · ${(c.remainingHectares ?? 0).toStringAsFixed(2)} ha left',
-                              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
+                              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone)),
                           if (c.lastWorkedOn != null)
                             Text('Started ${_date(c.cycleStartedOn)} · last worked ${_date(c.lastWorkedOn)}',
-                              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+                              style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
                         ],
                       ),
                     ),
@@ -164,19 +164,19 @@ class _CoverageSheetState extends State<_CoverageSheet> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Container(width: 12, height: 12, decoration: BoxDecoration(color: AgroColors.coverageDone, borderRadius: BorderRadius.circular(3))),
+                      Container(width: 12, height: 12, decoration: BoxDecoration(color: IlevoraColors.coverageDone, borderRadius: BorderRadius.circular(3))),
                       const SizedBox(width: 6),
-                      const Text('Done', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
+                      const Text('Done', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone)),
                       const SizedBox(width: 16),
-                      Container(width: 12, height: 12, decoration: BoxDecoration(color: AgroColors.coverageLeft, borderRadius: BorderRadius.circular(3))),
+                      Container(width: 12, height: 12, decoration: BoxDecoration(color: IlevoraColors.coverageLeft, borderRadius: BorderRadius.circular(3))),
                       const SizedBox(width: 6),
-                      const Text('Left to do', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
+                      const Text('Left to do', style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone)),
                     ],
                   ),
                   if (c.sections.isNotEmpty) ...[
                     const SizedBox(height: 10),
                     Text('Areas marked this cycle (${c.sections.length})',
-                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+                      style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
                     for (final s in c.sections)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
@@ -187,7 +187,7 @@ class _CoverageSheetState extends State<_CoverageSheet> {
                             const SizedBox(width: 10),
                             Text(_date(s.date), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12.5)),
                             const Spacer(),
-                            Text('${s.hectares.toStringAsFixed(2)} ha', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
+                            Text('${s.hectares.toStringAsFixed(2)} ha', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone)),
                           ],
                         ),
                       ),
@@ -199,11 +199,11 @@ class _CoverageSheetState extends State<_CoverageSheet> {
                       child: Text(_forcing ? 'Saving…' : 'Mark as complete'),
                     ),
                     const Text('Use when the work is finished but the marked areas fall a little short of the block.',
-                      style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: AgroColors.stone)),
+                      style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
                   ],
                 ] else
                   const Text('This block has no boundary yet, so what is done and what is left cannot be drawn.',
-                    style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: AgroColors.stone)),
+                    style: TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 13, color: IlevoraColors.stone)),
               ],
             ],
           ),

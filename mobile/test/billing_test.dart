@@ -2,15 +2,15 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:agromesh_mobile/models/billing_models.dart';
-import 'package:agromesh_mobile/models/models.dart';
-import 'package:agromesh_mobile/screens/more/billing_common.dart';
-import 'package:agromesh_mobile/screens/more/invoice_form_screen.dart';
-import 'package:agromesh_mobile/screens/more/vendor_invoices_screen.dart';
-import 'package:agromesh_mobile/services/farm_logo_service.dart';
-import 'package:agromesh_mobile/services/upload_rules.dart';
-import 'package:agromesh_mobile/theme/app_theme.dart';
-import 'package:agromesh_mobile/widgets/farm_mark.dart';
+import 'package:ilevora_mobile/models/billing_models.dart';
+import 'package:ilevora_mobile/models/models.dart';
+import 'package:ilevora_mobile/screens/more/billing_common.dart';
+import 'package:ilevora_mobile/screens/more/invoice_form_screen.dart';
+import 'package:ilevora_mobile/screens/more/vendor_invoices_screen.dart';
+import 'package:ilevora_mobile/services/farm_logo_service.dart';
+import 'package:ilevora_mobile/services/upload_rules.dart';
+import 'package:ilevora_mobile/theme/app_theme.dart';
+import 'package:ilevora_mobile/widgets/farm_mark.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -140,7 +140,7 @@ void main() {
 
     testWidgets('tile shows Unpaid, Overdue and the differs badge', (tester) async {
       await tester.pumpWidget(MaterialApp(
-        theme: AgroTheme.theme,
+        theme: IlevoraTheme.theme,
         home: Scaffold(body: VendorBillTile(bill: VendorInvoice.fromJson(json(overdue: true, amount: 6000)))),
       ));
       expect(find.text('UNPAID'), findsOneWidget);
@@ -236,27 +236,27 @@ void main() {
   });
 
   group('widgets', () {
-    testWidgets('FarmMarkImage shows the AgroMesh A when there is no logo', (tester) async {
+    testWidgets('FarmMarkImage shows the Ilevora mark when there is no logo', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: Scaffold(body: FarmMarkImage(bytes: null))));
-      expect(find.text('A'), findsOneWidget);
+      expect(find.byType(IlevoraMark), findsOneWidget);
       expect(find.byType(Image), findsNothing);
     });
 
     testWidgets('FarmMarkImage shows the logo image when it has bytes', (tester) async {
       await tester.pumpWidget(MaterialApp(home: Scaffold(body: FarmMarkImage(bytes: _png))));
       expect(find.byType(Image), findsOneWidget);
-      expect(find.text('A'), findsNothing);
+      expect(find.byType(IlevoraMark), findsNothing);
     });
 
     testWidgets('FarmMarkImage falls back to the mark when the bytes are not an image', (tester) async {
       await tester.pumpWidget(MaterialApp(home: Scaffold(body: FarmMarkImage(bytes: Uint8List.fromList(const [1, 2, 3, 4])))));
       await tester.pump();
-      expect(find.text('A'), findsOneWidget);
+      expect(find.byType(IlevoraMark), findsOneWidget);
     });
 
     testWidgets('InvoiceTotalsCard shows subtotal, VAT and total', (tester) async {
       final totals = computeInvoiceTotals(const [InvoiceLine(description: 'x', rate: 1000, quantity: 2)], 7.5);
-      await tester.pumpWidget(MaterialApp(theme: AgroTheme.theme, home: Scaffold(body: InvoiceTotalsCard(totals: totals, vatPercent: 7.5))));
+      await tester.pumpWidget(MaterialApp(theme: IlevoraTheme.theme, home: Scaffold(body: InvoiceTotalsCard(totals: totals, vatPercent: 7.5))));
       expect(find.text('₦2,000.00'), findsOneWidget);
       expect(find.text('VAT (7.5%)'), findsOneWidget);
       expect(find.text('₦150.00'), findsOneWidget);
@@ -318,7 +318,7 @@ void main() {
         await t.runAsync(() => Future<void>.delayed(const Duration(seconds: 2)));
         await t.pump();
         expect(t.takeException(), isNull);
-        expect(find.text('A'), findsNothing, reason: 'the logo, not the fallback mark, is shown');
+        expect(find.byType(IlevoraMark), findsNothing, reason: 'the logo, not the fallback mark, is shown');
         expect(PaintingBinding.instance.imageCache.currentSizeBytes, lessThan(1024 * 1024));
       });
     }

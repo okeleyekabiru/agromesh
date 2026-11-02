@@ -15,21 +15,21 @@ much, and why — that unconditionally blocks if it would push stock negative, a
 
 ## Context / existing code (reuse, don't rebuild)
 
-- **Domain**: `api/AgroMesh.Domain/Entities/InventoryItem.cs:51-59` — `DeductStock(decimal quantity)`
+- **Domain**: `api/Ilevora.Domain/Entities/InventoryItem.cs:51-59` — `DeductStock(decimal quantity)`
   already throws `DomainException` for `quantity <= 0` or insufficient stock; reused as-is, no new
-  arithmetic written anywhere in this phase. `api/AgroMesh.Domain/Entities/StockMovement.cs` —
+  arithmetic written anywhere in this phase. `api/Ilevora.Domain/Entities/StockMovement.cs` —
   `CreateOut(farmId, inventoryItemId, quantity, activityLogId=null, notes=null)` is the existing
   factory for `Out` movements; extended (not replaced) with an optional `workerId` parameter, since
   there is currently no field anywhere on the entity for "who" performed a movement.
-  `api/AgroMesh.Domain/Entities/Worker.cs` — real entity with `FarmId`/`Name`/`Active`, already has
+  `api/Ilevora.Domain/Entities/Worker.cs` — real entity with `FarmId`/`Name`/`Active`, already has
   `IWorkerRepository`.
 - **The auto-deduction path this stays separate from**: `IInventoryDeductionService` /
-  `api/AgroMesh.Infrastructure/Services/InventoryDeductionService.cs:20-54`, sole caller
-  `LogActivityCommandHandler` (`api/AgroMesh.Application/Commands/Activity/LogActivityCommand.cs:77`).
+  `api/Ilevora.Infrastructure/Services/InventoryDeductionService.cs:20-54`, sole caller
+  `LogActivityCommandHandler` (`api/Ilevora.Application/Commands/Activity/LogActivityCommand.cs:77`).
   It resolves items by name and **catches `DomainException` into a soft warning string** on
   insufficient stock (lines 46-50) instead of blocking. The new command never calls this service and
   never catches `DomainException` around `DeductStock` — it lets the exception propagate to
-  `api/AgroMesh.API/Middleware/ExceptionMiddleware.cs:40-54`, which already turns any unhandled
+  `api/Ilevora.API/Middleware/ExceptionMiddleware.cs:40-54`, which already turns any unhandled
   `DomainException` into an HTTP 422 `application/problem+json` body (`title: "Unprocessable
   Request"`, `detail: ex.Message`).
 - **"Who" — reused convention**: `LogActivityCommand.cs:49-55` builds `WorkerLog` entries by calling
@@ -41,13 +41,13 @@ much, and why — that unconditionally blocks if it would push stock negative, a
   a stock pick is a farm-labor action performed by a `Worker`, not an office login, and
   `InventoryController` has no `[Authorize]` today (pre-existing, out-of-scope gap, unchanged by this
   phase — see Non-goals).
-- **Repository**: `api/AgroMesh.Application/Interfaces/IInventoryRepository.cs` — `GetByIdAsync`,
+- **Repository**: `api/Ilevora.Application/Interfaces/IInventoryRepository.cs` — `GetByIdAsync`,
   `UpdateAsync`, `AddMovementAsync` reused as-is, no interface changes. `IWorkerRepository.GetByIdAsync`
   reused as-is.
-- **Sibling command to mirror**: `api/AgroMesh.Application/Commands/Inventory/AdjustInventoryStockCommand.cs`
+- **Sibling command to mirror**: `api/Ilevora.Application/Commands/Inventory/AdjustInventoryStockCommand.cs`
   (route param → command → single domain call → movement → persist shape) and
   `CreateInventoryItemCommand.cs` (IDOR guard + `DomainException` "not found" pattern).
-- **API**: `api/AgroMesh.API/Controllers/InventoryController.cs` — `api/farms/{farmId}/inventory`
+- **API**: `api/Ilevora.API/Controllers/InventoryController.cs` — `api/farms/{farmId}/inventory`
   (`GET /`, `POST /`, `GET /low-stock`, `GET /{itemId}/movements`, `PATCH /{itemId}/adjust`). New
   route: `POST /{itemId}/pick` (action-suffixed sub-route under an item id like `/adjust`, but `POST`
   since every call creates a new movement rather than overwriting a value — not idempotent). No
@@ -72,9 +72,9 @@ much, and why — that unconditionally blocks if it would push stock negative, a
   Workers-feature fixture, already farm-scoped to `farm_001` with `id`/`name`) reused for the "Picked
   by" dropdown instead of inventing new worker fixture data. `mockApi()`'s existing
   `**/api/farms/farm_001/workers**` intercept already covers the new modal's worker fetch.
-- **Domain unit tests**: `api/AgroMesh.Tests/InventoryTests.cs` (existing `DeductStock` coverage,
+- **Domain unit tests**: `api/Ilevora.Tests/InventoryTests.cs` (existing `DeductStock` coverage,
   unchanged — still the regression proof that the block-on-insufficient-stock behavior works). New
-  `api/AgroMesh.Tests/StockMovementTests.cs` (no such file exists yet) covers the new `WorkerId`
+  `api/Ilevora.Tests/StockMovementTests.cs` (no such file exists yet) covers the new `WorkerId`
   parameter on `CreateOut`, following the precedent Phase 1 set with `InventoryCategoryTests.cs` for
   a new domain concept.
 
@@ -185,7 +185,7 @@ much, and why — that unconditionally blocks if it would push stock negative, a
 - [x] **AC8** — Manual verification: applied the new EF Core migration
       (`AddStockMovementWorkerId`) against the local Postgres instance — confirmed via `\d
       "StockMovements"` that a nullable `WorkerId character varying(50)` column exists, no data loss.
-      Live `curl` pass against the rebuilt `agromesh_api` container proved: (a) a valid pick reduces
+      Live `curl` pass against the rebuilt `ilevora_api` container proved: (a) a valid pick reduces
       `CurrentStock` (100L → 35L) and records an `Out` movement with the given `WorkerId`/`Notes`
       (confirmed via direct `SELECT` on `StockMovements`); (a2) a pick crossing the reorder threshold
       (35L → 25L, threshold 30) returns `lowStockWarning` non-null with `isLowStock: true`, HTTP 200
@@ -205,7 +205,7 @@ much, and why — that unconditionally blocks if it would push stock negative, a
 
 ## Test plan
 
-- **Domain unit tests** (`api/AgroMesh.Tests/`, xUnit, plain `Assert.*`, no mocks/in-memory EF —
+- **Domain unit tests** (`api/Ilevora.Tests/`, xUnit, plain `Assert.*`, no mocks/in-memory EF —
   matching `InventoryTests.cs`/`InventoryCategoryTests.cs`): new `StockMovementTests.cs` covering
   AC1 (workerId set when provided, null when omitted) plus basic field-assignment coverage for
   `CreateOut` (no existing test file touches this entity at all today). `InventoryTests.cs` stays
@@ -230,5 +230,5 @@ Stock tests pass, all 24 Inventory-tagged tests (19 Phase 1 + 5 Phase 2) pass, a
 are the exact same pre-existing, unrelated Dashboard/Sidebar/Workers/log-activity-worker-picker/
 back-navigation staleness already documented in Phase 1's spec.md (confirmed by exact test-name
 diff against that baseline — no new failures introduced). Manual live-API verification (AC8) run
-against the rebuilt `agromesh_api` Docker container and local Postgres, full transcript in the
+against the rebuilt `ilevora_api` Docker container and local Postgres, full transcript in the
 build summary.
