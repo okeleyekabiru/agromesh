@@ -4,15 +4,7 @@
     <!-- ── Left: info panel ── -->
     <div class="blocks-panel">
       <div class="panel-brand">
-        <svg width="20" height="20" viewBox="0 0 72 72" fill="none">
-          <rect width="72" height="72" rx="16" fill="#1A4A32"/>
-          <circle cx="36" cy="36" r="7" fill="#E8A838"/>
-          <circle cx="36" cy="36" r="3.5" fill="#0D2B1F"/>
-          <line x1="24" y1="24" x2="36" y2="36" stroke="#3DAA6A" stroke-width="1.5"/>
-          <line x1="48" y1="24" x2="36" y2="36" stroke="#3DAA6A" stroke-width="1.5"/>
-          <line x1="24" y1="48" x2="36" y2="36" stroke="#3DAA6A" stroke-width="1.5"/>
-          <line x1="48" y1="48" x2="36" y2="36" stroke="#3DAA6A" stroke-width="1.5"/>
-        </svg>
+        <IlevoraMark :size="20" />
         <span class="brand-name">Ilevora</span>
       </div>
 
@@ -75,6 +67,7 @@
 </template>
 
 <script setup lang="ts">
+import IlevoraMark from '@/components/ui/IlevoraMark.vue'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAgroStore } from '@/stores/agro'

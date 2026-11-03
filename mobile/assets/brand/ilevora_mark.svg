@@ -1,7 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="Ilevora mark, direction A: Furrow I (sketch)">
-  <rect width="96" height="96" rx="22" fill="#0F7A3A"/>
-  <circle cx="48" cy="22" r="8" fill="#F5C90C"/>
-  <rect x="41" y="36" width="14" height="36" rx="7" fill="#FFFFFF"/>
-  <rect x="18" y="76" width="60" height="4" rx="2" fill="#8FD9A8"/>
-  <rect x="26" y="83" width="44" height="3" rx="1.5" fill="#8FD9A8" opacity="0.6"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="Ilevora mark, direction B: Rising rows (sketch)">
+  <rect width="96" height="96" rx="22" fill="#0D2B1F"/>
+  <path d="M14 74 C34 74 52 62 82 30" fill="none" stroke="#138A44" stroke-width="7" stroke-linecap="round"/>
+  <path d="M14 60 C30 60 44 50 66 26" fill="none" stroke="#8FD9A8" stroke-width="7" stroke-linecap="round"/>
+  <path d="M14 46 C26 46 36 38 50 22" fill="none" stroke="#F5C90C" stroke-width="7" stroke-linecap="round"/>
 </svg>

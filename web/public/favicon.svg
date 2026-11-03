@@ -1,1 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" rx="22" fill="#0D2B1F"/><path d="M14 74 C34 74 52 62 82 30" fill="none" stroke="#138A44" stroke-width="9" stroke-linecap="round"/><path d="M14 52 C30 52 44 42 62 24" fill="none" stroke="#F5C90C" stroke-width="9" stroke-linecap="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="Ilevora mark, direction B: Rising rows (sketch)">
+  <rect width="96" height="96" rx="22" fill="#0D2B1F"/>
+  <path d="M14 74 C34 74 52 62 82 30" fill="none" stroke="#138A44" stroke-width="7" stroke-linecap="round"/>
+  <path d="M14 60 C30 60 44 50 66 26" fill="none" stroke="#8FD9A8" stroke-width="7" stroke-linecap="round"/>
+  <path d="M14 46 C26 46 36 38 50 22" fill="none" stroke="#F5C90C" stroke-width="7" stroke-linecap="round"/>
+</svg>

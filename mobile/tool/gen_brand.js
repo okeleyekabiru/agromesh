@@ -20,9 +20,9 @@ html,body{margin:0;background:transparent}`;
     await p.screenshot({ path: out, omitBackground: omit });
   }
   const t = path.join(root, 'tool/icon');
-  await shot(`<div style="width:1024px;height:1024px;background:#0F7A3A">${tile(1024).replace('rx="22"','rx="0"')}</div>`, 1024, 1024, t + '/icon.png', false);
-  // Foreground: content bbox ~ x18..78, y14..86 -> centre (48,50), fit in ~58% of canvas.
-  await shot(`<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="${48-52} ${50-52} 104 104">${bare}</svg>`, 1024, 1024, t + '/icon_fg.png');
+  await shot(`<div style="width:1024px;height:1024px;background:#0D2B1F">${tile(1024).replace('rx="22"','rx="0"')}</div>`, 1024, 1024, t + '/icon.png', false);
+  // Foreground: content bbox ~ x10..86, y18..78 -> centre (48,48), fit in ~58% of canvas.
+  await shot(`<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="${48-65} ${48-65} 130 130">${bare}</svg>`, 1024, 1024, t + '/icon_fg.png');
   // Android 12 splash icon: tile with generous padding (circle mask safe).
   await shot(`<div style="width:1152px;height:1152px;display:flex;align-items:center;justify-content:center">${tile(480)}</div>`, 1152, 1152, path.join(root, 'android/app/src/main/res/drawable-nodpi/splash_icon.png'));
   // Lockup: mark above wordmark. Base 1x = 240x240 canvas.
