@@ -53,9 +53,20 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.14.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: tool/icon/icon.png
+  adaptive_icon_background: "#0F7A3A"
+  adaptive_icon_foreground: tool/icon/icon_fg.png
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/brand/
   fonts:
     - family: PlusJakartaSans
       fonts:

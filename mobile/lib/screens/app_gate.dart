@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../stores/auth_store.dart';
 import '../stores/app_store.dart';
@@ -58,13 +59,32 @@ class _AppGateState extends State<AppGate> {
   }
 }
 
+/// Matches the native launch screen: white, Ilevora mark above the wordmark.
 class _Splash extends StatelessWidget {
   const _Splash();
 
   @override
-  Widget build(BuildContext context) => const Scaffold(
-    backgroundColor: IlevoraColors.forest,
-    body: Center(child: CircularProgressIndicator(color: IlevoraColors.palm)),
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: IlevoraColors.white,
+    body: Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SvgPicture.asset('assets/brand/ilevora_mark.svg', width: 120, height: 120),
+          const SizedBox(height: 16),
+          const Text(
+            'Ilevora',
+            style: TextStyle(
+              fontFamily: 'PlusJakartaSans',
+              fontWeight: FontWeight.w800,
+              fontSize: 44,
+              letterSpacing: -1,
+              color: IlevoraColors.forest,
+            ),
+          ),
+        ],
+      ),
+    ),
   );
 }
 
