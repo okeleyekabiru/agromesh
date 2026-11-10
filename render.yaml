@@ -40,6 +40,17 @@ services:
         sync: false
       - key: Mono__WebhookSecret
         sync: false
+      # Transactional email via Resend. Without a key (or with Enabled=false) emails are logged and skipped.
+      - key: Resend__ApiKey
+        sync: false
+      - key: Resend__FromAddress
+        value: "Ilevora <no-reply@visionarybytesolutions.com>"
+      - key: Resend__Enabled
+        value: "true"
+      # Public URL of the web app (Vercel), used for links in emails. Set in the dashboard.
+      - key: App__WebBaseUrl
+        sync: false
+
   # ---- Dev environment -------------------------------------------------------
   # Deploys from the `develop` branch. Needs its OWN database (a separate Supabase
   # project or schema) so dev data never touches production. Free tier sleeps, so the
@@ -81,6 +92,16 @@ services:
       # Bank linking stays off in dev (no Mono licence yet).
       - key: Mono__Enabled
         value: "false"
+      # Transactional email via Resend. Without a key (or with Enabled=false) emails are logged and skipped.
+      - key: Resend__ApiKey
+        sync: false
+      - key: Resend__FromAddress
+        value: "Ilevora <no-reply@visionarybytesolutions.com>"
+      - key: Resend__Enabled
+        value: "true"
+      # Public URL of the web app (Vercel), used for links in emails. Set in the dashboard.
+      - key: App__WebBaseUrl
+        sync: false
 # Frontend (web/) is deployed separately on Vercel, not here. For dev, point a Vercel
 # preview/branch deployment's VITE_API_URL at https://agromesh-api-dev.onrender.com.
 # Dev mobile builds: flutter build apk --dart-define=API_BASE_URL=https://agromesh-api-dev.onrender.com

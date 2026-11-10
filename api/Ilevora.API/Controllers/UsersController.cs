@@ -28,6 +28,14 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> SetStatus(string userId, [FromBody] SetUserActiveRequest request, CancellationToken ct) =>
         Ok(await _mediator.Send(new SetUserActiveCommand(userId, request.IsActive), ct));
 
+    /// <summary>The caller's own setting for optional email (security email is always sent).</summary>
+    [HttpGet("me/email-preference")]
+    public async Task<IActionResult> GetEmailPreference(CancellationToken ct) => Ok(await _mediator.Send(new GetEmailPreferenceQuery(), ct));
+
+    [HttpPut("me/email-preference")]
+    public async Task<IActionResult> SetEmailPreference([FromBody] SetEmailPreferenceRequest request, CancellationToken ct) =>
+        Ok(await _mediator.Send(new SetEmailPreferenceCommand(request.Enabled), ct));
+
     [HttpPost]
     public async Task<IActionResult> Add([FromBody] AddStaffUserRequest request, CancellationToken ct)
     {

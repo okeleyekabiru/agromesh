@@ -19,6 +19,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         // against the DB is self-describing and a future added role doesn't silently reorder
         // meaning behind existing stored data.
         builder.Property(u => u.IsActive).IsRequired().HasDefaultValue(true);
+        builder.Property(u => u.EmailNotificationsEnabled).IsRequired().HasDefaultValue(true);
+        builder.Property(u => u.TokenVersion).IsRequired().HasDefaultValue(0);
         builder.Property(u => u.Role).IsRequired().HasConversion<string>().HasMaxLength(20);
     }
 }

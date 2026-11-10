@@ -2,6 +2,7 @@ using Ilevora.Application.Commands.Auth;
 using Ilevora.Application.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Ilevora.API.Controllers;
 
@@ -25,5 +26,22 @@ public class AuthController : ControllerBase
     {
         var result = await _mediator.Send(new LoginCommand(request), ct);
         return Ok(result);
+    }
+
+    /// <summary>Always 200 with the same body, whether or not the email has an account.</summary>
+    [HttpPost("forgot-password")]
+    [EnableRateLimiting("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken ct)
+    {
+        await _mediator.Send(new ForgotPasswordCommand(request), ct);
+        return Ok(new { message = "If an account exists for that email, a reset link is on its way." });
+    }
+
+    [HttpPost("reset-password")]
+    [EnableRateLimiting("token-endpoints")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken ct)
+    {
+        await _mediator.Send(new ResetPasswordCommand(request), ct);
+        return Ok(new { message = "Your password has been changed. You can sign in now." });
     }
 }

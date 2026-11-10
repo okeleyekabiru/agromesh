@@ -95,7 +95,7 @@ public class VendorInvoiceHandlerTests
 
     private static UploadVendorInvoiceFields Fields(string? vendor = null, string number = "SARO-2041", decimal amount = 5000m,
         DateOnly? date = null, DateOnly? due = null, string? notes = "ok") =>
-        new(vendor, number, amount, date ?? new DateOnly(2026, 10, 5), due ?? new DateOnly(2026, 11, 4), notes);
+        new(vendor, number, amount, date ?? DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-5), due ?? DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30), notes);
 
     private static UploadVendorInvoiceCommand Cmd(Harness h, Order? order = null, byte[]? content = null, string? type = "application/pdf",
         string? name = "bill.pdf", UploadVendorInvoiceFields? fields = null) =>

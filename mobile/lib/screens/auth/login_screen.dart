@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../stores/auth_store.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/widgets.dart';
+import '../more/common.dart';
 
 /// Mobile does login only — accounts, companies and farms are created on the
 /// web app. This screen just authenticates against the existing backend and
@@ -99,7 +100,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
 
-                    const SizedBox(height: 24),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => openWebApp(context, '/forgot-password'),
+                        child: const Text('Forgot password?'),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Invited by email? Open the link in the invitation to set your password, then log in here.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: IlevoraColors.stone, fontSize: 12.5),
+                    ),
+                    const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: auth.isSubmitting ? null : _submit,
                       child: auth.isSubmitting
