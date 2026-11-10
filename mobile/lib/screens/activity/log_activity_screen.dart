@@ -414,7 +414,7 @@ class _StepLocation extends StatelessWidget {
           decoration: const InputDecoration(),
           items: blocks.map((s) => DropdownMenuItem(
             value: s,
-            child: Text('${s.name} — ${s.crop.label}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14)),
+            child: Text('${s.name} — ${s.cropLabel}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14)),
           )).toList(),
           onChanged: onBlockChanged,
         ),

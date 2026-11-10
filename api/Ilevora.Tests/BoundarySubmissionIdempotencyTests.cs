@@ -1,3 +1,4 @@
+using Ilevora.Domain.Crops;
 using Ilevora.Application.Commands.Block;
 using Ilevora.Application.DTOs;
 using Ilevora.Application.Interfaces;
@@ -84,7 +85,7 @@ public class BoundarySubmissionIdempotencyTests
     [Fact]
     public async Task Handle_SameOperationIdSubmittedTwice_DoesNotCreateDuplicateSubmission()
     {
-        var block = Block.Create("farm-1", "Block A", [new BlockCrop(CropType.Maize, 1.0, 100)], 1.0);
+        var block = Block.Create("farm-1", "Block A", [new BlockCrop(BuiltInCrop.Maize, 1.0, 100)], 1.0);
         var blockRepo = new FakeBlockRepository { Block = block };
         var submissionRepo = new FakeBoundarySubmissionRepository();
         var handler = CreateHandler(blockRepo, submissionRepo);
@@ -105,7 +106,7 @@ public class BoundarySubmissionIdempotencyTests
     [Fact]
     public async Task Handle_DifferentOperationIds_CreatesSeparateSubmissions()
     {
-        var block = Block.Create("farm-1", "Block A", [new BlockCrop(CropType.Maize, 1.0, 100)], 1.0);
+        var block = Block.Create("farm-1", "Block A", [new BlockCrop(BuiltInCrop.Maize, 1.0, 100)], 1.0);
         var blockRepo = new FakeBlockRepository { Block = block };
         var submissionRepo = new FakeBoundarySubmissionRepository();
         var handler = CreateHandler(blockRepo, submissionRepo);

@@ -2,14 +2,14 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type {
   Farm, Block, Worker, WorkerRole, ActivityLog, Transaction,
-  InventoryItem, OutstandingStock, InventoryCategory, ChemicalProduct, UpcomingTask, LowStockAlert, WeatherWidget, DashboardData,
+  Crop,   InventoryItem, OutstandingStock, InventoryCategory, ChemicalProduct, UpcomingTask, LowStockAlert, WeatherWidget, DashboardData,
   AuthUser, AuthResponse, FeatureFlag, FarmSummary, State, FarmLogoInfo,
   BoundarySubmissionResult, PickStockResponse, StockAdjustmentRequest, PriceChangeRequest, SatelliteOverview,
   Supplier, Order, CreateOrderLineItemRequest, Report
 } from '@/types'
 import {
   farmApi, blockApi, activityApi, transactionApi,
-  workerApi, workerRoleApi, inventoryApi, inventoryCategoryApi, inventoryAdjustmentsApi, inventoryPriceChangesApi, chemicalApi,
+  workerApi, workerRoleApi, inventoryApi, inventoryCategoryApi, cropApi, inventoryAdjustmentsApi, inventoryPriceChangesApi, chemicalApi,
   authApi, featuresApi, referenceApi, supplierApi, orderApi, reportApi,
   setFarmId, logoApi,
   managersApi, satelliteApi
@@ -33,6 +33,7 @@ export const useAgroStore = defineStore('agro', () => {
   const inventoryItems = ref<InventoryItem[]>([])
   const outstandingStock = ref<OutstandingStock[]>([])
   const inventoryCategories = ref<InventoryCategory[]>([])
+  const crops = ref<Crop[]>([])
   const pendingAdjustments = ref<StockAdjustmentRequest[]>([])
   const pendingPriceChanges = ref<PriceChangeRequest[]>([])
   const suppliers = ref<Supplier[]>([])
@@ -213,7 +214,7 @@ export const useAgroStore = defineStore('agro', () => {
 
   async function updateBlock(
     blockId: string,
-    body: { name: string; crops: { cropType: number; percentage: number }[]; areaValue: number; treeCount: number | null; plantingYear?: number | null }
+    body: { name: string; crops: { cropId: string; percentage: number }[]; areaValue: number; treeCount: number | null; plantingYear?: number | null }
   ): Promise<Block> {
     const res = await blockApi.update(blockId, body)
     const block = normalizeBlock(res.data)
@@ -351,6 +352,18 @@ export const useAgroStore = defineStore('agro', () => {
     } finally {
       loading.value = false
     }
+  }
+
+  async function fetchCrops() {
+    try {
+      crops.value = (await cropApi.getAll()).data
+    } catch { /* non-critical: the block form shows no crops until this loads */ }
+  }
+
+  async function createCrop(name: string): Promise<Crop> {
+    const res = await cropApi.create({ name })
+    crops.value.push(res.data)
+    return res.data as Crop
   }
 
   async function fetchInventoryCategories() {
@@ -725,6 +738,7 @@ export const useAgroStore = defineStore('agro', () => {
   return {
     // state
     farm, blocks, workers, workerRoles, activities, transactions,
+    crops, fetchCrops, createCrop,
     inventoryItems, inventoryCategories, pendingAdjustments, suppliers, orders, chemicals, upcomingTasks, lowStockAlerts, weather, dashboard,
     isOnline, lastSynced, loading, error, needsOnboarding,
     // auth state

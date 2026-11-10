@@ -1,3 +1,4 @@
+using Ilevora.Domain.Crops;
 using Ilevora.Application.Interfaces;
 using Ilevora.Application.Services;
 using Ilevora.Domain.Entities;
@@ -16,13 +17,13 @@ public class FertilizerCycleTests
         BlockCycleCalculator.Calculate(new CycleInputs(today ?? Today, null, null, null, true, rain30, forecast16,
             forecast ?? [], [], crops, last, plantingYear)).Fertilizing!;
 
-    private static BlockCrop Crop(CropType t, int pct = 100) => new(t, 1, pct);
+    private static BlockCrop Crop(BuiltInCrop t, int pct = 100) => new(t, 1, pct);
 
     [Fact]
     public void Mature_oil_palm_is_fed_about_twice_a_year()
     {
         var last = Today.AddDays(-120);
-        var f = Fert(last, [Crop(CropType.OilPalm)], plantingYear: 2015);
+        var f = Fert(last, [Crop(BuiltInCrop.OilPalm)], plantingYear: 2015);
         Assert.Equal(last.AddDays(26 * 7), f.DueDate);
     }
 
@@ -30,27 +31,29 @@ public class FertilizerCycleTests
     public void Young_oil_palm_is_fed_more_often()
     {
         var last = Today.AddDays(-30);
-        var young = Fert(last, [Crop(CropType.OilPalm)], plantingYear: 2025);
-        var mature = Fert(last, [Crop(CropType.OilPalm)], plantingYear: 2015);
+        var young = Fert(last, [Crop(BuiltInCrop.OilPalm)], plantingYear: 2025);
+        var mature = Fert(last, [Crop(BuiltInCrop.OilPalm)], plantingYear: 2015);
         Assert.Equal(last.AddDays(12 * 7), young.DueDate);
         Assert.True(young.DueDate < mature.DueDate);
     }
 
     [Theory]
-    [InlineData(CropType.Maize, 6)]
-    [InlineData(CropType.Cocoa, 17)]
-    [InlineData(CropType.Cassava, 12)]
-    public void Each_crop_has_its_own_cycle(CropType crop, int weeks)
+    [InlineData("Maize", 6)]
+    [InlineData("Cocoa", 17)]
+    [InlineData("Cassava", 12)]
+    [InlineData("Plantain", 12)]
+    [InlineData("Banana", 8)]
+    public void Each_crop_has_its_own_cycle(string cropId, int weeks)
     {
         var last = Today.AddDays(-7);
-        Assert.Equal(last.AddDays(weeks * 7), Fert(last, [Crop(crop)]).DueDate);
+        Assert.Equal(last.AddDays(weeks * 7), Fert(last, [Crop(BuiltInCrop.FromId(cropId)!)]).DueDate);
     }
 
     [Fact]
     public void A_mixed_block_follows_the_crop_fed_most_often()
     {
         var last = Today.AddDays(-7);
-        var f = Fert(last, [Crop(CropType.OilPalm, 60), Crop(CropType.Maize, 40)], plantingYear: 2015);
+        var f = Fert(last, [Crop(BuiltInCrop.OilPalm, 60), Crop(BuiltInCrop.Maize, 40)], plantingYear: 2015);
         Assert.Equal(last.AddDays(6 * 7), f.DueDate);                       // maize (6 wks) beats palm (26 wks)
         Assert.Contains(f.Factors, x => x.StartsWith("Mixed block"));
     }
@@ -59,7 +62,7 @@ public class FertilizerCycleTests
     public void A_minor_crop_does_not_set_the_pace()
     {
         var last = Today.AddDays(-120);
-        var f = Fert(last, [Crop(CropType.OilPalm, 80), Crop(CropType.Maize, 20)], plantingYear: 2015);
+        var f = Fert(last, [Crop(BuiltInCrop.OilPalm, 80), Crop(BuiltInCrop.Maize, 20)], plantingYear: 2015);
         Assert.Equal(last.AddDays(26 * 7), f.DueDate);                      // maize is only 20% of the block
     }
 
@@ -68,7 +71,7 @@ public class FertilizerCycleTests
     {
         var today = new DateTime(2026, 11, 1, 0, 0, 0, DateTimeKind.Utc);
         var last = today.AddDays(-100);                                    // 26 weeks later = early Feb
-        var f = Fert(last, [Crop(CropType.OilPalm)], today: today, plantingYear: 2015);
+        var f = Fert(last, [Crop(BuiltInCrop.OilPalm)], today: today, plantingYear: 2015);
         Assert.Equal(new DateTime(2027, 3, 1), f.DueDate);
         Assert.Contains(f.Factors, x => x.Contains("Harmattan"));
     }
@@ -76,7 +79,7 @@ public class FertilizerCycleTests
     [Fact]
     public void A_block_with_no_fertilizer_logged_is_unknown_and_without_crops_asks_for_them()
     {
-        Assert.Equal(CycleStatus.Unknown, Fert(null, [Crop(CropType.Maize)]).Status);
+        Assert.Equal(CycleStatus.Unknown, Fert(null, [Crop(BuiltInCrop.Maize)]).Status);
         Assert.Equal(CycleStatus.Unknown, Fert(Today.AddDays(-10), []).Status);
     }
 
@@ -91,21 +94,21 @@ public class FertilizerCycleTests
             new DailyWeather(Today.AddDays(3), 45, 26, 22, 10),             // downpour
             new DailyWeather(Today.AddDays(4), 6, 28, 22, 10),
         };
-        var f = Fert(Today.AddDays(-200), [Crop(CropType.OilPalm)], plantingYear: 2015, forecast: forecast);
+        var f = Fert(Today.AddDays(-200), [Crop(BuiltInCrop.OilPalm)], plantingYear: 2015, forecast: forecast);
         Assert.Equal(Today.AddDays(1), f.RecommendedSprayDate);             // rain reaches it by day 3
     }
 
     [Fact]
     public void A_mixed_crop_type_must_be_spelled_out()
     {
-        Assert.Throws<DomainException>(() => Block.Create("f1", "A", [new BlockCrop(CropType.Mixed, 1, 100)], 1));
+        Assert.Throws<DomainException>(() => Block.Create("f1", "A", [new BlockCrop(BuiltInCrop.Mixed, 1, 100)], 1));
     }
 
     [Fact]
     public void Planting_year_must_be_sensible()
     {
-        Assert.Throws<DomainException>(() => Block.Create("f1", "A", [new BlockCrop(CropType.OilPalm, 1, 100)], 1, plantingYear: 1800));
-        var ok = Block.Create("f1", "A", [new BlockCrop(CropType.OilPalm, 1, 100)], 1, plantingYear: 2018);
+        Assert.Throws<DomainException>(() => Block.Create("f1", "A", [new BlockCrop(BuiltInCrop.OilPalm, 1, 100)], 1, plantingYear: 1800));
+        var ok = Block.Create("f1", "A", [new BlockCrop(BuiltInCrop.OilPalm, 1, 100)], 1, plantingYear: 2018);
         Assert.Equal(2018, ok.PlantingYear);
     }
 }

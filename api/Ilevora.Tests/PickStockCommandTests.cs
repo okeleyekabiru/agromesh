@@ -1,3 +1,4 @@
+using Ilevora.Domain.Crops;
 using Ilevora.Application.Commands.Inventory;
 using Ilevora.Application.DTOs;
 using Ilevora.Application.Interfaces;
@@ -111,7 +112,7 @@ public class PickStockCommandTests
     }
 
     private static Block CreateBlock(string farmId = "farm-1") =>
-        Block.Create(farmId, "Block A", [new BlockCrop(CropType.OilPalm, 10, 100)], 10);
+        Block.Create(farmId, "Block A", [new BlockCrop(BuiltInCrop.OilPalm, 10, 100)], 10);
 
     [Fact]
     public async Task Pick_ValidRequest_DeductsStockAndAttributesCurrentUserAndBlock()

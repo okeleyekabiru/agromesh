@@ -286,7 +286,7 @@
               <div v-for="cp in store.dashboard.cropPnl" :key="cp.cropType" class="pnl-item">
                 <div class="pnl-dot" :style="{ background: cropColor(cp.cropType) }" />
                 <div>
-                  <div class="pnl-crop">{{ cp.cropType }}</div>
+                  <div class="pnl-crop">{{ cropLabel(cp.cropType) }}</div>
                   <div class="pnl-cost">₦{{ (cp.cost / 1000).toFixed(0) }}K</div>
                   <div class="pnl-profit" :class="cp.netProfit >= 0 ? 'profit-up' : 'profit-dn'">
                     {{ cp.netProfit >= 0 ? '+' : '' }}₦{{ (cp.netProfit / 1000).toFixed(0) }}K net
@@ -362,7 +362,7 @@
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAgroStore } from '@/stores/agro'
-import { activityTypeLabel } from '@/utils/enums'
+import { activityTypeLabel, cropLabel } from '@/utils/enums'
 import AlertBanner from '@/components/ui/AlertBanner.vue'
 import ActivityRow from '@/components/ui/ActivityRow.vue'
 import TransactionRow from '@/components/ui/TransactionRow.vue'
@@ -480,7 +480,7 @@ const maizeArc = computed(() => {
 })
 
 const CROP_PALETTE: Record<string, string> = {
-  'Oil Palm': 'var(--leaf)', 'Palm': 'var(--leaf)',
+  'OilPalm': 'var(--leaf)', 'Oil Palm': 'var(--leaf)', 'Palm': 'var(--leaf)',
   'Maize': 'var(--harvest)',  'Corn': 'var(--harvest)'
 }
 function cropColor(type: string) {

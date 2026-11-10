@@ -1,3 +1,4 @@
+using Ilevora.Domain.Crops;
 using Ilevora.Application.Commands.Inventory;
 using Ilevora.Application.DTOs;
 using Ilevora.Application.Interfaces;
@@ -70,8 +71,8 @@ public class StockUsageFlowTests
 
     public StockUsageFlowTests()
     {
-        _blockA = Block.Create(_farm.Id, "Block A", [new BlockCrop(CropType.OilPalm, 10, 100)], 10);
-        _blockB = Block.Create(_farm.Id, "Block B", [new BlockCrop(CropType.OilPalm, 10, 100)], 10);
+        _blockA = Block.Create(_farm.Id, "Block A", [new BlockCrop(BuiltInCrop.OilPalm, 10, 100)], 10);
+        _blockB = Block.Create(_farm.Id, "Block B", [new BlockCrop(BuiltInCrop.OilPalm, 10, 100)], 10);
         _npk = InventoryItem.Create(_farm.Id, "NPK Fertilizer", "kg", "cat", 200, 20);
         typeof(InventoryItem).GetProperty(nameof(InventoryItem.Category))!
             .SetValue(_npk, InventoryCategory.Create(_farm.Id, "Fertilizer"));

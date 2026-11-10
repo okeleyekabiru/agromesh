@@ -34,8 +34,9 @@
 
         <!-- One crop -->
         <div v-if="cropKind === 'single'" class="crop-row">
-          <select class="form-select" v-model="detailsForm.crops[0].cropType" style="flex:1">
-            <option v-for="ct in CROP_TYPES" :key="ct" :value="ct">{{ CROP_LABELS[ct] }}</option>
+          <select class="form-select" :value="detailsForm.crops[0]?.cropId" style="flex:1" @change="onSingleCropChange(($event.target as HTMLSelectElement).value)">
+            <option v-for="ct in store.crops" :key="ct.id" :value="ct.id">{{ ct.name }}</option>
+            <option value="__new__">+ Add new crop...</option>
           </select>
         </div>
 
@@ -46,11 +47,12 @@
             timing follows the crops, so this matters.
           </div>
           <div class="crop-chips">
-            <button v-for="ct in CROP_TYPES" :key="ct" type="button" class="crop-chip"
-                    :class="{ on: hasCrop(ct) }" @click="toggleCrop(ct)">{{ CROP_LABELS[ct] }}</button>
+            <button v-for="ct in store.crops" :key="ct.id" type="button" class="crop-chip"
+                    :class="{ on: hasCrop(ct.id) }" @click="toggleCrop(ct.id)">{{ ct.name }}</button>
+            <button type="button" class="crop-chip" data-testid="add-crop-chip" @click="addingCrop = true">+ Add new crop</button>
           </div>
-          <div v-for="c in detailsForm.crops" :key="c.cropType" class="crop-row">
-            <div class="crop-name">{{ CROP_LABELS[c.cropType] }}</div>
+          <div v-for="c in detailsForm.crops" :key="c.cropId" class="crop-row">
+            <div class="crop-name">{{ cropName(c.cropId) }}</div>
             <input class="form-input" v-model.number="c.percentage" type="number"
                    min="1" max="100" style="width:72px" placeholder="%" @wheel.prevent />
             <span class="label-hint">% of the block</span>
@@ -59,6 +61,15 @@
           <div v-if="detailsForm.crops.length < 2" class="crop-warning">Choose at least two crops for a mixed block.</div>
           <div v-else-if="cropTotal !== 100" class="crop-warning">Total: {{ cropTotal }}% — must equal 100%</div>
         </template>
+        <!-- Add a crop that is not in the list yet -->
+        <div v-if="addingCrop" class="crop-row" data-testid="new-crop-form" style="margin-top:6px;">
+          <input class="form-input" v-model="newCropName" type="text" maxlength="100" placeholder="Crop name, e.g. Yam"
+                 style="flex:1" @keydown.enter.prevent="addCrop" />
+          <button type="button" class="btn-add-crop" style="width:auto;padding:7px 14px;" :disabled="!newCropName.trim() || savingCrop" @click="addCrop">Add</button>
+          <button type="button" class="btn-add-crop" style="width:auto;padding:7px 14px;" @click="cancelAddCrop">Cancel</button>
+        </div>
+        <div v-if="newCropError" class="form-error">{{ newCropError }}</div>
+
       </div>
 
       <div class="form-group">
@@ -224,11 +235,7 @@ const store = useAgroStore()
 
 // ── Constants ──
 const CORNER_COLORS = ['#3daa6a', '#e8a838', '#e64a19', '#5b4fcf', '#0288d1', '#c2185b']
-// Matches the backend's CropType enum (OilPalm=0, Maize=1, Mixed=2, Cocoa=3, Cassava=4). "Mixed" is not a crop
-// you can pick any more: a mixed block lists the real crops in it (the backend rejects a bare "Mixed").
-const CROP_TYPES = ['OilPalm', 'Maize', 'Cocoa', 'Cassava']
-const CROP_LABELS: Record<string, string> = { OilPalm: 'Oil palm', Maize: 'Maize', Cocoa: 'Cocoa', Cassava: 'Cassava' }
-const CROP_ORDINAL: Record<string, number> = { OilPalm: 0, Maize: 1, Mixed: 2, Cocoa: 3, Cassava: 4 }
+// "Mixed" is not a crop you can pick: a mixed block lists the real crops in it (the backend rejects a bare "Mixed").
 const MIN_CORNERS = 4
 
 // ── Phase machine: details -> boundary ──
@@ -238,32 +245,32 @@ const activeBlock = ref<Block | null>(props.block ?? null)
 // ── Phase 1: details form ──
 function cropsFromBlock(block: Block | null | undefined) {
   // A legacy "Mixed" entry says nothing about what is growing: drop it so the user is asked.
-  const real = (block?.crops ?? []).filter(c => c.cropType !== 'Mixed')
-  if (!block || !real.length) return [{ cropType: 'OilPalm', percentage: 100 }]
-  return real.map(c => ({ cropType: c.cropType, percentage: c.percentage }))
+  const real = (block?.crops ?? []).filter(c => c.cropId !== 'Mixed')
+  if (!block || !real.length) return [{ cropId: 'OilPalm', percentage: 100 }]
+  return real.map(c => ({ cropId: c.cropId, percentage: c.percentage }))
 }
 
-const wasMixed = !!props.block && (props.block.crops.length > 1 || props.block.crops.some(c => c.cropType === 'Mixed'))
+const wasMixed = !!props.block && (props.block.crops.length > 1 || props.block.crops.some(c => c.cropId === 'Mixed'))
 
 const detailsForm = ref({
   name: props.block?.name ?? '',
   areaValue: props.block?.area.hectares ?? 10,
-  crops: cropsFromBlock(props.block) as { cropType: string; percentage: number }[],
+  crops: cropsFromBlock(props.block) as { cropId: string; percentage: number }[],
   treeCount: (props.block?.treeCount ?? '') as number | '',
   plantingYear: (props.block?.plantingYear ?? '') as number | '',
 })
 const cropKind = ref<'single' | 'mixed'>(wasMixed ? 'mixed' : 'single')
 // A legacy "Mixed" block has no real crops to show yet: start with none picked.
-if (props.block?.crops.every(c => c.cropType === 'Mixed') && props.block.crops.length > 0) detailsForm.value.crops = []
+if (props.block?.crops.every(c => c.cropId === 'Mixed') && props.block.crops.length > 0) detailsForm.value.crops = []
 
 function setKind(kind: 'single' | 'mixed') {
   if (kind === cropKind.value) return
   cropKind.value = kind
-  const first = detailsForm.value.crops[0]?.cropType ?? 'OilPalm'
-  detailsForm.value.crops = kind === 'single' ? [{ cropType: first, percentage: 100 }] : [{ cropType: first, percentage: 100 }]
+  const first = detailsForm.value.crops[0]?.cropId ?? 'OilPalm'
+  detailsForm.value.crops = kind === 'single' ? [{ cropId: first, percentage: 100 }] : [{ cropId: first, percentage: 100 }]
 }
 
-function hasCrop(ct: string) { return detailsForm.value.crops.some(c => c.cropType === ct) }
+function hasCrop(ct: string) { return detailsForm.value.crops.some(c => c.cropId === ct) }
 
 function splitEvenly() {
   const n = detailsForm.value.crops.length
@@ -273,9 +280,41 @@ function splitEvenly() {
 }
 
 function toggleCrop(ct: string) {
-  if (hasCrop(ct)) detailsForm.value.crops = detailsForm.value.crops.filter(c => c.cropType !== ct)
-  else detailsForm.value.crops.push({ cropType: ct, percentage: 0 })
+  if (hasCrop(ct)) detailsForm.value.crops = detailsForm.value.crops.filter(c => c.cropId !== ct)
+  else detailsForm.value.crops.push({ cropId: ct, percentage: 0 })
   splitEvenly()
+}
+
+// ── Crops: the list comes from the API; a crop that is missing can be added on the spot ──
+const addingCrop = ref(false)
+const newCropName = ref('')
+const newCropError = ref('')
+const savingCrop = ref(false)
+
+function cropName(id: string) { return store.crops.find(c => c.id === id)?.name ?? props.block?.crops.find(c => c.cropId === id)?.cropName ?? id }
+
+function onSingleCropChange(value: string) {
+  if (value === '__new__') { addingCrop.value = true; return }
+  detailsForm.value.crops = [{ cropId: value, percentage: 100 }]
+}
+
+function cancelAddCrop() { addingCrop.value = false; newCropName.value = ''; newCropError.value = '' }
+
+async function addCrop() {
+  const name = newCropName.value.trim()
+  if (!name || savingCrop.value) return
+  savingCrop.value = true
+  newCropError.value = ''
+  try {
+    const crop = await store.createCrop(name)
+    if (cropKind.value === 'single') detailsForm.value.crops = [{ cropId: crop.id, percentage: 100 }]
+    else toggleCrop(crop.id)
+    cancelAddCrop()
+  } catch (e) {
+    newCropError.value = extractErrorMessage(e, 'Could not add the crop.')
+  } finally {
+    savingCrop.value = false
+  }
 }
 const savingDetails = ref(false)
 const detailsError = ref('')
@@ -293,7 +332,7 @@ async function saveDetails() {
   try {
     const payload = {
       name: detailsForm.value.name,
-      crops: detailsForm.value.crops.map(c => ({ cropType: CROP_ORDINAL[c.cropType], percentage: c.percentage })),
+      crops: detailsForm.value.crops.map(c => ({ cropId: c.cropId, percentage: c.percentage })),
       areaValue: detailsForm.value.areaValue,
       treeCount: detailsForm.value.treeCount === '' ? null : detailsForm.value.treeCount,
       plantingYear: detailsForm.value.plantingYear === '' ? null : detailsForm.value.plantingYear,
@@ -349,6 +388,7 @@ function parseExistingCorners(geoJson: string | null | undefined): typeof corner
 }
 
 onMounted(() => {
+  store.fetchCrops()
   // Pre-populate corners so they're ready by the time the user reaches the boundary step —
   // but always start at the details step (name/crops are still editable, per spec), never
   // skip straight past it just because a boundary already exists.

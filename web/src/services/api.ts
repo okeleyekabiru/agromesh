@@ -135,6 +135,12 @@ export const inventoryApi = {
   returnStock: (itemId: string, body: unknown) => api.post(`/api/farms/${FARM_ID}/inventory/${itemId}/return`, body)
 }
 
+// ── Crops (built-in + the farm own) ──
+export const cropApi = {
+  getAll: () => api.get(`/api/farms/${FARM_ID}/crops`),
+  create: (body: { name: string }) => api.post(`/api/farms/${FARM_ID}/crops`, body)
+}
+
 // ── Inventory Categories ──
 export const inventoryCategoryApi = {
   getAll: () => api.get(`/api/farms/${FARM_ID}/inventory-categories`),

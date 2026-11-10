@@ -144,7 +144,7 @@ public class GetReportQueryHandler : IRequestHandler<GetReportQuery, ReportDto>
             var (cost, count) = costByBlock.GetValueOrDefault(b.Id);
             // Cost per area in the farm's own unit (acres or hectares).
             var area = AreaConverter.ToDisplayUnit(b.Hectares, areaUnit);
-            return new ReportBlockDto(b.Id, b.Name, b.Crops.FirstOrDefault()?.CropType.ToString(), area,
+            return new ReportBlockDto(b.Id, b.Name, b.Crops.FirstOrDefault()?.Key, area,
                 Math.Round(cost, 2), area > 0 ? Math.Round(cost / (decimal)area, 2) : null, count);
         }).OrderByDescending(b => b.Cost).ToList();
 

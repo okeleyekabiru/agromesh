@@ -1,3 +1,4 @@
+using Ilevora.Domain.Crops;
 using Ilevora.Application.Services;
 using Ilevora.Domain.Entities;
 using Ilevora.Domain.Enums;
@@ -73,7 +74,7 @@ public class StructuredNarrationTests
 
 public class NarrationInterpreterTests
 {
-    private static Block MakeBlock(string name, params (CropType Crop, int Pct)[] crops) =>
+    private static Block MakeBlock(string name, params (BuiltInCrop Crop, int Pct)[] crops) =>
         Block.Create("farm", name, crops.Select(c => new BlockCrop(c.Crop, 0, c.Pct)).ToList(), 5);
 
     private static Transaction Debit(string narration, decimal amount = 5000) =>
@@ -83,7 +84,7 @@ public class NarrationInterpreterTests
     [Fact]
     public void The_spend_goes_to_the_named_block_and_category()
     {
-        var alpha = MakeBlock("Alpha", (CropType.OilPalm, 100));
+        var alpha = MakeBlock("Alpha", (BuiltInCrop.OilPalm, 100));
         var tx = Debit("ORD-1042/alpha/Fertilizer");
 
         Assert.True(NarrationInterpreter.Apply(tx, [alpha]));
@@ -97,7 +98,7 @@ public class NarrationInterpreterTests
     [Fact]
     public void A_mixed_block_splits_the_cost_across_its_crops()
     {
-        var mixed = MakeBlock("North", (CropType.OilPalm, 60), (CropType.Cassava, 40));
+        var mixed = MakeBlock("North", (BuiltInCrop.OilPalm, 60), (BuiltInCrop.Cassava, 40));
         var tx = Debit("ORD-1/North/Seeds");
 
         NarrationInterpreter.Apply(tx, [mixed]);
@@ -111,7 +112,7 @@ public class NarrationInterpreterTests
     {
         var tx = Debit("ORD-1/Nowhere/Fertilizer");
 
-        NarrationInterpreter.Apply(tx, [MakeBlock("Alpha", (CropType.Maize, 100))]);
+        NarrationInterpreter.Apply(tx, [MakeBlock("Alpha", (BuiltInCrop.Maize, 100))]);
 
         Assert.Null(tx.BlockId);
         Assert.Equal(TransactionCategory.Fertilizer, tx.Category);
@@ -122,7 +123,7 @@ public class NarrationInterpreterTests
     [Fact]
     public void An_unknown_type_is_flagged_and_the_block_still_applies()
     {
-        var alpha = MakeBlock("Alpha", (CropType.Maize, 100));
+        var alpha = MakeBlock("Alpha", (BuiltInCrop.Maize, 100));
         var tx = Debit("ORD-1/Alpha/gifts");
 
         NarrationInterpreter.Apply(tx, [alpha]);
@@ -137,7 +138,7 @@ public class NarrationInterpreterTests
     {
         var credit = Transaction.Create("farm", "m", "ORD-1/Alpha/Fertilizer", 5000, DateTime.UtcNow,
             TransactionCategory.Other, ConfidenceLevel.Low, CategorizationSource.Llm);
-        Assert.False(NarrationInterpreter.Apply(credit, [MakeBlock("Alpha", (CropType.Maize, 100))]));
+        Assert.False(NarrationInterpreter.Apply(credit, [MakeBlock("Alpha", (BuiltInCrop.Maize, 100))]));
         Assert.Null(credit.BlockId);
     }
 
@@ -145,7 +146,7 @@ public class NarrationInterpreterTests
     public void A_narration_with_no_order_is_left_alone()
     {
         var tx = Debit("diesel for generator");
-        Assert.False(NarrationInterpreter.Apply(tx, [MakeBlock("Alpha", (CropType.Maize, 100))]));
+        Assert.False(NarrationInterpreter.Apply(tx, [MakeBlock("Alpha", (BuiltInCrop.Maize, 100))]));
         Assert.Equal(TransactionCategory.Other, tx.Category);
     }
 }

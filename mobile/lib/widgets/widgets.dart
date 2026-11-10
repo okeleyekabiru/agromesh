@@ -192,7 +192,7 @@ class BlockTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(block.name, style: Theme.of(context).textTheme.titleMedium),
-                  Text(block.crop.label, style: Theme.of(context).textTheme.labelSmall),
+                  Text(block.cropLabel, style: Theme.of(context).textTheme.labelSmall),
                   if (work?.weeding != null) _cycleLine('🌿 Weeding', work!.weeding!),
                   if (work?.spraying != null) _cycleLine('💧 Spraying', work!.spraying!),
                   if (work?.fertilizing != null) _cycleLine('🌱 Fertilizer', work!.fertilizing!),

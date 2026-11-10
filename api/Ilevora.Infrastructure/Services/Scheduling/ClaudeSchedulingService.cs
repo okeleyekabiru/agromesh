@@ -218,7 +218,7 @@ public class ClaudeSchedulingService : IClaudeSchedulingService
         var sb = new StringBuilder();
         sb.AppendLine($"TODAY: {today:yyyy-MM-dd} ({today:dddd})");
         sb.AppendLine($"FARM: {farm.Name}{(location is null ? "" : $", {location}")}");
-        var crops = string.Join(", ", block.Crops.Select(c => $"{c.CropType} {c.Percentage}%"));
+        var crops = string.Join(", ", block.Crops.Select(c => $"{c.CropName} {c.Percentage}%"));
         sb.AppendLine($"BLOCK: {block.Name} | crops: {crops}" +
                       (block.PlantingYear is { } y ? $" | planted {y} (about {today.Year - y} years old)" : ""));
 
