@@ -44,7 +44,7 @@ services:
       - key: Resend__ApiKey
         sync: false
       - key: Resend__FromAddress
-        value: "Ilevora <no-reply@ilevora.com>"
+        value: "Ilevora <no-reply@visionarybytesolutions.com>"
       - key: Resend__Enabled
         value: "true"
       # Public URL of the web app (Vercel), used for links in emails. Set in the dashboard.
@@ -96,7 +96,7 @@ services:
       - key: Resend__ApiKey
         sync: false
       - key: Resend__FromAddress
-        value: "Ilevora <no-reply@ilevora.com>"
+        value: "Ilevora <no-reply@visionarybytesolutions.com>"
       - key: Resend__Enabled
         value: "true"
       # Public URL of the web app (Vercel), used for links in emails. Set in the dashboard.
