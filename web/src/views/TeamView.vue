@@ -197,5 +197,10 @@ onMounted(load)
 .invites-title { font-size: 11.5px; font-weight: 700; color: var(--stone); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 6px; }
 .inv-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--fog); flex-wrap: wrap; }
 .inv-row:last-child { border-bottom: none; }
+/* The email and role line get the full width; the badge and buttons sit on the line below so nothing overlaps. */
+.inv-row .who { flex: 1 1 100%; min-width: 0; }
+.inv-row .who .name, .inv-row .who .mail { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+.inv-row .btn { margin-left: 0; }
+.inv-row .btn:first-of-type { margin-left: auto; }
 .inv-row .btn.danger { color: var(--alert); border-color: rgba(220,60,60,0.35); }
 </style>
