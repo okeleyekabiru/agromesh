@@ -2,6 +2,7 @@
   <div class="settings">
     <FarmLogoCard />
     <BusinessProfileCard />
+    <EmailPreferenceCard />
   </div>
 </template>
 
@@ -10,6 +11,7 @@ import { onMounted } from 'vue'
 import { useAgroStore } from '@/stores/agro'
 import FarmLogoCard from '@/components/settings/FarmLogoCard.vue'
 import BusinessProfileCard from '@/components/settings/BusinessProfileCard.vue'
+import EmailPreferenceCard from '@/components/settings/EmailPreferenceCard.vue'
 
 const store = useAgroStore()
 // The settings are about the active farm, so make sure its record (hasLogo, logoUpdatedAt) is loaded

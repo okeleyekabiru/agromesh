@@ -201,6 +201,10 @@ export const authApi = {
   register: (body: { fullName: string; email: string; password: string; farmName: string }) =>
     api.post('/api/auth/register', body),
   me: () => api.get('/api/auth/me'),
+  forgotPassword: (body: { email: string }) =>
+    api.post('/api/auth/forgot-password', body),
+  resetPassword: (body: { token: string; newPassword: string }) =>
+    api.post('/api/auth/reset-password', body),
 }
 
 // ── Satellite crop condition per block ──
@@ -271,4 +275,21 @@ export const vendorInvoiceApi = {
   setStatus: (id: string, status: 'Paid' | 'Unpaid', paidAt?: string) =>
     api.patch(`/api/farms/${FARM_ID}/vendor-invoices/${id}/status`, paidAt ? { status, paidAt } : { status }),
   remove: (id: string) => api.delete(`/api/farms/${FARM_ID}/vendor-invoices/${id}`)
+}
+
+// ── Invitations (email link; preview and accept are public, the token is the credential) ──
+export const invitationApi = {
+  list:    () => api.get('/api/invitations'),
+  create:  (body: { email: string; role: string }) => api.post('/api/invitations', body),
+  resend:  (id: string) => api.post(`/api/invitations/${id}/resend`),
+  revoke:  (id: string) => api.delete(`/api/invitations/${id}`),
+  // POST so the one-time token stays out of URLs and proxy access logs.
+  preview: (token: string) => api.post('/api/invitations/preview', { token }),
+  accept:  (body: { token: string; fullName: string; password: string }) => api.post('/api/invitations/accept', body),
+}
+
+// ── Optional email preference of the signed-in user ──
+export const emailPreferenceApi = {
+  get: () => api.get('/api/users/me/email-preference'),
+  set: (enabled: boolean) => api.put('/api/users/me/email-preference', { enabled }),
 }

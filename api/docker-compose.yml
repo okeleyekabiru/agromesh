@@ -40,6 +40,10 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=ilevora;Username=ilevora;Password=ilevora_dev"
       ConnectionStrings__Redis: "redis:6379"
+      App__WebBaseUrl: "http://localhost:5173"
+      Resend__Enabled: "${RESEND_ENABLED:-false}"
+      Resend__ApiKey: "${RESEND_API_KEY:-}"
+      Resend__FromAddress: "${RESEND_FROM:-Ilevora <onboarding@resend.dev>}"
     volumes:
       # Local keys are mounted in, not baked into the image (see .dockerignore).
       - ./Ilevora.API/appsettings.Development.json:/app/appsettings.Development.json:ro

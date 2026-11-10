@@ -35,13 +35,11 @@
         <div class="head">
           <div>
             <div class="card-title">Invite someone</div>
-            <div class="sub">They sign in with the email and temporary password you set.</div>
+            <div class="sub">They get an email with a link to set their own password and join. The link works once and expires in 7 days.</div>
           </div>
         </div>
         <form class="invite" @submit.prevent="invite">
-          <label>Full name<input v-model.trim="form.fullName" placeholder="e.g. Ada Okafor" required /></label>
           <label>Email<input v-model.trim="form.email" type="email" placeholder="ada@example.com" required autocomplete="off" /></label>
-          <label>Temporary password<input v-model="form.password" type="text" placeholder="At least 8 characters" minlength="8" required autocomplete="off" /></label>
           <label>Role
             <select v-model="form.role">
               <option v-if="isAdmin" value="FarmManager">Farm manager</option>
@@ -51,8 +49,23 @@
           <div class="role-help">{{ ROLE_HELP[form.role] }}</div>
           <div v-if="error" class="error-msg">{{ error }}</div>
           <div v-if="done" class="ok-msg">{{ done }}</div>
-          <button class="btn btn-primary" :disabled="saving">{{ saving ? 'Adding…' : 'Add to team' }}</button>
+          <button class="btn btn-primary" :disabled="saving">{{ saving ? 'Sending…' : 'Send invitation' }}</button>
         </form>
+
+        <div v-if="invitations.length" class="invites">
+          <div class="invites-title">Invitations</div>
+          <div v-for="i in invitations" :key="i.id" class="inv-row">
+            <div class="who">
+              <div class="name">{{ i.email }}</div>
+              <div class="mail">{{ roleLabel(i.role) }} · expires {{ formatDate(i.expiresAt) }}</div>
+            </div>
+            <StatBadge :variant="statusVariant(i.status)">{{ i.status }}</StatBadge>
+            <template v-if="i.status === 'Pending' || i.status === 'Expired'">
+              <button class="btn btn-ghost btn-sm" :data-test="'resend-' + i.id" :disabled="busy[i.id]" @click="resend(i)">Resend</button>
+              <button class="btn btn-ghost btn-sm danger" :data-test="'revoke-' + i.id" :disabled="busy[i.id]" @click="revoke(i)">Revoke</button>
+            </template>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -60,13 +73,14 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
-import { api } from '@/services/api'
+import { api, invitationApi } from '@/services/api'
 import { useAgroStore } from '@/stores/agro'
 import { extractErrorMessage } from '@/utils/http'
 import AlertBanner from '@/components/ui/AlertBanner.vue'
 import StatBadge from '@/components/ui/StatBadge.vue'
 
 interface Member { id: string; fullName: string; email: string; role: string; isActive: boolean }
+interface Invitation { id: string; email: string; role: string; status: string; createdAt: string; expiresAt: string }
 
 const store = useAgroStore()
 // UX hint only: the API refuses everyone but an admin.
@@ -80,7 +94,8 @@ const error = ref('')
 const done = ref('')
 const rowError = ref('')
 const busy = reactive<Record<string, boolean>>({})
-const form = reactive({ fullName: '', email: '', password: '', role: store.currentUser?.role === 'Admin' ? 'FarmManager' : 'Supervisor' })
+const invitations = ref<Invitation[]>([])
+const form = reactive({ email: '', role: store.currentUser?.role === 'Admin' ? 'FarmManager' : 'Supervisor' })
 
 const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0].toUpperCase()).join('')
 const activeCount = computed(() => team.value.filter(m => m.isActive).length)
@@ -92,7 +107,28 @@ const ROLE_HELP: Record<string, string> = {
 
 const roleLabel = (r: string) => ({ FarmManager: 'Farm manager', Supervisor: 'Supervisor', Admin: 'Admin' } as Record<string, string>)[r] ?? r
 
+const formatDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+const statusVariant = (st: string) => (st === 'Pending' ? 'blue' : st === 'Accepted' ? 'green' : st === 'Revoked' ? 'red' : 'stone') as 'green' | 'blue' | 'red' | 'stone'
+
+async function loadInvitations() {
+  try { invitations.value = (await invitationApi.list()).data ?? [] } catch (e) { rowError.value = extractErrorMessage(e, 'Could not load invitations.') }
+}
+
+async function resend(i: Invitation) {
+  busy[i.id] = true
+  rowError.value = ''
+  try { await invitationApi.resend(i.id); await loadInvitations() } catch (e) { rowError.value = extractErrorMessage(e, 'Could not resend this invitation.') } finally { busy[i.id] = false }
+}
+
+async function revoke(i: Invitation) {
+  busy[i.id] = true
+  rowError.value = ''
+  try { await invitationApi.revoke(i.id); await loadInvitations() } catch (e) { rowError.value = extractErrorMessage(e, 'Could not revoke this invitation.') } finally { busy[i.id] = false }
+}
+
 async function load() {
+  if (!canInvite.value) return
+  await loadInvitations()
   if (!isAdmin.value) return
   loading.value = true
   try { team.value = (await api.get('/api/users')).data ?? [] } catch (e) { rowError.value = extractErrorMessage(e, 'Could not load the team.') } finally { loading.value = false }
@@ -103,12 +139,12 @@ async function invite() {
   error.value = ''
   done.value = ''
   try {
-    await api.post('/api/users', { ...form })
-    done.value = `${form.fullName} was added. Share the email and temporary password with them.`
-    Object.assign(form, { fullName: '', email: '', password: '' })
-    await load()
+    await invitationApi.create({ email: form.email, role: form.role })
+    done.value = `Invitation sent to ${form.email}.`
+    form.email = ''
+    await loadInvitations()
   } catch (e) {
-    error.value = extractErrorMessage(e, 'Could not add this person.')
+    error.value = extractErrorMessage(e, 'Could not send this invitation.')
   } finally {
     saving.value = false
   }
@@ -157,4 +193,9 @@ onMounted(load)
 .error-msg { font-size: 12px; color: var(--alert); }
 .error-msg.pad { padding: 0 20px 14px; }
 .ok-msg { font-size: 12px; color: var(--leaf); }
+.invites { border-top: 1px solid var(--fog); padding: 12px 20px 16px; }
+.invites-title { font-size: 11.5px; font-weight: 700; color: var(--stone); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 6px; }
+.inv-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--fog); flex-wrap: wrap; }
+.inv-row:last-child { border-bottom: none; }
+.inv-row .btn.danger { color: var(--alert); border-color: rgba(220,60,60,0.35); }
 </style>

@@ -131,6 +131,7 @@
                   </button>
                 </div>
               </div>
+              <div class="forgot-row"><router-link to="/forgot-password" class="link-btn">Forgot password?</router-link></div>
               <button type="submit" class="auth-submit" :disabled="submitting">
                 <span v-if="!submitting">Sign in</span>
                 <span v-else class="submit-loading">
@@ -981,6 +982,7 @@ onMounted(() => {
   text-underline-offset: 2px;
 }
 .link-btn:hover { color: #5EC986; }
+.forgot-row { text-align: right; margin: -4px 0 10px; font-size: 13px; }
 
 /* Form transition */
 .form-switch-enter-active { animation: fade-up 220ms var(--ease-out, cubic-bezier(.16,1,.3,1)) both; }

@@ -4,6 +4,8 @@ using Ilevora.Application;
 using Ilevora.Infrastructure;
 using Ilevora.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
+using System.Threading.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -76,7 +78,10 @@ try
                     var id = ctx.Principal?.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
                     var users = ctx.HttpContext.RequestServices.GetRequiredService<Ilevora.Application.Interfaces.IUserRepository>();
                     var user = id is null ? null : await users.GetByIdAsync(id, ctx.HttpContext.RequestAborted);
-                    if (user is null || !user.IsActive) ctx.Fail("This account is disabled.");
+                    if (user is null || !user.IsActive) { ctx.Fail("This account is disabled."); return; }
+                    // A password reset or change signs out every older session.
+                    var tv = ctx.Principal?.FindFirst("tv")?.Value;
+                    if (!user.IsTokenCurrent(int.TryParse(tv, out var version) ? version : null)) ctx.Fail("This session has ended. Sign in again.");
                 },
             };
         });
@@ -84,11 +89,38 @@ try
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
 
+    // Behind Render's proxy the socket address is the proxy's, so trust X-Forwarded-For for the client IP (rate limits are per IP).
+    builder.Services.Configure<ForwardedHeadersOptions>(o =>
+    {
+        o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        o.KnownNetworks.Clear();
+        o.KnownProxies.Clear();
+    });
+
+    // Throttles for the endpoints that send email or accept a one-time token.
+    builder.Services.AddRateLimiter(o =>
+    {
+        o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        static string Ip(HttpContext c) => c.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        static RateLimitPartition<string> PerIp(HttpContext c, int limit, TimeSpan window) =>
+            RateLimitPartition.GetFixedWindowLimiter(Ip(c), _ => new FixedWindowRateLimiterOptions { PermitLimit = limit, Window = window, QueueLimit = 0 });
+
+        o.AddPolicy("token-endpoints", c => PerIp(c, 10, TimeSpan.FromMinutes(15)));
+        o.AddPolicy("forgot-password", c => PerIp(c, 5, TimeSpan.FromMinutes(15)));
+        o.AddPolicy("invite", c =>
+        {
+            var user = c.User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value ?? Ip(c);
+            return RateLimitPartition.GetFixedWindowLimiter("invite:" + user,
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromHours(1), QueueLimit = 0 });
+        });
+    });
+
     builder.Services.AddCors(opts =>
         opts.AddPolicy("AllowAll", p => p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 
     var app = builder.Build();
 
+    app.UseForwardedHeaders();
     app.UseMiddleware<ExceptionMiddleware>();
 
     if (app.Environment.IsDevelopment())
@@ -116,6 +148,7 @@ try
     app.UseCors("AllowAll");
     app.UseAuthentication();
     app.UseAuthorization();
+    app.UseRateLimiter();
     app.MapControllers();
 
     // Pinged by an external scheduler (the Vercel daily cron) to wake a spun-down Render instance.

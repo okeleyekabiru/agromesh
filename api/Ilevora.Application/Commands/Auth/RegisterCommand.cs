@@ -1,4 +1,5 @@
 using Ilevora.Application.DTOs;
+using Ilevora.Application.Email;
 using Ilevora.Application.Interfaces;
 using Ilevora.Domain.Entities;
 using Ilevora.Domain.Exceptions;
@@ -16,6 +17,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
     private readonly IInventoryCategoryRepository _categoryRepo;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtService _jwtService;
+    private readonly IEmailSender _email;
+    private readonly IAppUrls _urls;
 
     public RegisterCommandHandler(
         IUserRepository userRepo,
@@ -23,7 +26,9 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
         IFarmRepository farmRepo,
         IInventoryCategoryRepository categoryRepo,
         IPasswordHasher passwordHasher,
-        IJwtService jwtService)
+        IJwtService jwtService,
+        IEmailSender email,
+        IAppUrls urls)
     {
         _userRepo = userRepo;
         _companyRepo = companyRepo;
@@ -31,6 +36,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
         _categoryRepo = categoryRepo;
         _passwordHasher = passwordHasher;
         _jwtService = jwtService;
+        _email = email;
+        _urls = urls;
     }
 
     public async Task<AuthResponse> Handle(RegisterCommand command, CancellationToken ct)
@@ -55,6 +62,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
 
         user.AssignCompany(company.Id);
         await _userRepo.SaveAsync(ct);
+
+        await _email.TrySendAsync(EmailTemplates.Welcome(user.Email, user.FullName, _urls.Login), ct);
 
         var token = _jwtService.GenerateToken(user);
         var farmSummary = new FarmSummaryDto(farm.Id, farm.Name, farm.SetupStatus);

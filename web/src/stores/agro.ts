@@ -10,7 +10,7 @@ import type {
 import {
   farmApi, blockApi, activityApi, transactionApi,
   workerApi, workerRoleApi, inventoryApi, inventoryCategoryApi, cropApi, inventoryAdjustmentsApi, inventoryPriceChangesApi, chemicalApi,
-  authApi, featuresApi, referenceApi, supplierApi, orderApi, reportApi,
+  authApi, invitationApi, featuresApi, referenceApi, supplierApi, orderApi, reportApi,
   setFarmId, logoApi,
   managersApi, satelliteApi
 } from '@/services/api'
@@ -637,6 +637,20 @@ export const useAgroStore = defineStore('agro', () => {
     return data
   }
 
+  async function acceptInvitation(body: { token: string; fullName: string; password: string }) {
+    const res = await invitationApi.accept(body)
+    const data = res.data as AuthResponse
+    token.value = data.token
+    currentUser.value = data.user
+    companyId.value = data.companyId ?? data.user.companyId ?? null
+    farms.value = data.farms ?? []
+    localStorage.setItem('agro_token', data.token)
+    localStorage.setItem('agro_user', JSON.stringify(data.user))
+    applyActiveFarm()
+    needsOnboarding.value = farms.value.length === 0
+    return data
+  }
+
   function logout() {
     token.value = null
     currentUser.value = null
@@ -763,6 +777,6 @@ export const useAgroStore = defineStore('agro', () => {
     fetchFarms, switchFarm, addFarm, setActiveFarm, fetchStates, setFarmLocation,
     completeFarmSetup, submitBoundaryPoints, uploadBoundaryFile, updateBlock,
     // auth actions
-    login, register, logout, fetchFeatures, restoreSession,
+    login, register, acceptInvitation, logout, fetchFeatures, restoreSession,
   }
 })

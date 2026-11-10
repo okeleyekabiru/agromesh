@@ -9,6 +9,9 @@ public class IlevoraDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Company> Companies => Set<Company>();
+    public DbSet<Invitation> Invitations => Set<Invitation>();
+    public DbSet<EmailOutboxMessage> EmailOutbox => Set<EmailOutboxMessage>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<State> States => Set<State>();
     public DbSet<Farm> Farms => Set<Farm>();
     public DbSet<Block> Blocks => Set<Block>();

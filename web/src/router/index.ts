@@ -17,6 +17,9 @@ import InvoicesView from '@/views/InvoicesView.vue'
 import InvoiceFormView from '@/views/InvoiceFormView.vue'
 import VendorInvoicesView from '@/views/VendorInvoicesView.vue'
 import FarmSettingsView from '@/views/FarmSettingsView.vue'
+import AcceptInviteView from '@/views/AcceptInviteView.vue'
+import ForgotPasswordView from '@/views/ForgotPasswordView.vue'
+import ResetPasswordView from '@/views/ResetPasswordView.vue'
 
 const currentMonth = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }).toUpperCase()
 
@@ -26,6 +29,9 @@ const routes = [
   { path: '/onboarding',    name: 'onboarding',     component: OnboardingView,   meta: { public: true } },
   { path: '/blocks-setup', name: 'blocks-setup', component: BlocksSetupView, meta: { public: true } },
   { path: '/setup-review',  name: 'setup-review',   component: ReviewConfirmView, meta: { public: true } },
+  { path: '/accept-invite',   name: 'accept-invite',   component: AcceptInviteView,   meta: { public: true } },
+  { path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordView, meta: { public: true } },
+  { path: '/reset-password',  name: 'reset-password',  component: ResetPasswordView,  meta: { public: true } },
 
   // App (require auth)
   { path: '/dashboard',  name: 'dashboard',  component: DashboardView,  meta: { title: 'Farm Overview',  sub: currentMonth } },

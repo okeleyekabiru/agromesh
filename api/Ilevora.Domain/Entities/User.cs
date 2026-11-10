@@ -17,7 +17,22 @@ public class User : BaseEntity
     // A disabled account cannot sign in, and a token it already holds stops working. Only an admin changes this.
     public bool IsActive { get; private set; } = true;
 
+    // Bumped whenever the password changes. Tokens carry the version they were issued with, so a reset or change
+    // signs out every session issued before it.
+    public int TokenVersion { get; private set; }
+
+    // Optional email (e.g. "your invitee joined") only. Security and account email (invite, reset, password changed) is always sent.
+    public bool EmailNotificationsEnabled { get; private set; } = true;
+
     private User() { }
+
+    public bool IsTokenCurrent(int? tokenVersionClaim) => (tokenVersionClaim ?? 0) == TokenVersion;
+
+    public void SetEmailNotifications(bool enabled)
+    {
+        EmailNotificationsEnabled = enabled;
+        UpdatedAt = DateTime.UtcNow;
+    }
 
     public static User Create(string fullName, string email, string passwordHash) => new()
     {
@@ -40,6 +55,13 @@ public class User : BaseEntity
     public void SetActive(bool active)
     {
         IsActive = active;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetPasswordHash(string passwordHash)
+    {
+        PasswordHash = passwordHash;
+        TokenVersion++;
         UpdatedAt = DateTime.UtcNow;
     }
 

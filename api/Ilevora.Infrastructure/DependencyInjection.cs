@@ -4,6 +4,7 @@ using Ilevora.Infrastructure.Persistence;
 using Ilevora.Infrastructure.Persistence.Repositories;
 using Ilevora.Infrastructure.Services;
 using Ilevora.Infrastructure.Services.Auth;
+using Ilevora.Infrastructure.Services.Email;
 using Ilevora.Infrastructure.Services.Financial;
 using Ilevora.Infrastructure.Services.Invoices;
 using Ilevora.Infrastructure.Services.Scheduling;
@@ -66,6 +67,30 @@ public static class DependencyInjection
         services.AddScoped<IVendorInvoiceRepository, VendorInvoiceRepository>();
         services.AddScoped<ISchedulingPredictionRepository, SchedulingPredictionRepository>();
         services.AddScoped<ICropAllocationRuleRepository, CropAllocationRuleRepository>();
+
+        services.AddScoped<IInvitationRepository, InvitationRepository>();
+        services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+
+        // Transactional email (Resend). IEmailSender writes to the EmailOutbox table; EmailDispatchService delivers from there in the background.
+        services.Configure<ResendOptions>(o =>
+        {
+            o.ApiKey = config["Resend:ApiKey"];
+            o.FromAddress = config["Resend:FromAddress"];
+            o.Enabled = bool.TryParse(config["Resend:Enabled"], out var enabled) && enabled;
+        });
+        services.Configure<AppOptions>(o =>
+        {
+            var url = config["App:WebBaseUrl"];
+            if (!string.IsNullOrWhiteSpace(url)) o.WebBaseUrl = url;
+        });
+        services.AddHttpClient<ResendEmailTransport>(c => c.Timeout = TimeSpan.FromSeconds(15));
+        services.AddScoped<IEmailSender, OutboxEmailSender>();
+        services.AddScoped<IEmailOutboxStore, EmailOutboxStore>();
+        services.AddScoped<IEmailTransport>(sp => sp.GetRequiredService<ResendEmailTransport>());
+        services.AddScoped<EmailOutboxProcessor>();
+        services.AddSingleton<IAppUrls, AppUrls>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddHostedService<EmailDispatchService>();
 
         services.AddScoped<IWeatherService, WeatherService>();
         services.AddScoped<IGeocodingService, GeocodingService>();
