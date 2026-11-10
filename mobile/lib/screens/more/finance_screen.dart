@@ -11,6 +11,9 @@ const _categories = [
 ];
 const _kinds = ['Expense', 'Income', 'Capital'];
 
+// Bank linking (Mono) is disabled for now; set to true to bring the card back.
+const kBankLinkingEnabled = false;
+
 String _catLabel(String c) => c == 'TaxAndCharges' ? 'Tax & Charges' : c;
 
 String _enumName(dynamic v, List<String> names) {
@@ -98,7 +101,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
             ),
           ]),
           const SizedBox(height: 14),
-          _bankCard(ctx, farm, d.bank, reload),
+          // Bank linking (Mono) is disabled for now.
+          if (kBankLinkingEnabled) _bankCard(ctx, farm, d.bank, reload),
           if (d.queue.isNotEmpty) ...[
             const SizedBox(height: 14),
             _queueCard(ctx, farm, d.queue, reload),

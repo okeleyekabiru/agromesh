@@ -26,6 +26,7 @@ public class MonoApiService : IMonoBankService
     private readonly ILogger<MonoApiService> _logger;
     private readonly PaymentReconciler _reconciler;
     private readonly IBlockRepository _blockRepo;
+    private readonly bool _enabled;
 
     public MonoApiService(
         IHttpClientFactory httpFactory,
@@ -40,6 +41,8 @@ public class MonoApiService : IMonoBankService
         _blockRepo = blockRepo;
         _http = httpFactory.CreateClient("mono-client");
         _secretKey = config["Mono:SecretKey"];
+        // Bank linking is off until the Mono licence is in place. Set Mono:Enabled=true to turn it back on.
+        _enabled = config.GetValue<bool>("Mono:Enabled");
         _transactionRepo = transactionRepo;
         _categorizationService = categorizationService;
         _logger = logger;
@@ -71,7 +74,7 @@ public class MonoApiService : IMonoBankService
 
     public async Task UnlinkAsync(string monoAccountId, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(_secretKey)) return;
+        if (!_enabled || string.IsNullOrWhiteSpace(_secretKey)) return;
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Post, $"{BaseUrl}/v2/accounts/{monoAccountId}/unlink");
@@ -88,6 +91,11 @@ public class MonoApiService : IMonoBankService
 
     public async Task<int> SyncTransactionsAsync(string farmId, string monoAccountId, CancellationToken ct = default)
     {
+        if (!_enabled)
+        {
+            _logger.LogInformation("Bank sync is disabled (Mono:Enabled is false) — skipping farm {FarmId}", farmId);
+            return 0;
+        }
         if (string.IsNullOrWhiteSpace(_secretKey))
         {
             _logger.LogWarning("Mono:SecretKey not configured — skipping sync for farm {FarmId}", farmId);
@@ -169,6 +177,8 @@ public class MonoApiService : IMonoBankService
 
     private void RequireKey()
     {
+        if (!_enabled)
+            throw new DomainException("Bank linking is not available yet.");
         if (string.IsNullOrWhiteSpace(_secretKey))
             throw new DomainException("Bank linking is not set up on the server yet (the Mono key is missing).");
     }

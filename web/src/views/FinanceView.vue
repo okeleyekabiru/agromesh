@@ -1,6 +1,7 @@
 <template>
   <div>
-    <BankAccountCard @changed="reload" />
+    <!-- Bank linking (Mono) is disabled for now. Flip BANK_LINKING_ENABLED in the script to bring it back. -->
+    <BankAccountCard v-if="BANK_LINKING_ENABLED" @changed="reload" />
 
     <div class="kpi-grid kpi-money">
       <KpiCard label="Income · MTD"  :value="money(summary?.income)"   delta="money in, not capital" deltaType="up" />
@@ -67,6 +68,8 @@ import FilterPill from '@/components/ui/FilterPill.vue'
 import TransactionRow from '@/components/ui/TransactionRow.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import BankAccountCard from '@/components/ui/BankAccountCard.vue'
+
+const BANK_LINKING_ENABLED = false
 import TransactionDetailModal from '@/components/modal/TransactionDetailModal.vue'
 import { transactionApi } from '@/services/api'
 import { extractErrorMessage } from '@/utils/http'
