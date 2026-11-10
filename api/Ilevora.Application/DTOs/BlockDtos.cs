@@ -1,8 +1,11 @@
 using Ilevora.Domain.Enums;
 
+
 namespace Ilevora.Application.DTOs;
 
-public record BlockCropDto(CropType CropType, AreaDto Area, int Percentage);
+// CropType keeps the old enum ordinal on the wire for older clients (OilPalm 0, Maize 1, Mixed 2, Cocoa 3, Cassava 4); crops added since send 2.
+// New clients use CropId + CropName.
+public record BlockCropDto(int CropType, string CropId, string CropName, AreaDto Area, int Percentage);
 
 public record BlockDto(
     string Id,
@@ -22,7 +25,12 @@ public record BlockDto(
     int? PlantingYear = null,
     UpcomingTaskDto? NextFertilizingPrediction = null);
 
-public record BlockCropInput(CropType CropType, double Percentage);
+// A crop is named by CropId (built-in code or custom crop id); CropType (old enum ordinal) is accepted when CropId is absent.
+public record BlockCropInput(double Percentage, string? CropId = null, int? CropType = null);
+
+public record CropDto(string Id, string Name, bool IsBuiltIn, int CropType);
+
+public record CreateCropRequest(string Name);
 
 // Boundary capture (GPS corner capture or GeoJSON/KML upload) happens as a separate step
 // after creation, via the dedicated boundary endpoints — not bundled into block creation.

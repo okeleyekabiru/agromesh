@@ -20,15 +20,13 @@ class AddBlockScreen extends StatefulWidget {
 }
 
 class _AddBlockScreenState extends State<AddBlockScreen> {
-  /// Real crops only: "Mixed" is not a crop, it is several of these.
-  static const _crops = [CropType.oilPalm, CropType.maize, CropType.cocoa, CropType.cassava];
 
   final _nameCtrl = TextEditingController();
   final _areaCtrl = TextEditingController();
   final _yearCtrl = TextEditingController();
   bool _mixed = false;
-  CropType _single = CropType.oilPalm;
-  final Map<CropType, int> _mix = {};
+  String _single = 'OilPalm';
+  final Map<String, int> _mix = {};
   bool _isSubmitting = false;
   String? _error;
   int? _treeCount;
@@ -38,19 +36,21 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) context.read<AppStore>().fetchCrops(); });
     final b = widget.editing;
     if (b == null) return;
     _nameCtrl.text = b.name;
     _areaCtrl.text = b.hectares.toStringAsFixed(2);
     _treeCount = b.treeCount;
-    final real = b.crops.where((c) => _crops.contains(c.cropType)).toList();
+    // "Mixed" is not a crop, it is several of these: a legacy Mixed entry is dropped so the user is asked.
+    final real = b.crops.where((c) => c.cropId != 'Mixed').toList();
     if (real.length > 1) {
       _mixed = true;
       for (final c in real) {
-        _mix[c.cropType] = c.percentage.round();
+        _mix[c.cropId] = c.percentage.round();
       }
     } else if (real.length == 1) {
-      _single = real.first.cropType;
+      _single = real.first.cropId;
     }
     // The year planted is not kept on the phone, so read it from the server.
     ApiClient.get('/api/farms/${b.farmId}/blocks').then((j) {
@@ -70,6 +70,55 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
     super.dispose();
   }
 
+  /// The farm's crops, plus any crop already on the block being edited that is no longer in the list.
+  List<Crop> _cropList(AppStore store) {
+    final list = [...store.crops.where((c) => c.id != 'Mixed')];
+    for (final c in widget.editing?.crops ?? const <BlockCrop>[]) {
+      if (c.cropId != 'Mixed' && !list.any((x) => x.id == c.cropId)) list.add(Crop(id: c.cropId, name: c.cropName));
+    }
+    return list;
+  }
+
+  String _nameOf(String id) {
+    final store = context.read<AppStore>();
+    for (final c in _cropList(store)) {
+      if (c.id == id) return c.name;
+    }
+    return id;
+  }
+
+  /// Asks for a name and adds it to the farm's crop list, then selects it.
+  Future<void> _addCrop() async {
+    final ctrl = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add new crop'),
+        content: TextField(controller: ctrl, autofocus: true, maxLength: 100, decoration: const InputDecoration(hintText: 'e.g. Yam')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, ctrl.text.trim()), child: const Text('Add')),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (name == null || name.isEmpty || !mounted) return;
+    try {
+      final crop = await context.read<AppStore>().createCrop(name);
+      if (!mounted) return;
+      setState(() {
+        if (_mixed) {
+          _toggle(crop.id);
+        } else {
+          _single = crop.id;
+        }
+        _error = null;
+      });
+    } catch (e) {
+      if (mounted) setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+    }
+  }
+
   int get _mixTotal => _mix.values.fold(0, (a, b) => a + b);
 
   void _splitEvenly() {
@@ -82,7 +131,7 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
     }
   }
 
-  void _toggle(CropType c) {
+  void _toggle(String c) {
     setState(() {
       if (_mix.containsKey(c)) {
         _mix.remove(c);
@@ -114,8 +163,8 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
     }
 
     final crops = _mixed
-        ? _mix.entries.map((e) => BlockCrop(cropType: e.key, percentage: e.value.toDouble())).toList()
-        : [BlockCrop(cropType: _single, percentage: 100)];
+        ? _mix.entries.map((e) => BlockCrop(cropId: e.key, cropName: _nameOf(e.key), percentage: e.value.toDouble())).toList()
+        : [BlockCrop(cropId: _single, cropName: _nameOf(_single), percentage: 100)];
 
     setState(() {
       _isSubmitting = true;
@@ -175,6 +224,7 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
   @override
   Widget build(BuildContext context) {
     final isOnline = context.watch<AppStore>().isOnline;
+    final crops = _cropList(context.watch<AppStore>());
 
     return Scaffold(
       backgroundColor: IlevoraColors.mist,
@@ -225,11 +275,14 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
             if (!_mixed)
               Wrap(
                 spacing: 8,
-                children: _crops.map((c) => ChoiceChip(
-                  label: Text(c.label),
-                  selected: _single == c,
-                  onSelected: (_) => setState(() => _single = c),
-                )).toList(),
+                children: [
+                  ...crops.map((c) => ChoiceChip(
+                    label: Text(c.name),
+                    selected: _single == c.id,
+                    onSelected: (_) => setState(() => _single = c.id),
+                  )),
+                  ActionChip(avatar: const Icon(Icons.add, size: 16), label: const Text('Add new crop'), onPressed: _addCrop),
+                ],
               )
             else ...[
               const Text('Pick every crop in this block, then its share of the block. Fertilizer timing follows the crops.',
@@ -237,22 +290,25 @@ class _AddBlockScreenState extends State<AddBlockScreen> {
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
-                children: _crops.map((c) => FilterChip(
-                  label: Text(c.label),
-                  selected: _mix.containsKey(c),
-                  onSelected: (_) => _toggle(c),
-                )).toList(),
+                children: [
+                  ...crops.map((c) => FilterChip(
+                    label: Text(c.name),
+                    selected: _mix.containsKey(c.id),
+                    onSelected: (_) => _toggle(c.id),
+                  )),
+                  ActionChip(avatar: const Icon(Icons.add, size: 16), label: const Text('Add new crop'), onPressed: _addCrop),
+                ],
               ),
               for (final c in _mix.keys.toList())
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Row(
                     children: [
-                      Expanded(child: Text(c.label, style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: IlevoraColors.forest))),
+                      Expanded(child: Text(_nameOf(c), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600, color: IlevoraColors.forest))),
                       SizedBox(
                         width: 90,
                         child: TextFormField(
-                          key: ValueKey('${c.name}-${_mix[c]}'),
+                          key: ValueKey('$c-${_mix[c]}'),
                           initialValue: '${_mix[c]}',
                           keyboardType: TextInputType.number,
                           decoration: const InputDecoration(suffixText: '%'),

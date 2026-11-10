@@ -1,5 +1,6 @@
 using Ilevora.Application.DTOs;
 using Ilevora.Application.Interfaces;
+using Ilevora.Application.Services;
 using Ilevora.Domain.Exceptions;
 using Ilevora.Domain.Utilities;
 using Ilevora.Domain.ValueObjects;
@@ -14,12 +15,14 @@ public class CreateBlockCommandHandler : IRequestHandler<CreateBlockCommand, Blo
     private readonly IBlockRepository _blockRepo;
     private readonly IFarmRepository _farmRepo;
     private readonly ICurrentUserAccessor _currentUser;
+    private readonly ICropRepository _cropRepo;
 
-    public CreateBlockCommandHandler(IBlockRepository blockRepo, IFarmRepository farmRepo, ICurrentUserAccessor currentUser)
+    public CreateBlockCommandHandler(IBlockRepository blockRepo, IFarmRepository farmRepo, ICurrentUserAccessor currentUser, ICropRepository cropRepo)
     {
         _blockRepo = blockRepo;
         _farmRepo = farmRepo;
         _currentUser = currentUser;
+        _cropRepo = cropRepo;
     }
 
     public async Task<BlockDto> Handle(CreateBlockCommand command, CancellationToken ct)
@@ -36,10 +39,7 @@ public class CreateBlockCommandHandler : IRequestHandler<CreateBlockCommand, Blo
             throw new DomainException("Area must be between 0 and 100,000.");
         var totalHectares = AreaConverter.ToHectares(req.AreaValue, farm.PreferredAreaUnit);
 
-        var crops = req.Crops.Select(c => new BlockCrop(
-            c.CropType,
-            Math.Round(totalHectares * (c.Percentage / 100.0), 4),
-            (int)c.Percentage)).ToList();
+        var crops = await CropResolver.ResolveAsync(_cropRepo, farm.Id, req.Crops, totalHectares, ct);
 
         var block = Domain.Entities.Block.Create(command.FarmId, req.Name, crops, totalHectares, treeCount: req.TreeCount, plantingYear: req.PlantingYear);
         if (totalHectares > 0)
@@ -52,7 +52,7 @@ public class CreateBlockCommandHandler : IRequestHandler<CreateBlockCommand, Blo
 
     public static BlockDto MapToDto(Domain.Entities.Block block, Domain.Enums.AreaUnit unit) => new(
         block.Id, block.FarmId, block.Name,
-        block.Crops.Select(c => new BlockCropDto(c.CropType, AreaDto.From(c.Hectares, unit), c.Percentage)).ToList(),
+        block.Crops.Select(c => new BlockCropDto(CropResolver.WireOrdinal(c.CropId), c.CropId, c.CropName, AreaDto.From(c.Hectares, unit), c.Percentage)).ToList(),
         AreaDto.From(block.Hectares, unit),
         block.Status, block.LastActivityDate, block.BoundaryGeoJson, block.BoundarySource,
         block.CentroidLat, block.CentroidLng, block.TreeCount,

@@ -34,13 +34,10 @@ export function normalizeActivity(a: ActivityLog): ActivityLog {
   }
 }
 
-const CROP_NAMES = ['OilPalm', 'Maize', 'Mixed', 'Cocoa', 'Cassava']
-
-/** A block as sent by the API (ordinal crop types and task activity types) with names the UI can compare. */
+/** A block as sent by the API (task activity types as ordinals) with names the UI can compare. */
 export function normalizeBlock(b: Block): Block {
   return {
     ...b,
-    crops: (b.crops ?? []).map(c => ({ ...c, cropType: nameOf(c.cropType, CROP_NAMES) as Block['crops'][number]['cropType'] })),
     nextWeedingPrediction: normalizeTask(b.nextWeedingPrediction),
     nextSprayingPrediction: normalizeTask(b.nextSprayingPrediction),
     nextFertilizingPrediction: normalizeTask(b.nextFertilizingPrediction),
@@ -76,4 +73,13 @@ const SPLIT_LABELS: Record<string, string> = {
 }
 export function activityTypeLabel(t: string): string {
   return SPLIT_LABELS[t] ?? t
+}
+
+/** Readable crop name for a crop-keyed figure (reports, profit by crop): built-in codes like OilPalm become "Oil palm"; custom names pass through. */
+export function cropLabel(key: string): string {
+  if (/^[A-Z][a-z]+([A-Z][a-z]+)+$/.test(key)) {
+    const spaced = key.replace(/([a-z])([A-Z])/g, '$1 $2')
+    return spaced.charAt(0) + spaced.slice(1).toLowerCase()
+  }
+  return key
 }

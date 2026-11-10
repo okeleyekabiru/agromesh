@@ -1,5 +1,6 @@
 using Ilevora.Application.DTOs;
 using Ilevora.Application.Interfaces;
+using Ilevora.Application.Services;
 using Ilevora.Domain.Exceptions;
 using Ilevora.Domain.Utilities;
 using Ilevora.Domain.ValueObjects;
@@ -14,12 +15,14 @@ public class UpdateBlockCommandHandler : IRequestHandler<UpdateBlockCommand, Blo
     private readonly IBlockRepository _blockRepo;
     private readonly IFarmRepository _farmRepo;
     private readonly ICurrentUserAccessor _currentUser;
+    private readonly ICropRepository _cropRepo;
 
-    public UpdateBlockCommandHandler(IBlockRepository blockRepo, IFarmRepository farmRepo, ICurrentUserAccessor currentUser)
+    public UpdateBlockCommandHandler(IBlockRepository blockRepo, IFarmRepository farmRepo, ICurrentUserAccessor currentUser, ICropRepository cropRepo)
     {
         _blockRepo = blockRepo;
         _farmRepo = farmRepo;
         _currentUser = currentUser;
+        _cropRepo = cropRepo;
     }
 
     public async Task<BlockDto> Handle(UpdateBlockCommand command, CancellationToken ct)
@@ -39,10 +42,7 @@ public class UpdateBlockCommandHandler : IRequestHandler<UpdateBlockCommand, Blo
             throw new DomainException("Area must be between 0 and 100,000.");
         var totalHectares = AreaConverter.ToHectares(req.AreaValue, farm.PreferredAreaUnit);
 
-        var crops = req.Crops.Select(c => new BlockCrop(
-            c.CropType,
-            Math.Round(totalHectares * (c.Percentage / 100.0), 4),
-            (int)c.Percentage)).ToList();
+        var crops = await CropResolver.ResolveAsync(_cropRepo, farm.Id, req.Crops, totalHectares, ct);
 
         block.Rename(req.Name);
         block.UpdateCrops(crops);

@@ -1,3 +1,4 @@
+using Ilevora.Domain.Crops;
 using Ilevora.Application.DTOs;
 using Ilevora.Application.Queries.Report;
 using Ilevora.Domain.Entities;
@@ -33,7 +34,7 @@ public class ReportBuilderTests
     {
         var npk = Item("NPK", "Fertilizer", 500);
         var fuel = Item("Diesel", "Fuel", 1000);
-        var block = Block.Create("f1", "Alpha", [new BlockCrop(CropType.OilPalm, 10, 100)], 10);
+        var block = Block.Create("f1", "Alpha", [new BlockCrop(BuiltInCrop.OilPalm, 10, 100)], 10);
 
         var report = GetReportQueryHandler.Build(2026, 10,
             [Activity(block.Id, ActivityType.FertilizerApplication, 4000, 30000,
@@ -55,8 +56,8 @@ public class ReportBuilderTests
     [Fact]
     public void Cost_per_hectare_uses_the_blocks_activity_cost()
     {
-        var a = Block.Create("f1", "Alpha", [new BlockCrop(CropType.OilPalm, 10, 100)], 10);
-        var b = Block.Create("f1", "Beta", [new BlockCrop(CropType.Maize, 4, 100)], 4);
+        var a = Block.Create("f1", "Alpha", [new BlockCrop(BuiltInCrop.OilPalm, 10, 100)], 10);
+        var b = Block.Create("f1", "Beta", [new BlockCrop(BuiltInCrop.Maize, 4, 100)], 4);
 
         var report = GetReportQueryHandler.Build(2026, 10,
             [Activity(a.Id, ActivityType.Weeding, 5000, 0)], [], [a, b], [], []);
@@ -67,7 +68,7 @@ public class ReportBuilderTests
         Assert.Equal("OilPalm", alpha.CropType);
         Assert.Equal(0m, report.Blocks.Single(x => x.BlockName == "Beta").Cost);
         // No area entered -> no per-area figure rather than a misleading 0.
-        var noArea = GetReportQueryHandler.Build(2026, 10, [Activity(a.Id, ActivityType.Weeding, 100, 0)], [], [Block.Create("f1", "Gamma", [new BlockCrop(CropType.OilPalm, 0, 100)], 0)], [], []);
+        var noArea = GetReportQueryHandler.Build(2026, 10, [Activity(a.Id, ActivityType.Weeding, 100, 0)], [], [Block.Create("f1", "Gamma", [new BlockCrop(BuiltInCrop.OilPalm, 0, 100)], 0)], [], []);
         Assert.Null(noArea.Blocks.Single().CostPerArea);
         Assert.Equal("Weeding", report.ByActivityType.Single().ActivityType);
     }
@@ -75,7 +76,7 @@ public class ReportBuilderTests
     [Fact]
     public void Cost_per_area_follows_the_farms_unit_in_acres()
     {
-        var a = Block.Create("f1", "Alpha", [new BlockCrop(CropType.OilPalm, 10, 100)], 10); // 24.71 ac
+        var a = Block.Create("f1", "Alpha", [new BlockCrop(BuiltInCrop.OilPalm, 10, 100)], 10); // 24.71 ac
         var report = GetReportQueryHandler.Build(2026, 10, [Activity(a.Id, ActivityType.Weeding, 24710, 0)], [], [a], [], [], AreaUnit.Acres);
 
         Assert.Equal("ac", report.AreaUnit);

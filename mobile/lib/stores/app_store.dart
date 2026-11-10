@@ -198,6 +198,36 @@ class AppStore extends ChangeNotifier {
     return 'Could not read the $what from the server ($e).';
   }
 
+  /// The crops a block can grow: built-in ones plus those this farm added. Falls back to the built-ins offline.
+  List<Crop> crops = const [
+    Crop(id: 'OilPalm', name: 'Oil palm', isBuiltIn: true),
+    Crop(id: 'Maize', name: 'Maize', isBuiltIn: true),
+    Crop(id: 'Cocoa', name: 'Cocoa', isBuiltIn: true),
+    Crop(id: 'Cassava', name: 'Cassava', isBuiltIn: true),
+    Crop(id: 'Plantain', name: 'Plantain', isBuiltIn: true),
+    Crop(id: 'Banana', name: 'Banana', isBuiltIn: true),
+  ];
+
+  Future<void> fetchCrops() async {
+    try {
+      final json = await ApiClient.get('/api/farms/$farmId/crops');
+      crops = (json as List).map((e) => Crop.fromJson(e as Map<String, dynamic>)).toList();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('fetchCrops failed: $e');
+    }
+  }
+
+  /// Adds a crop to this farm's list (needs a connection) and returns it.
+  Future<Crop> createCrop(String name) async {
+    if (!isOnline) throw Exception('You need an internet connection to add a crop.');
+    final json = await ApiClient.post('/api/farms/$farmId/crops', {'name': name});
+    final crop = Crop.fromJson(json as Map<String, dynamic>);
+    crops = [...crops, crop];
+    notifyListeners();
+    return crop;
+  }
+
   Future<void> refreshBlocks() async {
     blocksError = null;
     try {
@@ -239,7 +269,7 @@ class AppStore extends ChangeNotifier {
     final created = await ApiClient.post('/api/farms/$farmId/blocks', {
       'name': name,
       'crops': [
-        for (final c in crops) {'cropType': c.cropType.index, 'percentage': c.percentage},
+        for (final c in crops) {'cropId': c.cropId, 'percentage': c.percentage},
       ],
       'areaValue': areaValue,
       if (plantingYear != null) 'plantingYear': plantingYear,
@@ -274,7 +304,7 @@ class AppStore extends ChangeNotifier {
     await ApiClient.patch('/api/farms/$farmId/blocks/$blockId', {
       'name': name,
       'crops': [
-        for (final c in crops) {'cropType': c.cropType.index, 'percentage': c.percentage},
+        for (final c in crops) {'cropId': c.cropId, 'percentage': c.percentage},
       ],
       'areaValue': areaValue,
       if (plantingYear != null) 'plantingYear': plantingYear,

@@ -1,3 +1,4 @@
+using Ilevora.Domain.Crops;
 using Ilevora.Application.Interfaces;
 using Ilevora.Domain.Enums;
 using Ilevora.Domain.ValueObjects;
@@ -156,28 +157,18 @@ public static class BlockCycleCalculator
 
     // ── fertilizing ──
 
-    /// <summary>How often a crop is fed, in weeks, and why. Starting defaults for Nigerian conditions.</summary>
-    private static (int Weeks, string Note)? FertilizerProfile(CropType crop, int? plantingYear, int thisYear) => crop switch
+    /// <summary>How often a crop is fed, in weeks, and why. Built-in crops carry their own profile; custom crops get the generic one. Mixed has none.</summary>
+    private static (int Weeks, string Note)? FertilizerProfile(BlockCrop crop, int? plantingYear, int thisYear)
     {
-        CropType.OilPalm when plantingYear is { } y && thisYear - y < 3 =>
-            (12, "young oil palm (under 3 years) is fed about every 3 months"),
-        CropType.OilPalm => (26, "mature oil palm is fed about twice a year"),
-        CropType.Maize => (6, "maize is fed in splits, about 6 weeks apart"),
-        CropType.Cocoa => (17, "cocoa is fed about 3 times a year"),
-        CropType.Cassava => (12, "cassava is fed about every 3 months"),
-        _ => null,
-    };
-
-    private static string CropName(CropType c) => c switch
-    {
-        CropType.OilPalm => "Oil palm",
-        _ => c.ToString(),
-    };
+        var builtIn = crop.BuiltIn;
+        if (builtIn is null) return (BuiltInCrop.GenericFertilizer.Weeks, BuiltInCrop.GenericFertilizer.Note);
+        return builtIn.Fertilizer(plantingYear, thisYear) is { } plan ? (plan.Weeks, plan.Note) : null;
+    }
 
     private static CycleResult Fertilizing(CycleInputs i, string season, double rain30, bool dry)
     {
         var thisYear = i.Today.Year;
-        var crops = (i.Crops ?? []).Where(c => FertilizerProfile(c.CropType, i.PlantingYear, thisYear) is not null).ToList();
+        var crops = (i.Crops ?? []).Where(c => FertilizerProfile(c, i.PlantingYear, thisYear) is not null).ToList();
         if (crops.Count == 0)
             return new CycleResult(CycleStatus.Unknown, null, i.LastFertilizing,
                 "Set the block's crops to plan fertilizer", ["Fertilizer timing depends on the crop: edit the block and choose what is growing."],
@@ -186,17 +177,17 @@ public static class BlockCycleCalculator
         // The crops that take up most of the block set the pace; of those, the one fed most often wins.
         var main = crops.Where(c => c.Percentage >= 30).ToList();
         if (main.Count == 0) main = [crops.OrderByDescending(c => c.Percentage).First()];
-        var weeks = main.Min(c => FertilizerProfile(c.CropType, i.PlantingYear, thisYear)!.Value.Weeks);
+        var weeks = main.Min(c => FertilizerProfile(c, i.PlantingYear, thisYear)!.Value.Weeks);
 
         var factors = new List<string>();
         foreach (var c in main)
         {
-            var (w, note) = FertilizerProfile(c.CropType, i.PlantingYear, thisYear)!.Value;
-            factors.Add($"{CropName(c.CropType)} ({c.Percentage}% of the block): {note} (every ~{w} weeks).");
+            var (w, note) = FertilizerProfile(c, i.PlantingYear, thisYear)!.Value;
+            factors.Add($"{c.CropName} ({c.Percentage}% of the block): {note} (every ~{w} weeks).");
         }
         if (main.Count > 1)
             factors.Add($"Mixed block: it follows the crop that needs feeding most often (every {weeks} weeks).");
-        if (i.PlantingYear is null && main.Any(c => c.CropType == CropType.OilPalm))
+        if (i.PlantingYear is null && main.Any(c => c.BuiltIn == BuiltInCrop.OilPalm))
             factors.Add("Planting year not set, so the palms are treated as mature. Add it to the block for a better timetable.");
 
         if (i.LastFertilizing is null)

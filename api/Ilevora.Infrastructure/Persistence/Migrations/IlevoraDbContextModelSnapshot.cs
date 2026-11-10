@@ -369,6 +369,86 @@ namespace Ilevora.Infrastructure.Persistence.Migrations
                     b.ToTable("CoverageCompletions");
                 });
 
+            modelBuilder.Entity("Ilevora.Domain.Entities.Crop", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FarmId")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("IsBuiltIn")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FarmId");
+
+                    b.ToTable("Crops");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "OilPalm",
+                            CreatedAt = new DateTime(2026, 11, 9, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsBuiltIn = true,
+                            Name = "Oil palm",
+                            UpdatedAt = new DateTime(2026, 11, 9, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = "Maize",
+                            CreatedAt = new DateTime(2026, 11, 9, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsBuiltIn = true,
+                            Name = "Maize",
+                            UpdatedAt = new DateTime(2026, 11, 9, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = "Cocoa",
+                            CreatedAt = new DateTime(2026, 11, 9, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsBuiltIn = true,
+                            Name = "Cocoa",
+                            UpdatedAt = new DateTime(2026, 11, 9, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = "Cassava",
+                            CreatedAt = new DateTime(2026, 11, 9, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsBuiltIn = true,
+                            Name = "Cassava",
+                            UpdatedAt = new DateTime(2026, 11, 9, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = "Plantain",
+                            CreatedAt = new DateTime(2026, 11, 9, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsBuiltIn = true,
+                            Name = "Plantain",
+                            UpdatedAt = new DateTime(2026, 11, 9, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = "Banana",
+                            CreatedAt = new DateTime(2026, 11, 9, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsBuiltIn = true,
+                            Name = "Banana",
+                            UpdatedAt = new DateTime(2026, 11, 9, 0, 0, 0, 0, DateTimeKind.Utc)
+                        });
+                });
+
             modelBuilder.Entity("Ilevora.Domain.Entities.CropAllocationRule", b =>
                 {
                     b.Property<string>("Id")

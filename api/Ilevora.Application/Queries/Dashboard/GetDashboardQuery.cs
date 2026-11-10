@@ -145,7 +145,7 @@ public class GetDashboardQueryHandler : IRequestHandler<GetDashboardQuery, Dashb
         }
 
         static Dictionary<string, double> MixOf(Domain.Entities.Block b) =>
-            b.Crops.GroupBy(c => c.CropType.ToString()).ToDictionary(g => g.Key, g => (double)g.Sum(c => c.Percentage));
+            b.Crops.GroupBy(c => c.Key).ToDictionary(g => g.Key, g => (double)g.Sum(c => c.Percentage));
 
         var blockById = (blocks ?? []).ToDictionary(b => b.Id);
 
@@ -153,7 +153,7 @@ public class GetDashboardQueryHandler : IRequestHandler<GetDashboardQuery, Dashb
         var farmMix = new Dictionary<string, double>();
         foreach (var b in blocks ?? [])
             foreach (var c in b.Crops)
-                farmMix[c.CropType.ToString()] = farmMix.GetValueOrDefault(c.CropType.ToString()) + (c.Hectares > 0 ? c.Hectares : c.Percentage / 100.0);
+                farmMix[c.Key] = farmMix.GetValueOrDefault(c.Key) + (c.Hectares > 0 ? c.Hectares : c.Percentage / 100.0);
 
         foreach (var t in transactions)
         {

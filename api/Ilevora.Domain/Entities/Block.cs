@@ -109,7 +109,7 @@ public class Block : BaseEntity
             throw new DomainException("A block must have at least one crop.");
 
         // "Mixed" says nothing about what is growing, and fertilizer depends on the crop: spell out each crop.
-        if (crops.Any(c => c.CropType == CropType.Mixed))
+        if (crops.Any(c => c.BuiltIn == Ilevora.Domain.Crops.BuiltInCrop.Mixed))
             throw new DomainException("Say which crops grow in a mixed block (for example oil palm with cassava) and their share of the block.");
 
         var total = crops.Sum(c => c.Percentage);

@@ -37,7 +37,7 @@ const dotColor = computed(() => {
 })
 
 const cropLabel = computed(() =>
-  props.block.crops?.map(c => c.cropType).join(' / ') ?? ''
+  props.block.crops?.map(c => c.cropName).join(' / ') ?? ''
 )
 </script>
 

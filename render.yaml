@@ -40,4 +40,47 @@ services:
         sync: false
       - key: Mono__WebhookSecret
         sync: false
-# Frontend (web/) is deployed separately on Vercel, not here.
+  # ---- Dev environment -------------------------------------------------------
+  # Deploys from the `develop` branch. Needs its OWN database (a separate Supabase
+  # project or schema) so dev data never touches production. Free tier sleeps, so the
+  # first request after idle is slow.
+  - type: redis
+    name: agromesh-redis-dev
+    plan: free
+    ipAllowList: []
+
+  - type: web
+    name: agromesh-api-dev
+    runtime: docker
+    branch: develop
+    autoDeploy: true
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
+    plan: free
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Staging
+      # Dev database connection string, set in the Render dashboard. Must NOT be the production one.
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: ConnectionStrings__Redis
+        fromService:
+          type: redis
+          name: agromesh-redis-dev
+          property: connectionString
+      - key: Jwt__Key
+        sync: false
+      - key: Jwt__Issuer
+        value: Ilevora
+      - key: Anthropic__ApiKey
+        sync: false
+      - key: Copernicus__ClientId
+        sync: false
+      - key: Copernicus__ClientSecret
+        sync: false
+      # Bank linking stays off in dev (no Mono licence yet).
+      - key: Mono__Enabled
+        value: "false"
+# Frontend (web/) is deployed separately on Vercel, not here. For dev, point a Vercel
+# preview/branch deployment's VITE_API_URL at https://agromesh-api-dev.onrender.com.
+# Dev mobile builds: flutter build apk --dart-define=API_BASE_URL=https://agromesh-api-dev.onrender.com

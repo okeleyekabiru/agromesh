@@ -35,7 +35,7 @@
             <select class="form-select" v-model="form.blockId">
               <option value="">Choose block...</option>
               <option v-for="s in store.blocks" :key="s.id" :value="s.id">
-                {{ s.name }} — {{ s.crops.map(c => c.cropType).join(' / ') }}
+                {{ s.name }} — {{ s.crops.map(c => c.cropName).join(' / ') }}
               </option>
             </select>
             <div v-if="selectedBlock" class="form-hint">

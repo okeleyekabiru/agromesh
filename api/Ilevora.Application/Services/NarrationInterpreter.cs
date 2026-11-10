@@ -42,7 +42,7 @@ public static class NarrationInterpreter
     {
         if (block is null || block.Crops.Count == 0) return null;
         return block.Crops
-            .GroupBy(c => c.CropType.ToString())
+            .GroupBy(c => c.Key)
             .ToDictionary(g => g.Key, g => (double)g.Sum(c => c.Percentage));
     }
 }

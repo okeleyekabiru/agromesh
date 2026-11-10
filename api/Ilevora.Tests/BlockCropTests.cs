@@ -1,3 +1,4 @@
+using Ilevora.Domain.Crops;
 using Ilevora.Domain.Entities;
 using Ilevora.Domain.Enums;
 using Ilevora.Domain.Exceptions;
@@ -12,8 +13,8 @@ public class BlockCropTests
     {
         var crops = new List<BlockCrop>
         {
-            new(CropType.OilPalm, 5.0, 50),
-            new(CropType.Maize, 5.0, 50)
+            new(BuiltInCrop.OilPalm, 5.0, 50),
+            new(BuiltInCrop.Maize, 5.0, 50)
         };
         var block = Block.Create("farm1", "Block D", crops, 10.0);
         Assert.Equal(2, block.Crops.Count);
@@ -24,8 +25,8 @@ public class BlockCropTests
     {
         var crops = new List<BlockCrop>
         {
-            new(CropType.OilPalm, 5.0, 60),
-            new(CropType.Maize, 4.0, 30)
+            new(BuiltInCrop.OilPalm, 5.0, 60),
+            new(BuiltInCrop.Maize, 4.0, 30)
         };
         Assert.Throws<DomainException>(() => Block.Create("farm1", "Bad Block", crops, 9.0));
     }

@@ -46,8 +46,8 @@
         </div>
         <!-- Crop mix pills -->
         <div class="crop-pills">
-          <span v-for="c in s.crops" :key="c.cropType" class="crop-pill">
-            {{ c.cropType }} {{ c.percentage }}%
+          <span v-for="c in s.crops" :key="c.cropId" class="crop-pill">
+            {{ c.cropName }} {{ c.percentage }}%
           </span>
         </div>
         <div style="padding:0 16px 14px;">

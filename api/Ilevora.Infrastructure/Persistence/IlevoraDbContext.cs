@@ -12,6 +12,7 @@ public class IlevoraDbContext : DbContext
     public DbSet<State> States => Set<State>();
     public DbSet<Farm> Farms => Set<Farm>();
     public DbSet<Block> Blocks => Set<Block>();
+    public DbSet<Crop> Crops => Set<Crop>();
     public DbSet<BoundarySubmission> BoundarySubmissions => Set<BoundarySubmission>();
     public DbSet<WorkerRole> WorkerRoles => Set<WorkerRole>();
     public DbSet<Worker> Workers => Set<Worker>();

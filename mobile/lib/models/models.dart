@@ -2,20 +2,30 @@ import 'dart:convert';
 
 // ── ENUMS ──
 
-// Ordinals mirror the backend's `CropType` enum exactly (OilPalm, Maize, Mixed,
-// Cocoa, Cassava) since the API serializes enums as raw integers.
-enum CropType { oilPalm, maize, mixed, cocoa, cassava }
+// A crop a block can grow: built-in (OilPalm, Maize, Cocoa, Cassava, Plantain, Banana) or one the farm
+// added. Comes from `GET /api/farms/{id}/crops`; replaces the old closed `CropType` enum.
+class Crop {
+  final String id;
+  final String name;
+  final bool isBuiltIn;
 
-extension CropTypeExt on CropType {
-  String get label {
-    switch (this) {
-      case CropType.oilPalm: return 'Oil Palm';
-      case CropType.maize:   return 'Maize';
-      case CropType.mixed:   return 'Mixed';
-      case CropType.cocoa:   return 'Cocoa';
-      case CropType.cassava: return 'Cassava';
-    }
-  }
+  const Crop({required this.id, required this.name, this.isBuiltIn = false});
+
+  factory Crop.fromJson(Map<String, dynamic> j) => Crop(
+    id: '${j['id']}',
+    name: '${j['name']}',
+    isBuiltIn: j['isBuiltIn'] == true,
+  );
+}
+
+// Older API builds and cached blocks send only the old enum ordinal (OilPalm, Maize, Mixed, Cocoa, Cassava).
+const _legacyCrops = [
+  ('OilPalm', 'Oil palm'), ('Maize', 'Maize'), ('Mixed', 'Mixed'), ('Cocoa', 'Cocoa'), ('Cassava', 'Cassava'),
+];
+
+int _legacyOrdinal(String cropId) {
+  final i = _legacyCrops.indexWhere((l) => l.$1 == cropId);
+  return i < 0 ? 2 : i;
 }
 
 // Ordinals mirror the backend's `BlockStatus` enum (Active, Idle, HarvestSoon).
@@ -250,26 +260,33 @@ class Farm {
 // ── BLOCK ──
 
 class BlockCrop {
-  final CropType cropType;
+  final String cropId;
+  final String cropName;
   final double? hectares;
   final double percentage;
 
-  const BlockCrop({required this.cropType, this.hectares, required this.percentage});
+  const BlockCrop({required this.cropId, required this.cropName, this.hectares, required this.percentage});
 
-  static CropType _parseCropType(dynamic v) {
-    final i = (v as num?)?.toInt() ?? CropType.mixed.index;
-    if (i < 0 || i >= CropType.values.length) return CropType.mixed;
-    return CropType.values[i];
+  factory BlockCrop.fromJson(Map<String, dynamic> j) {
+    var id = (j['cropId'] as String?) ?? '';
+    var name = j['cropName'] as String?;
+    if (id.isEmpty) {
+      // Older payloads / cached rows: only the enum ordinal.
+      final i = (j['cropType'] as num?)?.toInt() ?? 2;
+      final legacy = _legacyCrops[(i < 0 || i >= _legacyCrops.length) ? 2 : i];
+      id = legacy.$1;
+      name ??= legacy.$2;
+    }
+    return BlockCrop(
+      cropId: id,
+      cropName: name ?? id,
+      hectares: j['area'] == null ? null : AreaValue.fromDynamic(j['area']).hectares,
+      percentage: (j['percentage'] as num?)?.toDouble() ?? 0,
+    );
   }
 
-  factory BlockCrop.fromJson(Map<String, dynamic> j) => BlockCrop(
-    cropType: _parseCropType(j['cropType']),
-    hectares: j['area'] == null ? null : AreaValue.fromDynamic(j['area']).hectares,
-    percentage: (j['percentage'] as num?)?.toDouble() ?? 0,
-  );
-
   Map<String, dynamic> toJson() => {
-    'cropType': cropType.index, 'hectares': hectares, 'percentage': percentage,
+    'cropId': cropId, 'cropName': cropName, 'hectares': hectares, 'percentage': percentage,
   };
 }
 
@@ -302,7 +319,7 @@ class Block {
 
   /// Back-compat accessor for older UI code written against a single-crop
   /// prototype model — surfaces the dominant (first) crop.
-  CropType get crop => crops.isNotEmpty ? crops.first.cropType : CropType.mixed;
+  String get cropLabel => crops.isNotEmpty ? crops.first.cropName : 'Mixed';
 
   bool get hasBoundary => boundaryGeoJson != null && boundaryGeoJson!.isNotEmpty;
 
@@ -333,7 +350,7 @@ class Block {
       id: j['id'] as String,
       farmId: j['farmId'] as String,
       name: j['name'] as String,
-      crops: crops.isEmpty ? const [BlockCrop(cropType: CropType.mixed, percentage: 100)] : crops,
+      crops: crops.isEmpty ? const [BlockCrop(cropId: 'Mixed', cropName: 'Mixed', percentage: 100)] : crops,
       hectares: AreaValue.fromDynamic(j['area']).hectares,
       status: _parseStatus(j['status']),
       lastActivityDate: j['lastActivityDate']?.toString(),
@@ -346,7 +363,7 @@ class Block {
 
   Map<String, dynamic> toMap() => {
     'id': id, 'farm_id': farmId, 'name': name,
-    'crop': crop.index, 'hectares': hectares,
+    'crop': _legacyOrdinal(crops.isNotEmpty ? crops.first.cropId : 'Mixed'), 'hectares': hectares,
     'status': status.index, 'last_activity_date': lastActivityDate,
     'tree_count': treeCount,
     'crops_json': jsonEncode(crops.map((c) => c.toJson()).toList()),
@@ -368,8 +385,8 @@ class Block {
       }
     }
     if (crops.isEmpty) {
-      final idx = (m['crop'] as int?) ?? CropType.mixed.index;
-      crops = [BlockCrop(cropType: CropType.values[idx.clamp(0, CropType.values.length - 1)], percentage: 100)];
+      final idx = ((m['crop'] as int?) ?? 2).clamp(0, _legacyCrops.length - 1);
+      crops = [BlockCrop(cropId: _legacyCrops[idx].$1, cropName: _legacyCrops[idx].$2, percentage: 100)];
     }
     return Block(
       id: m['id'] as String,

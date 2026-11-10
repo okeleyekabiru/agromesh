@@ -1,3 +1,4 @@
+using Ilevora.Domain.Crops;
 using Ilevora.Domain.Entities;
 using Ilevora.Domain.Enums;
 using Ilevora.Domain.ValueObjects;
@@ -8,7 +9,7 @@ public class BlockAreaTests
 {
     private static Block WithBoundary(double hectares)
     {
-        var b = Block.Create("f1", "A", [new BlockCrop(CropType.OilPalm, 0, 100)], 0);
+        var b = Block.Create("f1", "A", [new BlockCrop(BuiltInCrop.OilPalm, 0, 100)], 0);
         b.ApplyBoundary("{}", hectares, 1, 1, BoundarySource.GpsCapture);
         return b;
     }

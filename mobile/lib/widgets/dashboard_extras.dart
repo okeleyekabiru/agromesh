@@ -177,7 +177,7 @@ class _DashboardExtrasState extends State<DashboardExtras> {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
                     child: Row(
                       children: [
-                        Expanded(child: Text('${c['cropType']}', style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600))),
+                        Expanded(child: Text('${c['cropType']}'.replaceAllMapped(RegExp(r'([a-z])([A-Z])'), (m) => '${m[1]} ${m[2]!.toLowerCase()}'), style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 14, fontWeight: FontWeight.w600))),
                         Text('${naira(c['revenue'] as num?)} in · ${naira(c['cost'] as num?)} out',
                             style: const TextStyle(fontFamily: 'PlusJakartaSans', fontSize: 12, color: IlevoraColors.stone)),
                         const SizedBox(width: 10),

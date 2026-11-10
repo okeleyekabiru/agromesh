@@ -193,7 +193,7 @@ class _BlockCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cropLabel = block.crops.isEmpty
       ? '—'
-      : block.crops.map((c) => c.cropType.label).toSet().join(', ');
+      : block.crops.map((c) => c.cropName).toSet().join(', ');
 
     return AgroCard(
       child: Column(

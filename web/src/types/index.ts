@@ -1,6 +1,11 @@
 // ── CORE DOMAIN TYPES ──
 
-export type CropType = 'OilPalm' | 'Maize' | 'Mixed' | 'Cocoa' | 'Cassava'
+/** A crop a block can grow: built-in (OilPalm, Maize...) or one the farm added. */
+export interface Crop {
+  id: string
+  name: string
+  isBuiltIn: boolean
+}
 
 export type BlockStatus = 'Active' | 'Idle' | 'HarvestSoon'
 
@@ -63,7 +68,10 @@ export interface AreaDto {
 }
 
 export interface BlockCrop {
-  cropType: CropType
+  cropId: string
+  cropName: string
+  /** Old enum ordinal, kept on the wire for older clients; not used by the web app. */
+  cropType?: number
   area: AreaDto
   percentage: number
 }

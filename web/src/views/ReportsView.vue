@@ -121,6 +121,7 @@ import { useAgroStore } from '@/stores/agro'
 import StatBadge from '@/components/ui/StatBadge.vue'
 import type { Report } from '@/types'
 import { extractErrorMessage } from '@/utils/http'
+import { cropLabel } from '@/utils/enums'
 
 const store = useAgroStore()
 
@@ -151,9 +152,6 @@ function money(n: number) {
   return '₦' + Math.round(n).toLocaleString('en-NG')
 }
 
-function cropLabel(c: string) {
-  return c.replace(/([a-z])([A-Z])/g, '$1 $2')
-}
 
 function shift(delta: number) {
   const d = new Date(year.value, month.value - 1 + delta, 1)
