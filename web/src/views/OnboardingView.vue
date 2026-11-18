@@ -128,8 +128,8 @@
         <button class="btn btn-ghost" @click="back" :disabled="step === 0 || saving">
           ← Back
         </button>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <span style="font-family: var(--font-sans);font-size: 11px;color:var(--stone);">Step {{ step + 1 }} of {{ steps.length }}</span>
+        <div class="footer-right" style="display:flex;align-items:center;gap:12px;">
+          <span class="footer-step" style="font-family: var(--font-sans);font-size: 11px;color:var(--stone);">Step {{ step + 1 }} of {{ steps.length }}</span>
           <button class="btn btn-primary" @click="next" :disabled="!canProceed || saving">
             {{ step === steps.length - 1 ? (saving ? 'Saving…' : 'Continue to Blocks →') : 'Continue →' }}
           </button>
@@ -499,5 +499,39 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .onboard-shell { padding: 12px; align-items: flex-start; }
+  .onboard-card { border-radius: 16px; }
+  .onboard-header { padding: 18px 20px 16px; }
+  .step-bar { padding: 14px 12px; }
+  .step-name { font-size: 9px; letter-spacing: 0.04em; }
+  .onboard-body { padding: 20px 16px; min-height: 0; }
+  .form-row { flex-direction: column; gap: 0; }
+  .form-row > .form-group { width: 100% !important; flex: none !important; }
+
+  /* Role + worker rows: wrap into two tidy lines */
+  .role-input-row,
+  .worker-input-row {
+    flex-wrap: wrap;
+    padding: 12px;
+    border: 1px solid var(--fog);
+    border-radius: 10px;
+  }
+  .role-input-row > input:first-child,
+  .worker-input-row > input:first-child {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+  }
+  .role-input-row > select { flex: 1 1 0 !important; width: auto !important; min-width: 0; }
+  .rate-input-wrap { flex: 1 1 0; width: auto; min-width: 0; }
+  .worker-input-row > input:nth-child(2) { flex: 0 0 72px; }
+  .worker-input-row > select { flex: 1 1 0 !important; min-width: 0; }
+
+  .onboard-footer { padding: 14px 16px; gap: 8px; }
+  .footer-step { display: none; }
+  .footer-right { gap: 8px !important; }
 }
 </style>
